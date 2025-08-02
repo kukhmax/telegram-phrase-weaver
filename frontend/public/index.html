@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!-- Основная HTML страница для Telegram Mini App PhraseWeaver -->
+<html lang="ru">
+<head>
+    <!-- Кодировка символов UTF-8 для поддержки русского языка -->
+    <meta charset="UTF-8">
+    <!-- Настройка viewport для корректного отображения на мобильных устройствах -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Заголовок страницы, отображается в браузере -->
+    <title>PhraseWeaver</title>
+    <!-- Подключение официального SDK Telegram Web App для интеграции с Telegram -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Подключение основных стилей приложения -->
+    <link rel="stylesheet" href="../src/styles/main.css">
+</head>
+<body>
+    <!-- Основной контейнер приложения -->
+    <div id="app">
+        <!-- Заголовок приложения с логотипом и информацией о пользователе -->
+        <header class="app-header">
+            <div class="header-content">
+                <!-- Логотип приложения с иконкой книги -->
+                <div class="logo">
+                    <span class="logo-icon">📚</span>
+                    <h1>PhraseWeaver</h1>
+                </div>
+                <!-- Блок с информацией о текущем пользователе -->
+                <div class="user-info" id="userInfo">
+                    <span id="userName">Загрузка...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <div class="welcome-section" id="welcomeSection">
+                <h2>Добро пожаловать!</h2>
+                <p>Изучайте языки с помощью интеллектуальных карточек</p>
+                
+                <!-- Статус подключения -->
+                <div class="status" id="connectionStatus">
+                    <span class="status-indicator">🔄</span>
+                    <span>Подключение к серверу...</span>
+                </div>
+            </div>
+
+            <!-- Навигационные кнопки -->
+            <div class="navigation" id="navigation" style="display: none;">
+                <button class="nav-button primary" id="createDeckBtn">
+                    <span class="button-icon">➕</span>
+                    <span>Создать колоду</span>
+                </button>
+                
+                <button class="nav-button" id="myDecksBtn">
+                    <span class="button-icon">📖</span>
+                    <span>Мои колоды</span>
+                </button>
+                
+                <button class="nav-button" id="practiceBtn">
+                    <span class="button-icon">🎯</span>
+                    <span>Тренировка</span>
+                </button>
+            </div>
+
+            <!-- Информация о пользователе -->
+            <div class="user-details" id="userDetails" style="display: none;">
+                <h3>Информация о пользователе</h3>
+                <div class="detail-item">
+                    <strong>Telegram ID:</strong> <span id="telegramId">-</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Имя пользователя:</strong> <span id="username">-</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Язык:</strong> <span id="languageCode">-</span>
+                </div>
+            </div>
+        </main>
+
+        <!-- Футер -->
+        <footer class="app-footer">
+            <p>PhraseWeaver v0.1.0</p>
+        </footer>
+    </div>
+
+    <script src="../src/utils/api.js"></script>
+    <script src="../src/services/auth.js"></script>
+    <script src="../src/components/app.js"></script>
+</body>
+</html>
