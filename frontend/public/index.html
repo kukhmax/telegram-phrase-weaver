@@ -12,6 +12,8 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Подключение основных стилей приложения -->
     <link rel="stylesheet" href="styles/main.css">
+    <!-- Подключение стилей для компонента управления колодами -->
+    <link rel="stylesheet" href="styles/deck-manager.css">
 </head>
 <body>
     <!-- Основной контейнер приложения -->
@@ -66,6 +68,11 @@
                 </button>
             </div>
 
+            <!-- Компонент управления колодами (отображается после аутентификации) -->
+            <div id="deck-manager" style="display: none;">
+                <!-- Содержимое будет создано динамически компонентом DeckManager -->
+            </div>
+
             <!-- Секция отображения информации о текущем пользователе (скрыта до загрузки данных) -->
             <div class="user-details" id="userDetails" style="display: none;">
                 <h3>Информация о пользователе</h3>
@@ -95,6 +102,8 @@
     <script src="utils/api.js"></script>
     <!-- Модуль аутентификации через Telegram WebApp -->
     <script src="services/auth.js"></script>
+    <!-- Компонент управления колодами -->
+    <script src="components/deck-manager.js"></script>
     <!-- Основная логика приложения и инициализация -->
     <script src="components/app.js"></script>
 </body>

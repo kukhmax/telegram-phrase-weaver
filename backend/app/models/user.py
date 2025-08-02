@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, BigInteger
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..core.database import Base
 
@@ -14,5 +15,16 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_active = Column(DateTime(timezone=True), server_default=func.now())
     
+    # Связи с другими моделями
+    # Связь с колодами (один пользователь может иметь много колод)
+    decks = relationship("Deck", back_populates="user", cascade="all, delete-orphan")
+    
     def __repr__(self):
         return f"<User(telegram_id={self.telegram_id}, username={self.username})>"
+    
+    @property
+    def deck_count(self):
+        """
+        Возвращает количество колод пользователя
+        """
+        return len(self.decks) if self.decks else 0

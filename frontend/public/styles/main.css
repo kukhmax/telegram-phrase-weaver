@@ -203,6 +203,17 @@ body {
     background-color: #1e6ba8;
 }
 
+/* Активное состояние кнопки */
+.nav-button.active {
+    background-color: var(--primary-color);
+    color: var(--tg-theme-button-text-color);
+    box-shadow: 0 2px 8px rgba(36, 129, 204, 0.3);
+}
+
+.nav-button.active:hover {
+    background-color: #1e6ba8;
+}
+
 /* Иконки в кнопках */
 .button-icon {
     font-size: 20px;

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
 from .core.database import engine, Base
-from .api import auth
+from .api import auth, decks
 
 # Создаем таблицы в базе данных
 Base.metadata.create_all(bind=engine)
@@ -17,14 +17,15 @@ app = FastAPI(
 # Настройка CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins,
+    allow_origins=["http://localhost:3000", "*"],  # Явно указываем frontend URL
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
 # Подключаем роутеры
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
+app.include_router(decks.router, prefix="/api/decks", tags=["decks"])
 
 # Базовый endpoint для проверки
 @app.get("/")

@@ -11,6 +11,10 @@ class PhraseWeaverApp {
         this.isInitialized = false;
         this.authService = null;
         this.apiClient = null;
+        this.deckManager = null;
+        
+        // Состояние навигации
+        this.currentView = 'welcome'; // welcome, decks, practice
         
         // DOM элементы
         this.elements = {
@@ -36,7 +40,11 @@ class PhraseWeaverApp {
             // Навигационные кнопки
             createDeckBtn: null,
             myDecksBtn: null,
-            practiceBtn: null
+            practiceBtn: null,
+            
+            // Секции контента
+            deckManagerSection: null,
+            userDetails: null
         };
     }
 
@@ -112,6 +120,10 @@ class PhraseWeaverApp {
         this.elements.myDecksBtn = document.getElementById('myDecksBtn');
         this.elements.practiceBtn = document.getElementById('practiceBtn');
         
+        // Секции контента
+        this.elements.deckManagerSection = document.getElementById('deck-manager');
+        this.elements.userDetails = document.getElementById('userDetails');
+        
         console.log('[App] DOM elements initialized');
     }
 
@@ -171,11 +183,14 @@ class PhraseWeaverApp {
      * Обработка успешной аутентификации
      * @param {Object} user - Данные пользователя
      */
-    handleAuthSuccess(user) {
+    async handleAuthSuccess(user) {
         console.log('[App] Authentication successful:', user);
         
         // Обновляем информацию о пользователе в интерфейсе
         this.updateUserInterface(user);
+        
+        // Инициализируем менеджер колод
+        await this.initializeDeckManager();
         
         // Показываем навигацию
         this.showNavigation();
@@ -183,8 +198,8 @@ class PhraseWeaverApp {
         // Скрываем секцию приветствия
         this.hideWelcomeSection();
         
-        // Показываем информацию о пользователе
-        this.showUserInfo(user);
+        // Показываем менеджер колод по умолчанию
+        this.showDecksView();
     }
 
     /**
@@ -314,16 +329,114 @@ class PhraseWeaverApp {
     }
 
     /**
+     * Инициализация менеджера колод
+     */
+    async initializeDeckManager() {
+        try {
+            console.log('[App] Initializing deck manager...');
+            
+            // Создаем экземпляр менеджера колод
+            this.deckManager = new DeckManager(this.apiClient, this.authService);
+            
+            // Инициализируем менеджер
+            await this.deckManager.init();
+            
+            console.log('[App] Deck manager initialized successfully');
+            
+        } catch (error) {
+            console.error('[App] Failed to initialize deck manager:', error);
+            this.showError('Ошибка инициализации менеджера колод: ' + error.message);
+        }
+    }
+    
+    /**
+     * Показать раздел управления колодами
+     */
+    showDecksView() {
+        console.log('[App] Switching to decks view');
+        
+        // Скрываем все секции
+        this.hideAllSections();
+        
+        // Показываем менеджер колод
+        if (this.elements.deckManagerSection) {
+            this.elements.deckManagerSection.style.display = 'block';
+        }
+        
+        // Обновляем состояние навигации
+        this.currentView = 'decks';
+        this.updateNavigationState();
+    }
+    
+    /**
+     * Показать раздел информации о пользователе
+     */
+    showUserInfoView() {
+        console.log('[App] Switching to user info view');
+        
+        // Скрываем все секции
+        this.hideAllSections();
+        
+        // Показываем информацию о пользователе
+        if (this.elements.userDetails) {
+            this.elements.userDetails.style.display = 'block';
+        }
+        
+        // Обновляем состояние навигации
+        this.currentView = 'userinfo';
+        this.updateNavigationState();
+    }
+    
+    /**
+     * Скрыть все секции контента
+     */
+    hideAllSections() {
+        if (this.elements.deckManagerSection) {
+            this.elements.deckManagerSection.style.display = 'none';
+        }
+        if (this.elements.userDetails) {
+            this.elements.userDetails.style.display = 'none';
+        }
+    }
+    
+    /**
+     * Обновить состояние навигационных кнопок
+     */
+    updateNavigationState() {
+        // Убираем активное состояние со всех кнопок
+        const navButtons = [this.elements.createDeckBtn, this.elements.myDecksBtn, this.elements.practiceBtn];
+        navButtons.forEach(btn => {
+            if (btn) {
+                btn.classList.remove('active');
+            }
+        });
+        
+        // Добавляем активное состояние к текущей кнопке
+        if (this.currentView === 'decks' && this.elements.myDecksBtn) {
+            this.elements.myDecksBtn.classList.add('active');
+        }
+    }
+    
+    /**
      * Обработчики навигационных кнопок
      */
     handleCreateDeck() {
         console.log('[App] Create deck clicked');
-        this.authService?.showAlert('Функция создания колоды будет добавлена в следующих этапах');
+        
+        // Переключаемся на раздел колод
+        this.showDecksView();
+        
+        // Показываем форму создания колоды
+        if (this.deckManager) {
+            this.deckManager.showCreateForm();
+        }
     }
 
     handleMyDecks() {
         console.log('[App] My decks clicked');
-        this.authService?.showAlert('Функция просмотра колод будет добавлена в следующих этапах');
+        
+        // Переключаемся на раздел колод
+        this.showDecksView();
     }
 
     handlePractice() {
