@@ -44,6 +44,15 @@ async def health_check():
         "version": settings.version
     }
 
+# Health check endpoint для API
+@app.get("/api/health")
+async def api_health_check():
+    return {
+        "status": "healthy",
+        "database": "connected",
+        "version": settings.version
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
