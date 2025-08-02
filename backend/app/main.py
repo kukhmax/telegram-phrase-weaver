@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
 from .core.database import engine, Base
-from .api import auth, decks
+from .api import auth, decks, cards
 
 # Создаем таблицы в базе данных
 Base.metadata.create_all(bind=engine)
@@ -26,6 +26,7 @@ app.add_middleware(
 # Подключаем роутеры
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(decks.router, prefix="/api/decks", tags=["decks"])
+app.include_router(cards.router, prefix="/api/cards", tags=["cards"])
 
 # Базовый endpoint для проверки
 @app.get("/")

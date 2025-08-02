@@ -14,6 +14,10 @@
     <link rel="stylesheet" href="styles/main.css">
     <!-- Подключение стилей для компонента управления колодами -->
     <link rel="stylesheet" href="styles/deck-manager.css">
+    <!-- Подключение стилей для компонента управления карточками -->
+    <link rel="stylesheet" href="styles/card-manager.css">
+    <!-- Подключение стилей для компонента обогащения карточек -->
+    <link rel="stylesheet" href="styles/card-enricher.css">
 </head>
 <body>
     <!-- Основной контейнер приложения -->
@@ -73,6 +77,16 @@
                 <!-- Содержимое будет создано динамически компонентом DeckManager -->
             </div>
 
+            <!-- Компонент управления карточками (отображается при просмотре карточек колоды) -->
+            <div id="card-manager" style="display: none;">
+                <!-- Содержимое будет создано динамически компонентом CardManager -->
+            </div>
+
+            <!-- Компонент обогащения карточек (отображается при обогащении карточек) -->
+            <div id="card-enricher" style="display: none;">
+                <!-- Содержимое будет создано динамически компонентом CardEnricher -->
+            </div>
+
             <!-- Секция отображения информации о текущем пользователе (скрыта до загрузки данных) -->
             <div class="user-details" id="userDetails" style="display: none;">
                 <h3>Информация о пользователе</h3>
@@ -104,6 +118,10 @@
     <script src="services/auth.js"></script>
     <!-- Компонент управления колодами -->
     <script src="components/deck-manager.js"></script>
+    <!-- Компонент управления карточками -->
+    <script src="components/card-manager.js"></script>
+    <!-- Компонент обогащения карточек -->
+    <script src="components/card-enricher.js"></script>
     <!-- Основная логика приложения и инициализация -->
     <script src="components/app.js"></script>
 </body>

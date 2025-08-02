@@ -39,7 +39,7 @@ class Deck(Base):
     user = relationship("User", back_populates="decks")
     
     # Связь с карточками (одна колода может содержать много карточек)
-    # cards = relationship("Card", back_populates="deck", cascade="all, delete-orphan")
+    cards = relationship("Card", back_populates="deck", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Deck(id={self.id}, name='{self.name}', user_id={self.user_id})>"
@@ -48,10 +48,8 @@ class Deck(Base):
     def card_count(self):
         """
         Возвращает количество карточек в колоде
-        Будет реализовано после создания модели Card
         """
-        # return len(self.cards) if self.cards else 0
-        return 0  # Временная заглушка
+        return len(self.cards) if self.cards else 0
     
     @property
     def cards_to_review(self):

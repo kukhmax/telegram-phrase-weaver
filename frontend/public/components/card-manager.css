@@ -1,0 +1,405 @@
+/* Card Manager Styles - View Only Mode */
+.card-manager {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Deck Header */
+.deck-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.back-button:hover {
+    background: #545b62;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.deck-info {
+    flex: 1;
+    margin-left: 20px;
+}
+
+.deck-info h1 {
+    margin: 0 0 8px 0;
+    color: #2c3e50;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.deck-description {
+    margin: 0 0 12px 0;
+    color: #6c757d;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.deck-languages {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.language-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.language-badge.source {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.language-badge.target {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+/* Cards Header */
+.cards-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cards-header h2 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.cards-count {
+    color: #6c757d;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.cards-count #totalCards {
+    color: #007bff;
+    font-weight: 600;
+}
+
+/* Cards List */
+.cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.card-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.card-item:hover {
+    border-color: #007bff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
+}
+
+.card-content {
+    flex: 1;
+    margin-right: 20px;
+}
+
+.card-phrase {
+    margin-bottom: 15px;
+}
+
+.phrase-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    line-height: 1.4;
+}
+
+.phrase-separator {
+    font-size: 1.1rem;
+    color: #6c757d;
+    font-weight: 500;
+    margin: 0 8px;
+}
+
+.translation-text {
+    font-size: 1.05rem;
+    color: #495057;
+    line-height: 1.4;
+    font-style: italic;
+}
+
+/* Media Elements */
+.card-audio {
+    margin-top: 12px;
+}
+
+.card-audio audio {
+    width: 100%;
+    max-width: 300px;
+    height: 35px;
+}
+
+.card-image {
+    margin-top: 12px;
+}
+
+.card-image img {
+    max-width: 200px;
+    max-height: 150px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    object-fit: cover;
+}
+
+/* Card Actions */
+.card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px dashed #dee2e6;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    margin: 0 0 10px 0;
+    color: #495057;
+    font-size: 1.3rem;
+}
+
+.empty-state p {
+    margin: 0 0 25px 0;
+    color: #6c757d;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Loading State */
+.loading-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e9ecef;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+/* Alert Messages */
+.alert {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.alert i {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .card-manager {
+        padding: 15px;
+    }
+    
+    .deck-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .deck-info {
+        margin-left: 0;
+    }
+    
+    .deck-info h1 {
+        font-size: 1.5rem;
+    }
+    
+    .cards-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+        text-align: center;
+    }
+    
+    .card-item {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .card-content {
+        margin-right: 0;
+    }
+    
+    .card-actions {
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .phrase-text,
+    .translation-text {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-manager {
+        padding: 10px;
+    }
+    
+    .card-item {
+        padding: 15px;
+    }
+    
+    .cards-header {
+        padding: 15px;
+    }
+    
+    .deck-header {
+        padding-bottom: 15px;
+    }
+    
+    .card-image img {
+        max-width: 150px;
+        max-height: 100px;
+    }
+}
+
+/* Animation for smooth transitions */
+.card-item,
+.alert {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

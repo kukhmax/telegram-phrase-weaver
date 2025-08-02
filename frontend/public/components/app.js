@@ -3,6 +3,9 @@
  * Координирует работу всех компонентов и управляет состоянием приложения
  */
 
+// Импорт CardManager
+// CardManager должен быть загружен до инициализации App
+
 /**
  * Главный класс приложения
  */
@@ -12,9 +15,11 @@ class PhraseWeaverApp {
         this.authService = null;
         this.apiClient = null;
         this.deckManager = null;
+        this.cardManager = null;
+        this.cardEnricher = null;
         
         // Состояние навигации
-        this.currentView = 'welcome'; // welcome, decks, practice
+        this.currentView = 'welcome'; // welcome, decks, cards, practice
         
         // DOM элементы
         this.elements = {
@@ -44,6 +49,7 @@ class PhraseWeaverApp {
             
             // Секции контента
             deckManagerSection: null,
+            cardManagerSection: null,
             userDetails: null
         };
     }
@@ -122,6 +128,7 @@ class PhraseWeaverApp {
         
         // Секции контента
         this.elements.deckManagerSection = document.getElementById('deck-manager');
+        this.elements.cardManagerSection = document.getElementById('card-manager');
         this.elements.userDetails = document.getElementById('userDetails');
         
         console.log('[App] DOM elements initialized');
@@ -350,6 +357,48 @@ class PhraseWeaverApp {
     }
     
     /**
+     * Инициализация менеджера карточек для конкретной колоды
+     */
+    async initializeCardManager(deck) {
+        try {
+            console.log('[App] Initializing card manager for deck:', deck.name);
+            
+            // Создаем экземпляр менеджера карточек
+            this.cardManager = new CardManager(this.apiClient, this.authService);
+            
+            // Инициализируем менеджер с данными колоды
+            await this.cardManager.init(deck);
+            
+            console.log('[App] Card manager initialized successfully');
+            
+        } catch (error) {
+            console.error('[App] Failed to initialize card manager:', error);
+            this.showError('Ошибка инициализации менеджера карточек: ' + error.message);
+        }
+    }
+
+    /**
+     * Инициализация обогащения карточек для конкретной колоды
+     */
+    async initializeCardEnricher(deck) {
+        try {
+            console.log('[App] Initializing card enricher for deck:', deck.name);
+            
+            // Создаем экземпляр обогащения карточек
+            this.cardEnricher = new CardEnricher(this.apiClient, this.authService);
+            
+            // Инициализируем обогащение с данными колоды
+            await this.cardEnricher.init(deck);
+            
+            console.log('[App] Card enricher initialized successfully');
+            
+        } catch (error) {
+            console.error('[App] Failed to initialize card enricher:', error);
+            this.showError('Ошибка инициализации обогащения карточек: ' + error.message);
+        }
+    }
+    
+    /**
      * Показать раздел управления колодами
      */
     showDecksView() {
@@ -366,6 +415,67 @@ class PhraseWeaverApp {
         // Обновляем состояние навигации
         this.currentView = 'decks';
         this.updateNavigationState();
+    }
+    
+    /**
+     * Показать карточки конкретной колоды
+     */
+    async showCardsView(deck) {
+        console.log('[App] Switching to cards view for deck:', deck.name);
+        
+        // Скрываем все секции
+        this.hideAllSections();
+        
+        // Инициализируем менеджер карточек
+        await this.initializeCardManager(deck);
+        
+        // Показываем секцию карточек
+        if (this.elements.cardManagerSection) {
+            this.elements.cardManagerSection.style.display = 'block';
+        }
+        
+        // Обновляем состояние навигации
+        this.currentView = 'cards';
+        this.updateNavigationState();
+    }
+
+    /**
+     * Показать обогащение карточек для конкретной колоды
+     */
+    async showCardEnricherView(deck) {
+        console.log('[App] Switching to card enricher view for deck:', deck.name);
+        
+        // Скрываем все секции
+        this.hideAllSections();
+        
+        // Инициализируем обогащение карточек
+        await this.initializeCardEnricher(deck);
+        
+        // Показываем секцию обогащения карточек
+        const cardEnricherSection = document.getElementById('cardEnricherSection');
+        if (cardEnricherSection) {
+            cardEnricherSection.style.display = 'block';
+        }
+        
+        // Обновляем состояние навигации
+        this.currentView = 'enricher';
+        this.updateNavigationState();
+    }
+    
+    /**
+     * Вернуться к менеджеру колод
+     */
+    async showDeckManager() {
+        console.log('[App] Returning to deck manager');
+        
+        // Скрываем все секции
+        this.hideAllSections();
+        
+        // Переинициализируем менеджер колод для обновления данных
+        await this.initializeDeckManager();
+        
+        // Показываем менеджер колод
+        this.showDecksView();
     }
     
     /**
@@ -391,12 +501,24 @@ class PhraseWeaverApp {
      * Скрыть все секции контента
      */
     hideAllSections() {
-        if (this.elements.deckManagerSection) {
-            this.elements.deckManagerSection.style.display = 'none';
+        const sections = [
+            this.elements.welcomeSection,
+            this.elements.deckManagerSection,
+            this.elements.cardManagerSection,
+            this.elements.userDetails
+        ];
+        
+        // Добавляем секцию обогащения карточек
+        const cardEnricherSection = document.getElementById('cardEnricherSection');
+        if (cardEnricherSection) {
+            sections.push(cardEnricherSection);
         }
-        if (this.elements.userDetails) {
-            this.elements.userDetails.style.display = 'none';
-        }
+        
+        sections.forEach(section => {
+            if (section) {
+                section.style.display = 'none';
+            }
+        });
     }
     
     /**
@@ -452,8 +574,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Создаем экземпляр приложения
     const app = new PhraseWeaverApp();
     
-    // Делаем приложение доступным глобально для отладки
+    // Делаем приложение доступным глобально для отладки и навигации
     window.PhraseWeaverApp = app;
+    window.app = app;
     
     // Инициализируем приложение
     await app.init();

@@ -476,10 +476,16 @@ class DeckManager {
                 
                 <div class="deck-footer">
                     <span class="deck-date">Создана: ${createdDate}</span>
-                    <button class="btn btn-primary open-deck">
-                        <span class="btn-icon">📖</span>
-                        Открыть
-                    </button>
+                    <div class="deck-actions">
+                        <button class="btn btn-primary open-deck">
+                            <span class="btn-icon">📖</span>
+                            Открыть
+                        </button>
+                        <button class="btn btn-success add-cards" data-deck-id="${deck.id}">
+                            <span class="btn-icon">➕</span>
+                            Добавить карточки
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -495,6 +501,14 @@ class DeckManager {
                 const deckCard = e.target.closest('.deck-card');
                 const deckId = parseInt(deckCard.dataset.deckId);
                 this.openDeck(deckId);
+            });
+        });
+        
+        // Кнопки добавления карточек
+        document.querySelectorAll('.add-cards').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const deckId = parseInt(e.target.dataset.deckId);
+                this.addCardsToDeck(deckId);
             });
         });
         
@@ -520,10 +534,55 @@ class DeckManager {
     /**
      * Открытие колоды для просмотра карточек
      */
-    openDeck(deckId) {
+    async openDeck(deckId) {
         console.log('[DeckManager] Opening deck:', deckId);
-        // TODO: Реализовать переход к просмотру карточек колоды
-        this.showInfo(`Открытие колоды ${deckId} будет реализовано в следующих версиях`);
+        
+        try {
+            // Находим данные колоды
+            const deck = this.decks.find(d => d.id === parseInt(deckId));
+            if (!deck) {
+                this.showError('Колода не найдена');
+                return;
+            }
+            
+            // Вызываем метод главного приложения для показа карточек
+            if (window.app && typeof window.app.showCardsView === 'function') {
+                await window.app.showCardsView(deck);
+            } else {
+                console.error('[DeckManager] App instance or showCardsView method not found');
+                this.showError('Ошибка навигации к карточкам');
+            }
+        } catch (error) {
+            console.error('[DeckManager] Error opening deck:', error);
+            this.showError('Ошибка при открытии колоды: ' + error.message);
+        }
+    }
+    
+    /**
+     * Добавление карточек в колоду
+     */
+    async addCardsToDeck(deckId) {
+        console.log('[DeckManager] Adding cards to deck:', deckId);
+        
+        try {
+            // Находим данные колоды
+            const deck = this.decks.find(d => d.id === parseInt(deckId));
+            if (!deck) {
+                this.showError('Колода не найдена');
+                return;
+            }
+            
+            // Открываем модальное окно обогащения карточек
+            if (window.cardEnricher && typeof window.cardEnricher.open === 'function') {
+                window.cardEnricher.open(deck.id);
+            } else {
+                console.error('[DeckManager] CardEnricher instance not found');
+                this.showError('Ошибка открытия окна обогащения карточек');
+            }
+        } catch (error) {
+            console.error('[DeckManager] Error adding cards to deck:', error);
+            this.showError('Ошибка при добавлении карточек: ' + error.message);
+        }
     }
     
     /**
