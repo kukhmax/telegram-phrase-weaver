@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug PhraseWeaver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .debug-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .error {
+            color: red;
+            background: #ffe6e6;
+        }
+        .success {
+            color: green;
+            background: #e6ffe6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug PhraseWeaver</h1>
+    <div id="debug-output"></div>
+    
+    <script>
+        const debugOutput = document.getElementById('debug-output');
+        
+        function addDebugInfo(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `debug-info ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            debugOutput.appendChild(div);
+            console.log(`[DEBUG] ${message}`);
+        }
+        
+        addDebugInfo('Debug page loaded', 'success');
+        
+        // Проверяем доступность Telegram Web App
+        if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+            addDebugInfo('Telegram WebApp SDK доступен', 'success');
+        } else {
+            addDebugInfo('Telegram WebApp SDK НЕ доступен', 'error');
+        }
+        
+        // Проверяем подключение к API
+        fetch('http://localhost:8000/api/health')
+            .then(response => {
+                if (response.ok) {
+                    addDebugInfo('Backend API доступен', 'success');
+                    return response.json();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            })
+            .then(data => {
+                addDebugInfo(`API ответ: ${JSON.stringify(data)}`, 'success');
+            })
+            .catch(error => {
+                addDebugInfo(`Ошибка API: ${error.message}`, 'error');
+            });
+        
+        // Проверяем загрузку основных скриптов
+        const scripts = [
+            '/public/utils/api.js',
+            '/public/utils/auth.js',
+            '/public/components/deck-manager.js',
+            '/public/components/card-manager.js',
+            '/public/components/card-enricher.js',
+            '/public/components/app.js'
+        ];
+        
+        scripts.forEach(script => {
+            fetch(`http://localhost:3000${script}`)
+                .then(response => {
+                    if (response.ok) {
+                        addDebugInfo(`Скрипт доступен: ${script}`, 'success');
+                    } else {
+                        addDebugInfo(`Скрипт недоступен: ${script} (${response.status})`, 'error');
+                    }
+                })
+                .catch(error => {
+                    addDebugInfo(`Ошибка загрузки скрипта ${script}: ${error.message}`, 'error');
+                });
+        });
+    </script>
+</body>
+</html>

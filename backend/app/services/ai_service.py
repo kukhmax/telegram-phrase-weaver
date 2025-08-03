@@ -34,7 +34,7 @@ class AIService:
     
     def __init__(self):
         # Конфигурация для Gemini API
-        self.gemini_api_key = getattr(settings, 'gemini_api_key', None) or os.environ.get('GOOGLE_API_KEY')
+        self.gemini_api_key = getattr(settings, 'gemini_api_key', None) or os.environ.get('GEMINI_API_KEY')
         
         # Таймаут для запросов
         self.timeout = 30.0
@@ -86,15 +86,15 @@ class AIService:
         
         # Создаем и настраиваем модель ВНУТРИ функции
         try:
-            api_key = self.gemini_api_key or os.environ.get("GOOGLE_API_KEY")
+            api_key = self.gemini_api_key or os.environ.get("GEMINI_API_KEY")
             if not api_key:
-                logger.error("КРИТИЧЕСКАЯ ОШИБКА: Ключ GOOGLE_API_KEY не установлен!")
+                logger.error("КРИТИЧЕСКАЯ ОШИБКА: Ключ GEMINI_API_KEY не установлен!")
                 return None
                 
             genai.configure(api_key=api_key)
             model = genai.GenerativeModel('gemini-1.5-flash')
         except KeyError:
-            logger.error("КРИТИЧЕСКАЯ ОШИБКА: Ключ GOOGLE_API_KEY не установлен!")
+            logger.error("КРИТИЧЕСКАЯ ОШИБКА: Ключ GEMINI_API_KEY не установлен!")
             return None
         except Exception as e:
             logger.error(f"Ошибка конфигурации Gemini API: {e}")

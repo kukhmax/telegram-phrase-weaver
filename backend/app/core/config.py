@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     # External APIs (будем добавлять позже)
     openai_api_key: Optional[str] = None
     unsplash_access_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None
     
     # CORS
     allowed_origins: list = ["*"]  # В продакшене ограничить

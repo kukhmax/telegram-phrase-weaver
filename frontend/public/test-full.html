@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Full PhraseWeaver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .log {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #2481cc;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: #ffe6e6;
+        }
+        .success {
+            border-left-color: #4caf50;
+            background: #e6ffe6;
+        }
+        #app-content {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Full PhraseWeaver Loading</h1>
+    <div id="logs"></div>
+    <div id="app-content">
+        <h2>Содержимое приложения появится здесь</h2>
+        <div id="welcome-section">
+            <h3>Добро пожаловать в PhraseWeaver!</h3>
+            <p>Тестовая версия приложения</p>
+            <button id="test-auth">Тест аутентификации</button>
+        </div>
+    </div>
+    
+    <script>
+        const logs = document.getElementById('logs');
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            logs.appendChild(div);
+            console.log(`[TEST] ${message}`);
+        }
+        
+        log('Начинаем загрузку приложения', 'info');
+        
+        // Перехватываем console.log для отображения в интерфейсе
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('[')) {
+                log(args.join(' '), 'info');
+            }
+        };
+        
+        const originalError = console.error;
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            log(`ERROR: ${args.join(' ')}`, 'error');
+        };
+        
+        // Загружаем скрипты по порядку
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = () => {
+                    log(`Скрипт загружен: ${src}`, 'success');
+                    resolve();
+                };
+                script.onerror = () => {
+                    log(`Ошибка загрузки скрипта: ${src}`, 'error');
+                    reject(new Error(`Failed to load ${src}`));
+                };
+                document.head.appendChild(script);
+            });
+        }
+        
+        async function loadApp() {
+            try {
+                // Загружаем Telegram WebApp SDK
+                await loadScript('https://telegram.org/js/telegram-web-app.js');
+                
+                // Загружаем наши скрипты
+                await loadScript('utils/api.js');
+                await loadScript('services/auth.js');
+                await loadScript('components/deck-manager.js');
+                await loadScript('components/card-manager.js');
+                await loadScript('components/card-enricher.js');
+                await loadScript('components/app.js');
+                
+                log('Все скрипты загружены успешно', 'success');
+                
+                // Проверяем доступность сервисов
+                if (window.PhraseWeaverAuth) {
+                    log('AuthService доступен', 'success');
+                } else {
+                    log('AuthService НЕ доступен', 'error');
+                }
+                
+                if (window.PhraseWeaverAPI) {
+                    log('API Client доступен', 'success');
+                } else {
+                    log('API Client НЕ доступен', 'error');
+                }
+                
+                if (window.PhraseWeaverApp) {
+                    log('Main App доступен', 'success');
+                } else {
+                    log('Main App НЕ доступен', 'error');
+                }
+                
+                // Тестируем аутентификацию
+                document.getElementById('test-auth').onclick = async () => {
+                    log('Тестируем аутентификацию...', 'info');
+                    try {
+                        if (window.PhraseWeaverAuth) {
+                            const result = await window.PhraseWeaverAuth.initialize();
+                            log(`Инициализация auth: ${result}`, result ? 'success' : 'error');
+                            
+                            if (result) {
+                                const authResult = await window.PhraseWeaverAuth.authenticate();
+                                log(`Аутентификация: ${authResult}`, authResult ? 'success' : 'error');
+                            }
+                        }
+                    } catch (error) {
+                        log(`Ошибка аутентификации: ${error.message}`, 'error');
+                    }
+                };
+                
+            } catch (error) {
+                log(`Ошибка загрузки приложения: ${error.message}`, 'error');
+            }
+        }
+        
+        // Запускаем загрузку
+        loadApp();
+    </script>
+</body>
+</html>

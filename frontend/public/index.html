@@ -8,83 +8,644 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Заголовок страницы, отображается в браузере -->
     <title>PhraseWeaver</title>
-    <!-- Подключение официального SDK Telegram Web App для интеграции с Telegram -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключение основных стилей приложения -->
-    <link rel="stylesheet" href="styles/main.css">
-    <!-- Подключение стилей для компонента управления колодами -->
-    <link rel="stylesheet" href="styles/deck-manager.css">
-    <!-- Подключение стилей для компонента управления карточками -->
-    <link rel="stylesheet" href="styles/card-manager.css">
-    <!-- Подключение стилей для компонента обогащения карточек -->
-    <link rel="stylesheet" href="styles/card-enricher.css">
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #000000;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .app-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 0px;
+            background: #4CAF50;
+            padding: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            font-family: 'Georgia', 'Times New Roman', serif;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header-icon {
+            font-size: 1.2em;
+            cursor: pointer;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .header-icon:hover {
+            opacity: 0.8;
+        }
+
+        .main-create-button {
+            display: block;
+            width: 90%;
+            margin: 0 auto 0px auto;
+            padding: 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .main-create-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .decks-section {
+            margin-top: 0px;
+        }
+        .section-title {
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .content {
+            background: white;
+            padding: 0;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .card-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .phrase-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .phrase-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+        .phrase-item.selected {
+            border-color: #28a745;
+            background: #f8fff8;
+            box-shadow: 0 4px 12px rgba(40,167,69,0.2);
+        }
+        .phrase-content {
+            margin-bottom: 10px;
+        }
+        .phrase-text {
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        .phrase-keyword {
+            color: #666;
+            font-size: 14px;
+        }
+        .phrase-translation {
+            color: #333;
+            font-size: 14px;
+            margin: 5px 0;
+            padding: 5px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .phrase-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-select {
+            background: #2481cc;
+            color: white;
+        }
+        .btn-select.selected {
+            background: #28a745;
+        }
+        .btn-select:hover {
+            background: #1a6ba8;
+        }
+        .btn-delete:hover {
+            background: #c82333;
+        }
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        /* Стили для списка колод */
+            .deck-item {
+                 background: white;
+                 border-radius: 15px;
+                 padding: 20px;
+                 margin: 15px 0;
+                 box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                 transition: all 0.3s ease;
+                 cursor: pointer;
+                 display: flex;
+                 justify-content: space-between;
+                 align-items: center;
+             }
+             
+             .deck-item:hover {
+                 box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+                 transform: translateY(-2px);
+             }
+             
+             .deck-content {
+                 flex: 1;
+             }
+             
+             .deck-title {
+                 font-size: 16px;
+                 font-weight: bold;
+                 color: #4CAF50;
+                 margin: 0 0 10px 0;
+                 line-height: 1.3;
+             }
+             
+             .deck-title small {
+                 font-size: 0.8em;
+                 color: #666;
+                 font-weight: normal;
+             }
+             
+             .deck-stats {
+                 display: flex;
+                 gap: 15px;
+                 font-size: 14px;
+                 color: #666;
+             }
+             
+             .deck-actions {
+                 display: flex;
+                 flex-direction: column;
+                 gap: 8px;
+                 margin-left: 20px;
+             }
+             
+             .deck-btn {
+                 padding: 8px 16px;
+                 border: none;
+                 border-radius: 15px;
+                 font-size: 12px;
+                 font-weight: 600;
+                 cursor: pointer;
+                 transition: all 0.3s ease;
+                 min-width: 80px;
+             }
+             
+             .deck-btn.cards {
+                 background: #4CAF50;
+                 color: white;
+             }
+             
+             .deck-btn.training {
+                 background: #f0f0f0;
+                 color: #333;
+             }
+             
+             .deck-btn:hover {
+                 transform: translateY(-1px);
+             }
+             
+             .mascot-container {
+                 text-align: center;
+                 margin: 0;
+             }
+             
+             .mascot {
+                 width: 120px;
+                 height: 120px;
+                 animation: float 3s ease-in-out infinite;
+                 margin: 0 auto;
+                 display: flex;
+                 align-items: center;
+                 justify-content: center;
+             }
+             
+             .mascot img {
+                 width: 100%;
+                 height: 100%;
+                 object-fit: contain;
+             }
+             
+             @keyframes float {
+                 0%, 100% { transform: translateY(0px); }
+                 50% { transform: translateY(-10px); }
+             }
+             
+             .plus-button {
+                 position: fixed;
+                 bottom: 30px;
+                 right: 30px;
+                 width: 60px;
+                 height: 60px;
+                 background: #4CAF50;
+                 border: none;
+                 border-radius: 50%;
+                 color: white;
+                 font-size: 30px;
+                 cursor: pointer;
+                 box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                 transition: all 0.3s ease;
+             }
+             
+             .plus-button:hover {
+                 background: #45a049;
+                 transform: scale(1.1);
+             }
+             
+             .tooltip {
+                 position: absolute;
+                 bottom: 70px;
+                 right: 0;
+                 background: rgba(0,0,0,0.8);
+                 color: white;
+                 padding: 8px 12px;
+                 border-radius: 8px;
+                 font-size: 12px;
+                 white-space: nowrap;
+                 opacity: 0;
+                 transition: opacity 0.3s;
+             }
+             
+             .plus-button:hover .tooltip {
+                 opacity: 1;
+             }
+             
+             .api-button {
+                 display: block;
+                 width: 90%;
+                 margin: 300px 20px auto;
+                 padding: 12px;
+                 background: #f0f0f0;
+                 color: #333;
+                 border: 1px solid #ddd;
+                 border-radius: 8px;
+                 font-size: 14px;
+                 cursor: pointer;
+                 transition: all 0.3s ease;
+             }
+             
+             .api-button:hover {
+                 background: #e0e0e0;
+                 border-color: #ccc;
+             }
+             
+             .settings-icon {
+                 color: white;
+                 font-size: 20px;
+                 cursor: pointer;
+             }
+             
+             /* Стили для просмотра карточек */
+             .cards-container {
+                 padding: 20px;
+                 max-width: 600px;
+                 margin: 0 auto;
+             }
+             
+             .cards-header {
+                 display: flex;
+                 align-items: center;
+                 margin-bottom: 20px;
+                 gap: 15px;
+             }
+             
+             .cards-header h2 {
+                 margin: 0;
+                 color: #333;
+                 font-size: 1.5em;
+             }
+             
+             .cards-list {
+                 display: flex;
+                 flex-direction: column;
+                 gap: 10px;
+             }
+             
+             .card-item {
+                 display: flex;
+                 align-items: center;
+                 padding: 15px;
+                 background: white;
+                 border-radius: 10px;
+                 box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                 transition: transform 0.2s ease;
+             }
+             
+             .card-item:hover {
+                 transform: translateY(-2px);
+                 box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+             }
+             
+             .card-phrase {
+                 flex: 1;
+                 font-weight: 500;
+                 color: #333;
+             }
+             
+             .card-arrow {
+                 margin: 0 15px;
+                 color: #4CAF50;
+                 font-weight: bold;
+                 font-size: 1.2em;
+             }
+             
+             .card-translation {
+                 flex: 1;
+                 color: #666;
+                 text-align: right;
+             }
+        .phrases-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .phrases-header h4 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        .phrases-counter {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+        .action-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .action-buttons .nav-button {
+            flex: 1;
+            min-width: 120px;
+        }
+        .nav-button.secondary {
+            background: #6c757d;
+        }
+        .nav-button.secondary:hover {
+            background: #545b62;
+        }
+        .nav-button:disabled {
+            background: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .nav-button:disabled:hover {
+            background: #ccc;
+            transform: none;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
     <!-- Основной контейнер приложения -->
     <div id="app">
-        <!-- Заголовок приложения с логотипом и информацией о пользователе -->
-        <header class="app-header">
-            <div class="header-content">
-                <!-- Логотип приложения с иконкой книги -->
-                <div class="logo">
-                    <span class="logo-icon">📚</span>
-                    <h1>PhraseWeaver</h1>
-                </div>
-                <!-- Блок с информацией о текущем пользователе -->
-                <div class="user-info" id="userInfo">
-                    <span id="userName">Загрузка...</span>
-                </div>
-            </div>
-        </header>
+    <div class="app-container">
+        <div class="header">
+             <div class="header-left">
+                 <div class="header-icon" onclick="showStatistics()" title="Статистика">📊</div>
+             </div>
+             <div class="logo">PHRASE WEAVER</div>
+             <div class="header-right">
+                 <div class="header-icon" onclick="showSettings()" title="Настройки">⚙️</div>
+             </div>
+         </div>
 
-        <!-- Основной контент приложения -->
-        <main class="main-content">
-            <!-- Секция приветствия, отображается при первом запуске -->
-            <div class="welcome-section" id="welcomeSection">
-                <h2>Добро пожаловать!</h2>
-                <p>Изучайте языки с помощью интеллектуальных карточек</p>
+        <div class="mascot-container">
+            <div class="mascot">
+                <img src="images/duo_main.png" alt="PhraseWeaver Mascot">
+            </div>
+        </div>
+
+        <button class="main-create-button" onclick="showCreateDeckForm()">
+            СОЗДАТЬ КОЛОДУ
+        </button>
+
+        <div class="decks-section">
+            <div class="section-title">Мои колоды</div>
+
+            <!-- Основной контент приложения -->
+        <div class="content" id="main-content">
+            <div id="main-view">
                 
-                <!-- Индикатор статуса подключения к серверу -->
-                <div class="status" id="connectionStatus">
-                    <span class="status-indicator">🔄</span>
-                    <span>Подключение к серверу...</span>
+                <!-- Список колод -->
+                <div id="decks-list" style="margin-top: 20px;">
+                    <h4>Мои колоды:</h4>
+                    <div id="decks-container">
+                        <!-- Колоды будут загружены динамически -->
+                        <div class="deck-item" onclick="generateCards(1)">
+                            <div class="deck-content">
+                                <h3 class="deck-title">General<br><small>(English → Russian)</small></h3>
+                                <div class="deck-stats">
+                                    <span>Total: 15</span>
+                                    <span>To repeat: 7</span>
+                                </div>
+                            </div>
+                            <div class="deck-actions">
+                                <button class="deck-btn cards" onclick="event.stopPropagation(); viewDeckCards(1)">карточки</button>
+                                <button class="deck-btn training" onclick="event.stopPropagation(); startTraining(1)">тренировка</button>
+                            </div>
+                        </div>
+                        
+                        <div class="deck-item" onclick="generateCards(2)">
+                            <div class="deck-content">
+                                <h3 class="deck-title">Pierwszy<br><small>(Polski → Portugues)</small></h3>
+                                <div class="deck-stats">
+                                    <span>Total: 9</span>
+                                    <span>To repeat: 0</span>
+                                </div>
+                            </div>
+                            <div class="deck-actions">
+                                <button class="deck-btn cards" onclick="event.stopPropagation(); viewDeckCards(2)">карточки</button>
+                                <button class="deck-btn training" onclick="event.stopPropagation(); startTraining(2)">тренировка</button>
+                            </div>
+                     </div>
+                     
+                     <button class="api-button" onclick="testAPI()">🔗 Проверить подключение к API</button>
+                </div>
+                
+                <!-- Кнопка плюс -->
+                <button class="plus-button" onclick="showCreateDeckForm()">
+                    <span class="tooltip">Создать новую колоду</span>
+                    +
+                </button>
                 </div>
             </div>
-
-            <!-- Навигационные кнопки основного меню (скрыты до успешной аутентификации) -->
-            <div class="navigation" id="navigation" style="display: none;">
-                <!-- Кнопка создания новой колоды карточек -->
-                <button class="nav-button primary" id="createDeckBtn">
-                    <span class="button-icon">➕</span>
-                    <span>Создать колоду</span>
-                </button>
+            
+            <div id="create-deck-view" style="display: none;">
+                <h3>Создать новую колоду</h3>
                 
-                <!-- Кнопка просмотра существующих колод пользователя -->
-                <button class="nav-button" id="myDecksBtn">
-                    <span class="button-icon">📖</span>
-                    <span>Мои колоды</span>
-                </button>
+                <!-- Форма создания колоды -->
+                <div class="card-form">
+                    <div class="form-group">
+                        <label for="deckNameInput">Название колоды:</label>
+                        <input type="text" id="deckNameInput" placeholder="Введите название колоды">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="deckDescInput">Описание:</label>
+                        <textarea id="deckDescInput" placeholder="Введите описание колоды" rows="3"></textarea>
+                    </div>
+                    
+                    <button class="nav-button primary" onclick="createNewDeck()" id="createNewDeckBtn">
+                        ➕ Создать колоду
+                    </button>
+                </div>
                 
-                <!-- Кнопка запуска тренировочной сессии -->
-                <button class="nav-button" id="practiceBtn">
-                    <span class="button-icon">🎯</span>
-                    <span>Тренировка</span>
-                </button>
+                <button class="nav-button" onclick="goHome()">← Назад на главную</button>
             </div>
+            
+            <!-- Экран просмотра карточек колоды -->
+            <div id="deck-cards-view" style="display: none;">
+                <div class="cards-container">
+                    <div class="cards-header">
+                        <button class="nav-button" onclick="goHome()">← Назад</button>
+                        <h3>Карточки колоды</h3>
+                    </div>
+                    <div id="cards-list" class="cards-list">
+                        <!-- Карточки будут загружены динамически -->
+                    </div>
+                </div>
+            </div>
+            
+            <div id="generate-cards-view" style="display: none;">
+                <h3>Генерация карточек</h3>
+                
+                <!-- Форма для ввода фразы и ключевого слова -->
+                <div class="card-form">
+                    <div class="form-group">
+                        <label for="phraseInput">Фраза:</label>
+                        <textarea id="phraseInput" placeholder="Введите фразу для обогащения" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="keywordInput">Ключевое слово:</label>
+                        <input type="text" id="keywordInput" placeholder="Введите ключевое слово">
+                    </div>
+                    
+                    <button class="nav-button primary" onclick="generatePhrases()" id="generateBtn">
+                        🪄 Обогатить
+                    </button>
+                </div>
+                
+                <!-- Область для отображения сгенерированных фраз -->
+                <div id="generatedPhrases" style="display: none;">
+                    <div class="phrases-header">
+                        <h4>Сгенерированные фразы:</h4>
+                        <div class="phrases-counter">
+                            <span id="phrasesCount">0 фраз</span> | 
+                            <span id="selectedCount">0 выбрано</span>
+                        </div>
+                    </div>
+                    <div id="phrasesList"></div>
+                    
+                    <div class="action-buttons">
+                        <button class="nav-button" onclick="selectAllPhrases()" id="selectAllBtn">✅ Выбрать все</button>
+                        <button class="nav-button" onclick="saveSelectedPhrases()" id="saveBtn">💾 Сохранить выбранные</button>
+                        <button class="nav-button secondary" onclick="clearGenerated()">🗑️ Очистить все</button>
+                    </div>
+                </div>
+                
+                <button class="nav-button" onclick="goHome()">← Назад на главную</button>
+            </div>
+            
+            <div id="my-decks-view" style="display: none;">
+                <h3>Мои колоды</h3>
+                <p>Здесь будет список ваших колод карточек.</p>
+                <button class="nav-button" onclick="goHome()">← Назад на главную</button>
+            </div>
+        </div>
 
             <!-- Компонент управления колодами (отображается после аутентификации) -->
             <div id="deck-manager" style="display: none;">
-                <!-- Содержимое будет создано динамически компонентом DeckManager -->
+                <!-- Контент компонента будет загружен динамически -->
             </div>
 
-            <!-- Компонент управления карточками (отображается при просмотре карточек колоды) -->
+            <!-- Компонент управления карточками (отображается при работе с колодой) -->
             <div id="card-manager" style="display: none;">
-                <!-- Содержимое будет создано динамически компонентом CardManager -->
+                <!-- Контент компонента будет загружен динамически -->
             </div>
 
-            <!-- Компонент обогащения карточек (отображается при обогащении карточек) -->
+            <!-- Компонент обогащения карточек (отображается при создании/редактировании карточки) -->
             <div id="card-enricher" style="display: none;">
-                <!-- Содержимое будет создано динамически компонентом CardEnricher -->
+                <!-- Контент компонента будет загружен динамически -->
             </div>
 
             <!-- Секция отображения информации о текущем пользователе (скрыта до загрузки данных) -->
@@ -111,18 +672,361 @@
         </footer>
     </div>
 
-    <!-- Подключение JavaScript модулей приложения -->
-    <!-- API клиент для взаимодействия с backend сервером -->
-    <script src="utils/api.js"></script>
-    <!-- Модуль аутентификации через Telegram WebApp -->
-    <script src="services/auth.js"></script>
-    <!-- Компонент управления колодами -->
-    <script src="components/deck-manager.js"></script>
-    <!-- Компонент управления карточками -->
-    <script src="components/card-manager.js"></script>
-    <!-- Компонент обогащения карточек -->
-    <script src="components/card-enricher.js"></script>
-    <!-- Основная логика приложения и инициализация -->
-    <script src="components/app.js"></script>
+    <script>
+        // Простая логика приложения без внешних зависимостей
+        let currentView = 'main';
+        
+        function showView(viewName) {
+            // Скрыть все виды
+            const views = ['main-view', 'create-deck-view', 'my-decks-view', 'generate-cards-view'];
+            views.forEach(view => {
+                const element = document.getElementById(view);
+                if (element) element.style.display = 'none';
+            });
+            
+            // Показать выбранный вид
+            const targetView = document.getElementById(viewName + '-view');
+            if (targetView) {
+                targetView.style.display = 'block';
+            }
+        }
+        
+
+        
+        function updateStatus(message) {
+            const statusEl = document.getElementById('connectionStatus');
+            if (statusEl) {
+                statusEl.innerHTML = `<span class="status-indicator">✅</span><span>${message}</span>`;
+                statusEl.style.background = '#e6ffe6';
+            }
+        }
+        
+        function showCreateDeckForm() {
+            showView('create-deck');
+            updateStatus('Переход к созданию колоды');
+        }
+        
+        function showMyDecks() {
+            showView('my-decks');
+            updateStatus('Просмотр колод');
+        }
+        
+        function generateCards(deckId) {
+            showView('generate-cards');
+            updateStatus(`Генерация карточек для колоды: ${deckId}`);
+        }
+        
+        function startTraining(deckId) {
+            updateStatus(`Запуск тренировки для колоды: ${deckId}`);
+            // Здесь будет логика запуска тренировки
+        }
+        
+        function viewDeck(deckId) {
+            updateStatus(`Просмотр колоды: ${deckId}`);
+            // Здесь будет логика просмотра колоды
+        }
+        
+        function createNewDeck() {
+            const deckName = document.getElementById('deckNameInput').value;
+            const deckDesc = document.getElementById('deckDescInput').value;
+            
+            if (!deckName.trim()) {
+                updateStatus('Введите название колоды');
+                return;
+            }
+            
+            updateStatus(`Создание колоды: ${deckName}`);
+            // Здесь будет логика создания колоды
+            
+            // Очистить форму
+            document.getElementById('deckNameInput').value = '';
+            document.getElementById('deckDescInput').value = '';
+            
+            // Вернуться на главную
+            goHome();
+        }
+        
+        function viewDeckCards(deckId) {
+            console.log('Просмотр карточек колоды:', deckId);
+            showView('deck-cards');
+            loadDeckCards(deckId);
+        }
+        
+        function loadDeckCards(deckId) {
+            // Здесь будет загрузка карточек из API
+            const mockCards = [
+                { phrase: 'Hello', translation: 'Привет' },
+                { phrase: 'Good morning', translation: 'Доброе утро' },
+                { phrase: 'Thank you', translation: 'Спасибо' },
+                { phrase: 'How are you?', translation: 'Как дела?' },
+                { phrase: 'See you later', translation: 'Увидимся позже' }
+            ];
+            
+            const cardsContainer = document.getElementById('cards-list');
+            if (cardsContainer) {
+                cardsContainer.innerHTML = '';
+                
+                mockCards.forEach((card, index) => {
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'card-item';
+                    cardElement.innerHTML = `
+                        <div class="card-phrase">${card.phrase}</div>
+                        <div class="card-arrow">→</div>
+                        <div class="card-translation">${card.translation}</div>
+                    `;
+                    cardsContainer.appendChild(cardElement);
+                });
+            }
+        }
+        
+        function goHome() {
+            showView('main');
+            updateStatus('Возврат на главную');
+        }
+        
+        function showStatistics() {
+            console.log('Переход к статистике');
+            // Здесь будет логика показа статистики
+            alert('Статистика (в разработке)');
+        }
+        
+        function showSettings() {
+            console.log('Переход к настройкам');
+            // Здесь будет логика показа настроек
+            alert('Настройки (в разработке)');
+        }
+        
+        async function testAPI() {
+            updateStatus('Проверка подключения к API...');
+            try {
+                const response = await fetch('http://localhost:8000/api/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus(`API работает: ${data.status || 'OK'}`);
+                } else {
+                    updateStatus(`Ошибка API: ${response.status}`);
+                }
+            } catch (error) {
+                updateStatus(`Ошибка подключения: ${error.message}`);
+            }
+        }
+        
+        let generatedPhrasesData = [];
+        
+        async function generatePhrases() {
+            const phraseInput = document.getElementById('phraseInput');
+            const keywordInput = document.getElementById('keywordInput');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            const phrase = phraseInput.value.trim();
+            const keyword = keywordInput.value.trim();
+            
+            if (!phrase || !keyword) {
+                updateStatus('Пожалуйста, заполните все поля');
+                return;
+            }
+            
+            // Показать состояние загрузки
+            generateBtn.disabled = true;
+            generateBtn.textContent = '🔄 Генерация...';
+            updateStatus('Генерация фраз...');
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/cards/enrich?user_id=1', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        original_phrase: phrase,
+                        keyword: keyword,
+                        deck_id: 1
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    generatedPhrasesData = data.phrases || [];
+                    displayGeneratedPhrases(generatedPhrasesData);
+                    updateStatus(`Сгенерировано ${generatedPhrasesData.length} фраз`);
+                } else {
+                    const errorData = await response.json();
+                    updateStatus(`Ошибка генерации: ${errorData.detail || response.status}`);
+                }
+            } catch (error) {
+                updateStatus(`Ошибка подключения: ${error.message}`);
+            } finally {
+                // Восстановить кнопку
+                generateBtn.disabled = false;
+                generateBtn.textContent = '🪄 Сгенерировать фразы';
+            }
+        }
+        
+        function displayGeneratedPhrases(phrases) {
+            const generatedSection = document.getElementById('generatedPhrases');
+            const phrasesList = document.getElementById('phrasesList');
+            
+            if (phrases.length === 0) {
+                generatedSection.style.display = 'none';
+                return;
+            }
+            
+            phrasesList.innerHTML = '';
+            
+            phrases.forEach((phraseData, index) => {
+                const phraseItem = document.createElement('div');
+                phraseItem.className = 'phrase-item';
+                
+                // Извлекаем данные из ответа API
+                const originalPhrase = phraseData.original || phraseData.phrase || phraseData.text || 'Фраза не найдена';
+                const translation = phraseData.translation || 'Перевод не найден';
+                const keyword = phraseData.keyword || 'Не указано';
+                
+                phraseItem.innerHTML = `
+                    <div class="phrase-content">
+                        <div class="phrase-text">
+                            <strong>🇵🇹 Португальский:</strong> ${originalPhrase}
+                        </div>
+                        <div class="phrase-translation">
+                            <strong>🇷🇺 Русский:</strong> ${translation}
+                        </div>
+                        <div class="phrase-keyword">
+                            <strong>Ключевое слово:</strong> ${keyword}
+                        </div>
+                    </div>
+                    <div class="phrase-actions">
+                        <button class="btn-small btn-select" onclick="togglePhraseSelection(${index})" id="selectBtn${index}">
+                            ✓ Выбрать
+                        </button>
+                        <button class="btn-small btn-delete" onclick="deletePhrase(${index})">
+                            🗑️ Удалить
+                        </button>
+                    </div>
+                `;
+                phrasesList.appendChild(phraseItem);
+            });
+            
+            generatedSection.style.display = 'block';
+            updatePhrasesCounter();
+        }
+        
+        function togglePhraseSelection(index) {
+            const phraseItem = document.querySelector(`#phrasesList .phrase-item:nth-child(${index + 1})`);
+            const selectBtn = document.getElementById(`selectBtn${index}`);
+            
+            if (phraseItem.classList.contains('selected')) {
+                phraseItem.classList.remove('selected');
+                selectBtn.textContent = '✓ Выбрать';
+                selectBtn.classList.remove('selected');
+                generatedPhrasesData[index].selected = false;
+            } else {
+                phraseItem.classList.add('selected');
+                selectBtn.textContent = '✅ Выбрано';
+                selectBtn.classList.add('selected');
+                generatedPhrasesData[index].selected = true;
+            }
+            updatePhrasesCounter();
+        }
+        
+        function deletePhrase(index) {
+            if (confirm('Вы уверены, что хотите удалить эту фразу?')) {
+                generatedPhrasesData.splice(index, 1);
+                displayGeneratedPhrases(generatedPhrasesData);
+                updateStatus(`Фраза удалена. Осталось: ${generatedPhrasesData.length}`);
+            }
+        }
+        
+        function updatePhrasesCounter() {
+            const totalCount = generatedPhrasesData.length;
+            const selectedCount = generatedPhrasesData.filter(phrase => phrase.selected).length;
+            
+            document.getElementById('phrasesCount').textContent = `${totalCount} ${totalCount === 1 ? 'фраза' : totalCount < 5 ? 'фразы' : 'фраз'}`;
+            document.getElementById('selectedCount').textContent = `${selectedCount} выбрано`;
+            
+            // Обновляем кнопку "Выбрать все"
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            if (selectedCount === totalCount && totalCount > 0) {
+                selectAllBtn.textContent = '❌ Снять выделение';
+            } else {
+                selectAllBtn.textContent = '✅ Выбрать все';
+            }
+            
+            // Обновляем кнопку сохранения
+            const saveBtn = document.getElementById('saveBtn');
+            if (selectedCount > 0) {
+                saveBtn.textContent = `💾 Сохранить выбранные (${selectedCount})`;
+                saveBtn.disabled = false;
+            } else {
+                saveBtn.textContent = '💾 Сохранить выбранные';
+                saveBtn.disabled = true;
+            }
+        }
+        
+        function selectAllPhrases() {
+            const selectedCount = generatedPhrasesData.filter(phrase => phrase.selected).length;
+            const totalCount = generatedPhrasesData.length;
+            
+            // Если все выбраны, снимаем выделение, иначе выбираем все
+            const shouldSelect = selectedCount !== totalCount;
+            
+            generatedPhrasesData.forEach((phrase, index) => {
+                phrase.selected = shouldSelect;
+                const phraseItem = document.querySelector(`#phrasesList .phrase-item:nth-child(${index + 1})`);
+                const selectBtn = document.getElementById(`selectBtn${index}`);
+                
+                if (shouldSelect) {
+                    phraseItem.classList.add('selected');
+                    selectBtn.textContent = '✅ Выбрано';
+                    selectBtn.classList.add('selected');
+                } else {
+                    phraseItem.classList.remove('selected');
+                    selectBtn.textContent = '✓ Выбрать';
+                    selectBtn.classList.remove('selected');
+                }
+            });
+            
+            updatePhrasesCounter();
+            updateStatus(shouldSelect ? 'Все фразы выбраны' : 'Выделение снято со всех фраз');
+        }
+        
+        function saveSelectedPhrases() {
+            const selectedPhrases = generatedPhrasesData.filter(phrase => phrase.selected);
+            
+            if (selectedPhrases.length === 0) {
+                updateStatus('Выберите хотя бы одну фразу для сохранения');
+                return;
+            }
+            
+            // Здесь будет логика сохранения в базу данных
+            updateStatus(`Сохранено ${selectedPhrases.length} фраз`);
+            
+            // Очистить форму после сохранения
+            clearGenerated();
+            document.getElementById('phraseInput').value = '';
+            document.getElementById('keywordInput').value = '';
+        }
+        
+        function clearGenerated() {
+            if (generatedPhrasesData.length > 0 && !confirm('Вы уверены, что хотите очистить все сгенерированные фразы?')) {
+                return;
+            }
+            generatedPhrasesData = [];
+            document.getElementById('generatedPhrases').style.display = 'none';
+            document.getElementById('phrasesList').innerHTML = '';
+            updateStatus('Сгенерированные фразы очищены');
+        }
+        
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus('Приложение загружено успешно');
+            showView('main');
+            
+            // Обновление информации о пользователе
+            const userInfo = document.getElementById('user-info');
+            if (userInfo) {
+                userInfo.textContent = 'Пользователь: Тестовый режим';
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест генерации фраз</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        .container {
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #3d3d3d;
+            color: #ffffff;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+        .log {
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #555;
+        }
+        .error {
+            color: #ff6b6b;
+        }
+        .success {
+            color: #51cf66;
+        }
+        .info {
+            color: #74c0fc;
+        }
+        h1, h2 {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест генерации фраз</h1>
+    
+    <div class="container">
+        <h2>Параметры запроса</h2>
+        <label for="phrase">Исходная фраза:</label>
+        <input type="text" id="phrase" value="fuck you" placeholder="Введите фразу для обогащения">
+        
+        <label for="keyword">Ключевое слово:</label>
+        <input type="text" id="keyword" value="fuck" placeholder="Введите ключевое слово">
+        
+        <label for="userId">User ID:</label>
+        <input type="number" id="userId" value="1" placeholder="ID пользователя">
+        
+        <label for="deckId">Deck ID:</label>
+        <input type="number" id="deckId" value="1" placeholder="ID колоды">
+        
+        <label for="backendUrl">Backend URL:</label>
+        <input type="text" id="backendUrl" value="http://localhost:8000" placeholder="URL бэкенда">
+        
+        <button id="testBtn" onclick="testPhraseGeneration()">🚀 Тестировать генерацию</button>
+        <button onclick="clearLog()">🗑️ Очистить лог</button>
+    </div>
+    
+    <div class="container">
+        <h2>Лог выполнения</h2>
+        <div id="log" class="log"></div>
+    </div>
+    
+    <script>
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logElement.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        async function testPhraseGeneration() {
+            const testBtn = document.getElementById('testBtn');
+            testBtn.disabled = true;
+            
+            try {
+                // Получаем параметры
+                const phrase = document.getElementById('phrase').value;
+                const keyword = document.getElementById('keyword').value;
+                const userId = document.getElementById('userId').value;
+                const deckId = document.getElementById('deckId').value;
+                const backendUrl = document.getElementById('backendUrl').value;
+                
+                log('🔄 Начинаем тест генерации фраз...');
+                log(`📝 Параметры: phrase="${phrase}", keyword="${keyword}", userId=${userId}, deckId=${deckId}`);
+                
+                // Проверяем доступность бэкенда
+                log('🔍 Проверяем доступность бэкенда...');
+                try {
+                    const healthResponse = await fetch(`${backendUrl}/api/health`);
+                    if (healthResponse.ok) {
+                        const healthData = await healthResponse.json();
+                        log(`✅ Бэкенд доступен: ${JSON.stringify(healthData)}`, 'success');
+                    } else {
+                        log(`⚠️ Бэкенд отвечает с кодом: ${healthResponse.status}`, 'error');
+                    }
+                } catch (healthError) {
+                    log(`❌ Ошибка подключения к бэкенду: ${healthError.message}`, 'error');
+                    return;
+                }
+                
+                // Формируем URL и тело запроса
+                const url = `${backendUrl}/api/cards/enrich?user_id=${userId}`;
+                const requestBody = {
+                    original_phrase: phrase,
+                    keyword: keyword,
+                    deck_id: parseInt(deckId)
+                };
+                
+                log(`🌐 URL запроса: ${url}`);
+                log(`📦 Тело запроса: ${JSON.stringify(requestBody, null, 2)}`);
+                
+                // Отправляем запрос
+                log('📡 Отправляем запрос на генерацию...');
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                log(`📊 Статус ответа: ${response.status} ${response.statusText}`);
+                log(`📋 Заголовки ответа: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}`);
+                
+                // Обрабатываем ответ
+                const responseText = await response.text();
+                log(`📄 Сырой ответ: ${responseText}`);
+                
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(responseText);
+                        log(`🎉 Успешный ответ: ${JSON.stringify(data, null, 2)}`, 'success');
+                        
+                        if (data.phrases && data.phrases.length > 0) {
+                            log(`✨ Сгенерировано фраз: ${data.phrases.length}`, 'success');
+                            data.phrases.forEach((phrase, index) => {
+                                log(`  ${index + 1}. "${phrase.original}" -> "${phrase.translation}"`, 'success');
+                            });
+                            log(`🎨 Запрос изображения: "${data.image_query}"`, 'success');
+                            log(`🌍 Языки: ${data.source_language} -> ${data.target_language}`, 'success');
+                        } else {
+                            log('⚠️ Фразы не были сгенерированы', 'error');
+                        }
+                    } catch (parseError) {
+                        log(`❌ Ошибка парсинга JSON: ${parseError.message}`, 'error');
+                    }
+                } else {
+                    log(`❌ Ошибка API: ${response.status} - ${responseText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`💥 Критическая ошибка: ${error.message}`, 'error');
+                log(`📚 Stack trace: ${error.stack}`, 'error');
+            } finally {
+                testBtn.disabled = false;
+                log('🏁 Тест завершен.');
+            }
+        }
+        
+        // Автоматически очищаем лог при загрузке
+        window.onload = function() {
+            log('🚀 Тестовая страница загружена. Готов к тестированию!');
+        };
+    </script>
+</body>
+</html>

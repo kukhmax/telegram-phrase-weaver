@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple PhraseWeaver Test</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">📚</span>
+                    <h1>PhraseWeaver</h1>
+                </div>
+                <div class="user-info" id="userInfo">
+                    <span id="userName">Тестовый пользователь</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="welcome-section" id="welcomeSection">
+                <h2>Добро пожаловать!</h2>
+                <p>Изучайте языки с помощью интеллектуальных карточек</p>
+                
+                <div class="status" id="connectionStatus">
+                    <span class="status-indicator">✅</span>
+                    <span>Подключение установлено</span>
+                </div>
+            </div>
+
+            <!-- Показываем навигацию сразу для теста -->
+            <div class="navigation" id="navigation">
+                <button class="nav-button primary" id="createDeckBtn">
+                    <span class="button-icon">➕</span>
+                    <span>Создать колоду</span>
+                </button>
+                
+                <button class="nav-button" id="myDecksBtn">
+                    <span class="button-icon">📖</span>
+                    <span>Мои колоды</span>
+                </button>
+                
+                <button class="nav-button" id="practiceBtn">
+                    <span class="button-icon">🎯</span>
+                    <span>Тренировка</span>
+                </button>
+            </div>
+
+            <!-- Секции для разных экранов -->
+            <div class="deck-manager-section" id="deckManagerSection" style="display: none;">
+                <h2>Управление колодами</h2>
+                <p>Здесь будет список ваших колод</p>
+            </div>
+
+            <div class="card-manager-section" id="cardManagerSection" style="display: none;">
+                <h2>Управление карточками</h2>
+                <p>Здесь будет список карточек выбранной колоды</p>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="footer-content">
+                <p>PhraseWeaver - Ваш помощник в изучении языков</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        console.log('Simple test page loaded');
+        
+        // Простые обработчики для кнопок
+        document.getElementById('createDeckBtn').onclick = () => {
+            alert('Создание колоды - функция в разработке');
+        };
+        
+        document.getElementById('myDecksBtn').onclick = () => {
+            alert('Мои колоды - функция в разработке');
+        };
+        
+        document.getElementById('practiceBtn').onclick = () => {
+            alert('Тренировка - функция в разработке');
+        };
+        
+        // Проверяем, что CSS загрузился
+        const computedStyle = window.getComputedStyle(document.body);
+        console.log('Body background color:', computedStyle.backgroundColor);
+        console.log('Body font family:', computedStyle.fontFamily);
+    </script>
+</body>
+</html>

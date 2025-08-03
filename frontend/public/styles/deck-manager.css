@@ -215,6 +215,16 @@
     margin-right: 12px;
 }
 
+.clickable-deck-name {
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.clickable-deck-name:hover {
+    color: #1da1f2;
+    text-decoration: underline;
+}
+
 .deck-actions {
     display: flex;
     gap: 4px;

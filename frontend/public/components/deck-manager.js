@@ -440,7 +440,7 @@ class DeckManager {
         return `
             <div class="deck-card" data-deck-id="${deck.id}">
                 <div class="deck-card-header">
-                    <h3 class="deck-name">${this.escapeHtml(deck.name)}</h3>
+                    <h3 class="deck-name clickable-deck-name" title="Нажмите для генерации фраз">${this.escapeHtml(deck.name)}</h3>
                     <div class="deck-actions">
                         <button class="btn-icon edit-deck" title="Редактировать">
                             ✏️
@@ -495,6 +495,15 @@ class DeckManager {
      * Привязка обработчиков для карточек колод
      */
     bindDeckCardEvents() {
+        // Клик на название колоды для генерации фраз
+        document.querySelectorAll('.clickable-deck-name').forEach(deckName => {
+            deckName.addEventListener('click', (e) => {
+                const deckCard = e.target.closest('.deck-card');
+                const deckId = parseInt(deckCard.dataset.deckId);
+                this.openPhraseGeneration(deckId);
+            });
+        });
+        
         // Кнопки открытия колоды
         document.querySelectorAll('.open-deck').forEach(button => {
             button.addEventListener('click', (e) => {
@@ -582,6 +591,33 @@ class DeckManager {
         } catch (error) {
             console.error('[DeckManager] Error adding cards to deck:', error);
             this.showError('Ошибка при добавлении карточек: ' + error.message);
+        }
+    }
+    
+    /**
+     * Открытие окна генерации фраз для колоды
+     */
+    async openPhraseGeneration(deckId) {
+        console.log('[DeckManager] Opening phrase generation for deck:', deckId);
+        
+        try {
+            // Находим данные колоды
+            const deck = this.decks.find(d => d.id === parseInt(deckId));
+            if (!deck) {
+                this.showError('Колода не найдена');
+                return;
+            }
+            
+            // Открываем модальное окно генерации фраз
+            if (window.cardEnricher && typeof window.cardEnricher.open === 'function') {
+                window.cardEnricher.open(deck.id);
+            } else {
+                console.error('[DeckManager] CardEnricher instance not found');
+                this.showError('Ошибка открытия окна генерации фраз');
+            }
+        } catch (error) {
+            console.error('[DeckManager] Error opening phrase generation:', error);
+            this.showError('Ошибка при открытии генерации фраз: ' + error.message);
         }
     }
     
