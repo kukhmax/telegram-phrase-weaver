@@ -131,6 +131,45 @@
             resize: vertical;
             min-height: 80px;
         }
+        
+        /* Стили для checkbox групп */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background: white;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .checkbox-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: #2481cc;
+        }
+        
+        .checkbox-item .checkmark {
+            display: none;
+        }
         .phrase-item {
             background: white;
             border: 1px solid #e0e0e0;
@@ -564,6 +603,34 @@
                         <textarea id="deckDescInput" placeholder="Введите описание колоды" rows="3"></textarea>
                     </div>
                     
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="sourceLanguageSelect">Изучаемый язык *</label>
+                            <select id="sourceLanguageSelect" name="source_language" required>
+                                <option value="">Выберите язык</option>
+                                <option value="en">English</option>
+                                <option value="ru">Русский</option>
+                                <option value="fr">Français</option>
+                                <option value="de">Deutsch</option>
+                                <option value="es">Español</option>
+                                <option value="pl">Polski</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="targetLanguageSelect">Язык перевода *</label>
+                            <select id="targetLanguageSelect" name="target_language" required>
+                                <option value="">Выберите язык</option>
+                                <option value="en">English</option>
+                                <option value="ru">Русский</option>
+                                <option value="fr">Français</option>
+                                <option value="de">Deutsch</option>
+                                <option value="es">Español</option>
+                                <option value="pl">Polski</option>
+                            </select>
+                        </div>
+                    </div>
+                    
                     <button class="nav-button primary" onclick="createNewDeck()" id="createNewDeckBtn">
                         ➕ Создать колоду
                     </button>
@@ -726,21 +793,109 @@
             // Здесь будет логика просмотра колоды
         }
         
+        // Функция для получения выбранного языка из выпадающего списка
+        function getSelectedLanguage(selectId) {
+            const select = document.getElementById(selectId);
+            return select ? select.value : null;
+        }
+        
+        // Функция для получения полного названия языка
+        function getLanguageName(code) {
+            const languages = {
+                'en': 'English',
+                'ru': 'Русский',
+                'fr': 'Français',
+                'de': 'Deutsch',
+                'es': 'Español',
+                'it': 'Italiano'
+            };
+            return languages[code] || code;
+        }
+        
+        // Функция для добавления новой колоды на главный экран
+        function addDeckToMainScreen(deck) {
+            const decksContainer = document.getElementById('decks-container');
+            if (!decksContainer) return;
+            
+            const sourceLanguageName = getLanguageName(deck.source_language);
+            const targetLanguageName = getLanguageName(deck.target_language);
+            
+            // Создаем элемент колоды
+            const deckElement = document.createElement('div');
+            deckElement.className = 'deck-item';
+            deckElement.onclick = () => generateCards(deck.id);
+            
+            deckElement.innerHTML = `
+                <div class="deck-content">
+                    <h3 class="deck-title">${deck.name}<br><small>(${sourceLanguageName} → ${targetLanguageName})</small></h3>
+                    <div class="deck-stats">
+                        <span>Total: ${deck.card_count}</span>
+                        <span>To repeat: ${deck.cards_to_review}</span>
+                    </div>
+                </div>
+                <div class="deck-actions">
+                    <button class="deck-btn cards" onclick="event.stopPropagation(); viewDeckCards(${deck.id})">карточки</button>
+                    <button class="deck-btn training" onclick="event.stopPropagation(); startTraining(${deck.id})">тренировка</button>
+                </div>
+            `;
+            
+            // Находим кнопку API и вставляем новую колоду перед ней
+            const apiButton = decksContainer.querySelector('.api-button');
+            if (apiButton) {
+                decksContainer.insertBefore(deckElement, apiButton);
+            } else {
+                decksContainer.appendChild(deckElement);
+            }
+        }
+        
         function createNewDeck() {
             const deckName = document.getElementById('deckNameInput').value;
             const deckDesc = document.getElementById('deckDescInput').value;
+            const sourceLanguage = getSelectedLanguage('sourceLanguageSelect');
+            const targetLanguage = getSelectedLanguage('targetLanguageSelect');
             
+            // Валидация
             if (!deckName.trim()) {
                 updateStatus('Введите название колоды');
                 return;
             }
             
-            updateStatus(`Создание колоды: ${deckName}`);
-            // Здесь будет логика создания колоды
+            if (!sourceLanguage) {
+                updateStatus('Выберите изучаемый язык');
+                return;
+            }
+            
+            if (!targetLanguage) {
+                updateStatus('Выберите язык перевода');
+                return;
+            }
+            
+            if (sourceLanguage === targetLanguage) {
+                updateStatus('Изучаемый язык и язык перевода должны быть разными');
+                return;
+            }
+            
+            // Создаем новую колоду и добавляем в список
+            const newDeck = {
+                id: Date.now(), // Временный ID
+                name: deckName,
+                description: deckDesc,
+                source_language: sourceLanguage,
+                target_language: targetLanguage,
+                card_count: 0,
+                cards_to_review: 0
+            };
+            
+            addDeckToMainScreen(newDeck);
+            updateStatus(`Колода "${deckName}" успешно создана!`);
             
             // Очистить форму
             document.getElementById('deckNameInput').value = '';
             document.getElementById('deckDescInput').value = '';
+            
+            // Сбросить выпадающие списки
+            document.getElementById('sourceLanguageSelect').value = '';
+            document.getElementById('targetLanguageSelect').value = '';
             
             // Вернуться на главную
             goHome();
