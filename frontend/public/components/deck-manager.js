@@ -435,6 +435,8 @@ class DeckManager {
     renderDeckCard(deck) {
         const sourceLanguageName = this.getLanguageName(deck.source_language);
         const targetLanguageName = this.getLanguageName(deck.target_language);
+        const sourceFlag = this.getLanguageFlag(deck.source_language);
+        const targetFlag = this.getLanguageFlag(deck.target_language);
         const createdDate = new Date(deck.created_at).toLocaleDateString('ru-RU');
         
         return `
@@ -457,9 +459,9 @@ class DeckManager {
                 
                 <div class="deck-info">
                     <div class="deck-languages">
-                        <span class="language-badge source">${sourceLanguageName}</span>
+                        <span class="language-badge source">${sourceFlag} ${sourceLanguageName}</span>
                         <span class="arrow">→</span>
-                        <span class="language-badge target">${targetLanguageName}</span>
+                        <span class="language-badge target">${targetFlag} ${targetLanguageName}</span>
                     </div>
                     
                     <div class="deck-stats">
@@ -672,6 +674,23 @@ class DeckManager {
     getLanguageName(code) {
         const language = this.languages.find(lang => lang.code === code);
         return language ? language.name : code.toUpperCase();
+    }
+    
+    /**
+     * Получение флага языка по коду
+     */
+    getLanguageFlag(code) {
+        const flags = {
+            'en': '🇺🇸',
+            'ru': '🇷🇺',
+            'fr': '🇫🇷',
+            'de': '🇩🇪',
+            'es': '🇪🇸',
+            'it': '🇮🇹',
+            'pt': '🇵🇹',
+            'pl': '🇵🇱',
+        };
+        return flags[code] || '🌐';
     }
     
     /**

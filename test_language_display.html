@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест отображения языков</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .language-display {
+            font-size: 18px;
+            margin: 10px 0;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 4px;
+        }
+        .test-button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Тест отображения языков</h1>
+    
+    <div class="test-section">
+        <h2>Тест функций getLanguageFlag и getLanguageName</h2>
+        <div id="language-tests"></div>
+        <button class="test-button" onclick="testLanguageFunctions()">Протестировать языки</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Тест API колод</h2>
+        <div id="api-tests"></div>
+        <button class="test-button" onclick="testDeckAPI()">Протестировать API</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Симуляция generateCards</h2>
+        <div id="generate-cards-test"></div>
+        <button class="test-button" onclick="simulateGenerateCards(1)">Тест колоды 1 (en->ru)</button>
+        <button class="test-button" onclick="simulateGenerateCards(2)">Тест колоды 2 (fr->ru)</button>
+    </div>
+
+    <script>
+        // Копируем функции из основного приложения
+        function getLanguageName(code) {
+            const languages = {
+                'en': 'English',
+                'ru': 'Русский',
+                'fr': 'Français',
+                'de': 'Deutsch',
+                'es': 'Español',
+                'it': 'Italiano',
+                'pt': 'Português',
+                'pl': 'Polski',
+            };
+            return languages[code] || code;
+        }
+        
+        function getLanguageFlag(code) {
+            const flags = {
+                'en': '🇺🇸',
+                'ru': '🇷🇺',
+                'fr': '🇫🇷',
+                'de': '🇩🇪',
+                'es': '🇪🇸',
+                'it': '🇮🇹',
+                'pt': '🇵🇹',
+                'pl': '🇵🇱',
+            };
+            return flags[code] || '🌐';
+        }
+        
+        function testLanguageFunctions() {
+            const testContainer = document.getElementById('language-tests');
+            const languages = ['en', 'ru', 'fr', 'de', 'es', 'pl'];
+            
+            let html = '<h3>Результаты тестирования:</h3>';
+            
+            languages.forEach(code => {
+                const flag = getLanguageFlag(code);
+                const name = getLanguageName(code);
+                html += `<div class="language-display">${flag} ${name} (код: ${code})</div>`;
+            });
+            
+            testContainer.innerHTML = html;
+        }
+        
+        async function testDeckAPI() {
+            const testContainer = document.getElementById('api-tests');
+            testContainer.innerHTML = '<p>Тестирование API...</p>';
+            
+            try {
+                // Тест колоды 1
+                const response1 = await fetch('http://localhost:8000/api/decks/1?user_id=1');
+                const deck1 = await response1.json();
+                
+                // Тест колоды 2
+                const response2 = await fetch('http://localhost:8000/api/decks/2?user_id=1');
+                const deck2 = await response2.json();
+                
+                let html = '<h3>Результаты API:</h3>';
+                html += `<div class="language-display">Колода 1: ${getLanguageFlag(deck1.source_language)} ${getLanguageName(deck1.source_language)} → ${getLanguageFlag(deck1.target_language)} ${getLanguageName(deck1.target_language)}</div>`;
+                html += `<div class="language-display">Колода 2: ${getLanguageFlag(deck2.source_language)} ${getLanguageName(deck2.source_language)} → ${getLanguageFlag(deck2.target_language)} ${getLanguageName(deck2.target_language)}</div>`;
+                
+                testContainer.innerHTML = html;
+            } catch (error) {
+                testContainer.innerHTML = `<p style="color: red;">Ошибка API: ${error.message}</p>`;
+            }
+        }
+        
+        async function simulateGenerateCards(deckId) {
+            const testContainer = document.getElementById('generate-cards-test');
+            testContainer.innerHTML = `<p>Симуляция generateCards для колоды ${deckId}...</p>`;
+            
+            try {
+                // Симулируем функцию generateCards
+                const response = await fetch(`http://localhost:8000/api/decks/${deckId}?user_id=1`);
+                if (response.ok) {
+                    const deck = await response.json();
+                    const currentDeck = {
+                        id: deck.id,
+                        name: deck.name,
+                        source_language: deck.source_language,
+                        target_language: deck.target_language
+                    };
+                    
+                    const sourceFlag = getLanguageFlag(currentDeck.source_language);
+                    const targetFlag = getLanguageFlag(currentDeck.target_language);
+                    const sourceName = getLanguageName(currentDeck.source_language);
+                    const targetName = getLanguageName(currentDeck.target_language);
+                    
+                    let html = `<h3>Результат для колоды ${deckId}:</h3>`;
+                    html += `<div class="language-display">Название: ${deck.name}</div>`;
+                    html += `<div class="language-display">Исходный язык: ${sourceFlag} ${sourceName}</div>`;
+                    html += `<div class="language-display">Целевой язык: ${targetFlag} ${targetName}</div>`;
+                    html += `<div class="language-display">Отображение: ${sourceFlag} ${sourceName} → ${targetFlag} ${targetName}</div>`;
+                    
+                    testContainer.innerHTML = html;
+                } else {
+                    testContainer.innerHTML = `<p style="color: red;">Ошибка загрузки колоды ${deckId}</p>`;
+                }
+            } catch (error) {
+                testContainer.innerHTML = `<p style="color: red;">Ошибка: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

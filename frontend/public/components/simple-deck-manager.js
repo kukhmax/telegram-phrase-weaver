@@ -302,6 +302,20 @@ class SimpleDeckManager {
         return language ? language.name : code;
     }
     
+    getLanguageFlag(code) {
+        const flags = {
+            'en': '🇺🇸',
+            'ru': '🇷🇺',
+            'fr': '🇫🇷',
+            'de': '🇩🇪',
+            'es': '🇪🇸',
+            'it': '🇮🇹',
+            'pt': '🇵🇹',
+            'pl': '🇵🇱',
+        };
+        return flags[code] || '🌐';
+    }
+    
     // Методы для работы с localStorage
     loadDecksFromStorage() {
         try {
@@ -344,6 +358,8 @@ class SimpleDeckManager {
     renderDeckCard(deck) {
         const sourceLanguage = this.getLanguageName(deck.source_language);
         const targetLanguage = this.getLanguageName(deck.target_language);
+        const sourceFlag = this.getLanguageFlag(deck.source_language);
+        const targetFlag = this.getLanguageFlag(deck.target_language);
         const createdDate = new Date(deck.created_at).toLocaleDateString('ru-RU');
         
         return `
@@ -364,9 +380,9 @@ class SimpleDeckManager {
                 
                 <div class="deck-info">
                     <div class="deck-languages">
-                        <span class="language-badge source">${sourceLanguage}</span>
+                        <span class="language-badge source">${sourceFlag} ${sourceLanguage}</span>
                         <span class="arrow">→</span>
-                        <span class="language-badge target">${targetLanguage}</span>
+                        <span class="language-badge target">${targetFlag} ${targetLanguage}</span>
                     </div>
                     
                     <div class="deck-stats">
@@ -473,6 +489,16 @@ class SimpleDeckManager {
         const dynamicDecks = mainDecksContainer.querySelectorAll('.deck-item.dynamic-deck');
         dynamicDecks.forEach(deck => deck.remove());
         
+        // Управляем отображением заглушки
+        const emptyMessage = document.getElementById('empty-decks-message');
+        if (emptyMessage) {
+            if (this.decks.length > 0) {
+                emptyMessage.style.display = 'none';
+            } else {
+                emptyMessage.style.display = 'block';
+            }
+        }
+        
         // Находим кнопку API для вставки новых колод перед ней
         const apiButton = mainDecksContainer.querySelector('.api-button');
         
@@ -480,6 +506,8 @@ class SimpleDeckManager {
         this.decks.forEach(deck => {
             const sourceLanguage = this.getLanguageName(deck.source_language);
             const targetLanguage = this.getLanguageName(deck.target_language);
+            const sourceFlag = this.getLanguageFlag(deck.source_language);
+            const targetFlag = this.getLanguageFlag(deck.target_language);
             
             const deckElement = document.createElement('div');
             deckElement.className = 'deck-item dynamic-deck';
@@ -487,7 +515,7 @@ class SimpleDeckManager {
             
             deckElement.innerHTML = `
                 <div class="deck-content">
-                    <h3 class="deck-title">${deck.name}<br><small>(${sourceLanguage} → ${targetLanguage})</small></h3>
+                    <h3 class="deck-title">${deck.name}<br><small>(${sourceFlag} ${sourceLanguage} → ${targetFlag} ${targetLanguage})</small></h3>
                     <div class="deck-stats">
                         <span>Total: ${deck.card_count}</span>
                         <span>To repeat: 0</span>

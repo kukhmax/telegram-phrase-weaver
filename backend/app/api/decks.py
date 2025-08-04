@@ -126,6 +126,7 @@ async def get_user_decks(
     return DeckListResponse(decks=decks, total=total)
 
 @router.get("/{deck_id}", response_model=DeckResponse)
+
 async def get_deck(
     deck_id: int,
     user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
@@ -152,6 +153,7 @@ async def get_deck(
     return deck
 
 @router.put("/{deck_id}", response_model=DeckResponse)
+
 async def update_deck(
     deck_id: int,
     deck_data: DeckUpdate,

@@ -110,6 +110,44 @@
             border-radius: 8px;
             margin-bottom: 20px;
         }
+        
+        /* Стили для отображения языков */
+        .language-info {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .language-pair {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .language-pair .arrow {
+            color: #1976d2;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        /* Стили для inline отображения языков */
+        .language-info-inline {
+            margin: 0 50px;
+            font-size: 14px;
+            color: #1976d2;
+            font-weight: normal;
+        }
+        
+        .language-info-inline .arrow {
+            margin: 0 5px;
+            font-size: 14px;
+        }
         .form-group {
             margin-bottom: 15px;
         }
@@ -549,23 +587,11 @@
                     <h4>Мои колоды:</h4>
                     <div id="decks-container">
                         <!-- Колоды будут загружены динамически -->
-                        <div class="deck-item" onclick="generateCards(1)">
-                            <div class="deck-content">
-                                <h3 class="deck-title">General<br><small>(English → Russian)</small></h3>
-                                <div class="deck-stats">
-                                    <span>Total: 15</span>
-                                    <span>To repeat: 7</span>
-                                </div>
-                            </div>
-                            <div class="deck-actions">
-                                <button class="deck-btn cards" onclick="event.stopPropagation(); viewDeckCards(1)">карточки</button>
-                                <button class="deck-btn training" onclick="event.stopPropagation(); startTraining(1)">тренировка</button>
-                            </div>
+                        <div id="empty-decks-message" class="empty-message" style="text-align: center; padding: 40px; color: #666; font-style: italic;">
+                            Здесь появятся ваши колоды
                         </div>
                         
-
-                     
-                     <button class="api-button" onclick="testAPI()">🔗 Проверить подключение к API</button>
+                        <button class="api-button" onclick="testAPI()">🔗 Проверить подключение к API</button>
                 </div>
                 
                 <!-- Кнопка плюс -->
@@ -596,12 +622,13 @@
                             <label for="sourceLanguageSelect">Изучаемый язык *</label>
                             <select id="sourceLanguageSelect" name="source_language" required>
                                 <option value="">Выберите язык</option>
-                                <option value="en">English</option>
-                                <option value="ru">Русский</option>
-                                <option value="fr">Français</option>
-                                <option value="de">Deutsch</option>
-                                <option value="es">Español</option>
-                                <option value="pl">Polski</option>
+                                <option value="en">🇺🇸 English</option>
+                                <option value="ru">🇷🇺 Русский</option>
+                                <option value="fr">🇫🇷 Français</option>
+                                <option value="de">🇩🇪 Deutsch</option>
+                                <option value="es">🇪🇸 Español</option>
+                                <option value="pl">🇵🇱 Polski</option>
+                                <option value="pt">🇵🇹 Portuguese</option>
                             </select>
                         </div>
                         
@@ -609,12 +636,13 @@
                             <label for="targetLanguageSelect">Язык перевода *</label>
                             <select id="targetLanguageSelect" name="target_language" required>
                                 <option value="">Выберите язык</option>
-                                <option value="en">English</option>
-                                <option value="ru">Русский</option>
-                                <option value="fr">Français</option>
-                                <option value="de">Deutsch</option>
-                                <option value="es">Español</option>
-                                <option value="pl">Polski</option>
+                                <option value="en">🇺🇸 English</option>
+                                <option value="ru">🇷🇺 Русский</option>
+                                <option value="fr">🇫🇷 Français</option>
+                                <option value="de">🇩🇪 Deutsch</option>
+                                <option value="es">🇪🇸 Español</option>
+                                <option value="pl">🇵🇱 Polski</option>
+                                <option value="pt">🇵🇹 Portuguese</option>
                             </select>
                         </div>
                     </div>
@@ -641,12 +669,19 @@
             </div>
             
             <div id="generate-cards-view" style="display: none;">
-                <h3>Генерация карточек</h3>
+                <h3 id="generate-cards-title">Генерация карточек для колоды:<br></h3>
                 
                 <!-- Форма для ввода фразы и ключевого слова -->
                 <div class="card-form">
                     <div class="form-group">
-                        <label for="phraseInput">Фраза:</label>
+                        <span id="language-info" class="language-info-inline" style="display: none;">
+                                <span id="source-lang-display"></span>
+                                <span class="arrow">→</span>
+                                <span id="target-lang-display"></span>
+                        </span>
+                        <label for="phraseInput">
+                            Фраза:
+                        </label>
                         <textarea id="phraseInput" placeholder="Введите фразу для обогащения" rows="3"></textarea>
                     </div>
                     
@@ -766,8 +801,80 @@
             updateStatus('Просмотр колод');
         }
         
-        function generateCards(deckId) {
+        async function generateCards(deckId) {
+            // Сначала пытаемся найти колоду в локальном хранилище
+            let foundDeck = null;
+            try {
+                const storedDecks = localStorage.getItem('phraseweaver_decks');
+                if (storedDecks) {
+                    const decks = JSON.parse(storedDecks);
+                    foundDeck = decks.find(deck => deck.id == deckId);
+                }
+            } catch (error) {
+                console.warn('Ошибка при чтении локального хранилища:', error);
+            }
+            
+            if (foundDeck) {
+                // Используем данные из локального хранилища
+                currentDeck = {
+                    id: foundDeck.id,
+                    name: foundDeck.name,
+                    source_language: foundDeck.source_language,
+                    target_language: foundDeck.target_language
+                };
+            } else {
+                // Пытаемся загрузить из API
+                try {
+                    const response = await fetch(`http://localhost:8000/api/decks/${deckId}/?user_id=1`);
+                    if (response.ok) {
+                        const deck = await response.json();
+                        currentDeck = {
+                            id: deck.id,
+                            name: deck.name,
+                            source_language: deck.source_language,
+                            target_language: deck.target_language
+                        };
+                    } else {
+                        // Если не удалось загрузить колоду, используем значения по умолчанию
+                        console.warn('Не удалось загрузить информацию о колоде, используем значения по умолчанию');
+                        currentDeck = {
+                            id: deckId,
+                            name: 'Неизвестная колода',
+                            source_language: 'pt',
+                            target_language: 'ru'
+                        };
+                    }
+                } catch (error) {
+                    console.error('Ошибка при загрузке колоды:', error);
+                    currentDeck = {
+                        id: deckId,
+                        name: 'Неизвестная колода',
+                        source_language: 'en',
+                        target_language: 'pt'
+                    };
+                }
+            }
+            
             showView('generate-cards');
+            
+            // Обновляем заголовок с названием колоды
+            const titleElement = document.getElementById('generate-cards-title');
+            if (titleElement && currentDeck && currentDeck.name) {
+                titleElement.textContent = `Генерация карточек для колоды: ${currentDeck.name}`;
+            }
+            
+            // Показываем информацию о языках
+            if (currentDeck) {
+                const sourceLanguageName = getLanguageName(currentDeck.source_language);
+                const targetLanguageName = getLanguageName(currentDeck.target_language);
+                const sourceFlag = getLanguageFlag(currentDeck.source_language);
+                const targetFlag = getLanguageFlag(currentDeck.target_language);
+                
+                document.getElementById('source-lang-display').textContent = `${sourceFlag} ${sourceLanguageName}`;
+                document.getElementById('target-lang-display').textContent = `${targetFlag} ${targetLanguageName}`;
+                document.getElementById('language-info').style.display = 'inline';
+            }
+            
             updateStatus(`Генерация карточек для колоды: ${deckId}`);
         }
         
@@ -795,9 +902,26 @@
                 'fr': 'Français',
                 'de': 'Deutsch',
                 'es': 'Español',
-                'it': 'Italiano'
+                'it': 'Italiano',
+                'pt': 'Português',
+                'pl': 'Polski',
             };
             return languages[code] || code;
+        }
+        
+        // Функция для получения флага языка
+        function getLanguageFlag(code) {
+            const flags = {
+                'en': '🇺🇸',
+                'ru': '🇷🇺',
+                'fr': '🇫🇷',
+                'de': '🇩🇪',
+                'es': '🇪🇸',
+                'it': '🇮🇹',
+                'pt': '🇵🇹',
+                'pl': '🇵🇱',
+            };
+            return flags[code] || '🌐';
         }
         
         // Функция для добавления новой колоды на главный экран
@@ -805,8 +929,16 @@
             const decksContainer = document.getElementById('decks-container');
             if (!decksContainer) return;
             
+            // Скрываем заглушку при добавлении первой колоды
+            const emptyMessage = document.getElementById('empty-decks-message');
+            if (emptyMessage) {
+                emptyMessage.style.display = 'none';
+            }
+            
             const sourceLanguageName = getLanguageName(deck.source_language);
             const targetLanguageName = getLanguageName(deck.target_language);
+            const sourceFlag = getLanguageFlag(deck.source_language);
+            const targetFlag = getLanguageFlag(deck.target_language);
             
             // Создаем элемент колоды
             const deckElement = document.createElement('div');
@@ -815,7 +947,7 @@
             
             deckElement.innerHTML = `
                 <div class="deck-content">
-                    <h3 class="deck-title">${deck.name}<br><small>(${sourceLanguageName} → ${targetLanguageName})</small></h3>
+                    <h3 class="deck-title">${deck.name}<br><small>${sourceFlag} ${sourceLanguageName} → ${targetFlag} ${targetLanguageName}</small></h3>
                     <div class="deck-stats">
                         <span>Total: ${deck.card_count}</span>
                         <span>To repeat: ${deck.cards_to_review}</span>
@@ -836,7 +968,7 @@
             }
         }
         
-        function createNewDeck() {
+        async function createNewDeck() {
             const deckName = document.getElementById('deckNameInput').value;
             const deckDesc = document.getElementById('deckDescInput').value;
             const sourceLanguage = getSelectedLanguage('sourceLanguageSelect');
@@ -863,30 +995,57 @@
                 return;
             }
             
-            // Создаем новую колоду и добавляем в список
-            const newDeck = {
-                id: Date.now(), // Временный ID
-                name: deckName,
-                description: deckDesc,
-                source_language: sourceLanguage,
-                target_language: targetLanguage,
-                card_count: 0,
-                cards_to_review: 0
-            };
+            updateStatus('Создание колоды...');
             
-            addDeckToMainScreen(newDeck);
-            updateStatus(`Колода "${deckName}" успешно создана!`);
-            
-            // Очистить форму
-            document.getElementById('deckNameInput').value = '';
-            document.getElementById('deckDescInput').value = '';
-            
-            // Сбросить выпадающие списки
-            document.getElementById('sourceLanguageSelect').value = '';
-            document.getElementById('targetLanguageSelect').value = '';
-            
-            // Вернуться на главную
-            goHome();
+            try {
+                // Отправляем POST запрос к API для создания колоды
+                const response = await fetch('http://localhost:8000/api/decks/?user_id=1', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: deckName,
+                        description: deckDesc,
+                        source_language: sourceLanguage,
+                        target_language: targetLanguage
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const newDeck = await response.json();
+                
+                // Сохраняем колоду в localStorage для быстрого доступа
+                try {
+                    const storedDecks = localStorage.getItem('phraseweaver_decks');
+                    let decks = storedDecks ? JSON.parse(storedDecks) : [];
+                    decks.push(newDeck);
+                    localStorage.setItem('phraseweaver_decks', JSON.stringify(decks));
+                } catch (error) {
+                    console.error('Ошибка при сохранении колоды в localStorage:', error);
+                }
+                
+                addDeckToMainScreen(newDeck);
+                updateStatus(`Колода "${deckName}" успешно создана!`);
+                
+                // Очистить форму
+                document.getElementById('deckNameInput').value = '';
+                document.getElementById('deckDescInput').value = '';
+                
+                // Сбросить выпадающие списки
+                document.getElementById('sourceLanguageSelect').value = '';
+                document.getElementById('targetLanguageSelect').value = '';
+                
+                // Вернуться на главную
+                goHome();
+                
+            } catch (error) {
+                console.error('Ошибка при создании колоды:', error);
+                updateStatus('Ошибка при создании колоды. Попробуйте еще раз.');
+            }
         }
         
         function viewDeckCards(deckId) {
@@ -942,7 +1101,7 @@
         async function testAPI() {
             updateStatus('Проверка подключения к API...');
             try {
-                const response = await fetch('http://localhost:8000/api/health');
+                const response = await fetch('http://localhost:8000/api/health/');
                 if (response.ok) {
                     const data = await response.json();
                     updateStatus(`API работает: ${data.status || 'OK'}`);
@@ -955,6 +1114,7 @@
         }
         
         let generatedPhrasesData = [];
+        let currentDeck = null; // Информация о текущей колоде
         
         async function generatePhrases() {
             const phraseInput = document.getElementById('phraseInput');
@@ -975,7 +1135,7 @@
             updateStatus('Генерация фраз...');
             
             try {
-                const response = await fetch('http://localhost:8000/api/cards/enrich?user_id=1', {
+                const response = await fetch('http://localhost:8000/api/cards/enrich/?user_id=1', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -983,13 +1143,23 @@
                     body: JSON.stringify({
                         original_phrase: phrase,
                         keyword: keyword,
-                        deck_id: 1
+                        deck_id: currentDeck ? currentDeck.id : 1
                     })
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
                     generatedPhrasesData = data.phrases || [];
+                    
+                    // Обновляем информацию о текущей колоде из ответа API
+                    if (data.source_language && data.target_language) {
+                        currentDeck = {
+                            ...currentDeck,
+                            source_language: data.source_language,
+                            target_language: data.target_language
+                        };
+                    }
+                    
                     displayGeneratedPhrases(generatedPhrasesData);
                     updateStatus(`Сгенерировано ${generatedPhrasesData.length} фраз`);
                 } else {
@@ -1014,6 +1184,18 @@
                 return;
             }
             
+            // Обновляем информацию о языках в inline элементе
+            if (currentDeck) {
+                const sourceFlag = getLanguageFlag(currentDeck.source_language);
+                const targetFlag = getLanguageFlag(currentDeck.target_language);
+                const sourceName = getLanguageName(currentDeck.source_language);
+                const targetName = getLanguageName(currentDeck.target_language);
+                
+                document.getElementById('source-lang-display').textContent = `${sourceFlag} ${sourceName}`;
+                document.getElementById('target-lang-display').textContent = `${targetFlag} ${targetName}`;
+                document.getElementById('language-info').style.display = 'inline';
+            }
+            
             phrasesList.innerHTML = '';
             
             phrases.forEach((phraseData, index) => {
@@ -1023,18 +1205,24 @@
                 // Извлекаем данные из ответа API
                 const originalPhrase = phraseData.original || phraseData.phrase || phraseData.text || 'Фраза не найдена';
                 const translation = phraseData.translation || 'Перевод не найден';
-                const keyword = phraseData.keyword || 'Не указано';
+                
+                // Получаем языки и флаги из текущей колоды
+                const sourceLanguage = currentDeck ? currentDeck.source_language : 'pt';
+                const targetLanguage = currentDeck ? currentDeck.target_language : 'ru';
+                const sourceFlag = getLanguageFlag(sourceLanguage);
+                const targetFlag = getLanguageFlag(targetLanguage);
+                const sourceName = getLanguageName(sourceLanguage);
+                const targetName = getLanguageName(targetLanguage);
                 
                 phraseItem.innerHTML = `
                     <div class="phrase-content">
                         <div class="phrase-text">
-                            <strong>🇵🇹 Португальский:</strong> ${originalPhrase}
+                            <strong>${sourceFlag} ${sourceName}:</strong><br>
+                            ${originalPhrase}
                         </div>
                         <div class="phrase-translation">
-                            <strong>🇷🇺 Русский:</strong> ${translation}
-                        </div>
-                        <div class="phrase-keyword">
-                            <strong>Ключевое слово:</strong> ${keyword}
+                            <strong>${targetFlag} ${targetName}:</strong><br>
+                            ${translation}
                         </div>
                     </div>
                     <div class="phrase-actions">
@@ -1159,8 +1347,47 @@
             updateStatus('Сгенерированные фразы очищены');
         }
         
+        // Функция загрузки колод из API
+        async function loadDecksFromAPI() {
+            try {
+                const response = await fetch('http://localhost:8000/api/decks/?user_id=1');
+                if (response.ok) {
+                    const apiDecks = await response.json();
+                    
+                    // Сохраняем колоды в localStorage
+                    localStorage.setItem('phraseweaver_decks', JSON.stringify(apiDecks.decks || apiDecks));
+                    
+                    // Отображаем колоды на главном экране
+                    const decks = apiDecks.decks || apiDecks;
+                    decks.forEach(deck => addDeckToMainScreen(deck));
+                    
+                    console.log('Колоды загружены из API:', decks.length);
+                } else {
+                    console.warn('Не удалось загрузить колоды из API, используем localStorage');
+                    loadDecksFromLocalStorage();
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке колод из API:', error);
+                loadDecksFromLocalStorage();
+            }
+        }
+        
+        // Функция загрузки колод из localStorage (резервная)
+        function loadDecksFromLocalStorage() {
+            try {
+                const storedDecks = localStorage.getItem('phraseweaver_decks');
+                if (storedDecks) {
+                    const decks = JSON.parse(storedDecks);
+                    decks.forEach(deck => addDeckToMainScreen(deck));
+                    console.log('Колоды загружены из localStorage:', decks.length);
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке колод из localStorage:', error);
+            }
+        }
+        
         // Инициализация при загрузке страницы
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             updateStatus('Приложение загружено успешно');
             showView('main');
             
@@ -1169,6 +1396,9 @@
             if (userInfo) {
                 userInfo.textContent = 'Пользователь: Тестовый режим';
             }
+            
+            // Загружаем колоды из API
+            await loadDecksFromAPI();
         });
     </script>
 </body>

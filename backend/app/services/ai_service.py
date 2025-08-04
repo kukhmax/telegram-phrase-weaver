@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 # Промпт для генерации фраз с изображениями
 PROMPT_TEMPLATE = """
 Твоя задача - помочь в изучении языков.
-Для слова или фразы "{keyword}" на языке "{language}":
+Для слова "{keyword}" на языке "{language}":
 1. Придумай одно-два ключевых слова на английском для поиска картинки, которая лучше всего визуально ассоциируется с "{keyword}". Назови это поле "image_query".
 2. Создай 5 реалистичных примеров предложений со словом "{keyword}". Используй разные грамматические формы.
 3. Для каждого предложения предоставь точный перевод на {target_language} язык.
@@ -114,7 +114,19 @@ class AIService:
             response = await model.generate_content_async(prompt)
             raw_text = response.text.strip().replace("```json", "").replace("```", "").strip()
             data = json.loads(raw_text)
+            
+            # Логируем сгенерированные данные
             logger.info(f"AI успешно сгенерировал данные для '{keyword}'.")
+            logger.info(f"Поисковый запрос для изображения: {data.get('image_query', 'не указан')}")
+            
+            examples = data.get('examples', [])
+            logger.info(f"Количество сгенерированных фраз: {len(examples)}")
+            
+            for i, example in enumerate(examples, 1):
+                original = example.get('original', 'не указано')
+                translation = example.get('translation', 'не указано')
+                logger.info(f"Фраза {i}: {original} -> {translation}")
+            
             return data
         except Exception as e:
             logger.error(f"Ошибка при работе с AI: {e}")
@@ -332,7 +344,9 @@ class AIService:
         """
         Генерирует mock данные в новом формате с image_query и examples
         """
-        return {
+        logger.warning(f"Используются MOCK данные для ключевого слова '{keyword}'")
+        
+        mock_data = {
             "image_query": f"{keyword} activity",
             "examples": [
                 {
@@ -357,6 +371,14 @@ class AIService:
                 }
             ]
         }
+        
+        # Логируем сгенерированные mock фразы
+        logger.info(f"MOCK: Поисковый запрос для изображения: '{mock_data['image_query']}'")
+        logger.info(f"MOCK: Сгенерировано {len(mock_data['examples'])} фраз:")
+        for i, phrase in enumerate(mock_data['examples'], 1):
+            logger.info(f"MOCK: Фраза {i}: '{phrase['original']}' -> '{phrase['translation']}'")
+        
+        return mock_data
 
 # Создаем экземпляр сервиса
 ai_service = AIService()
