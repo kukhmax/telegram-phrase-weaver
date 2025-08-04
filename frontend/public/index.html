@@ -1397,6 +1397,9 @@
                 userInfo.textContent = 'Пользователь: Тестовый режим';
             }
             
+            // Очищаем localStorage от старых дефолтных колод
+            localStorage.removeItem('phraseweaver_decks');
+            
             // Загружаем колоды из API
             await loadDecksFromAPI();
         });
