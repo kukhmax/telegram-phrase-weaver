@@ -1328,17 +1328,24 @@
                 return;
             }
             
-            // Здесь будет логика сохранения в базу данных
-            updateStatus(`Сохранено ${selectedPhrases.length} фраз`);
-            
-            // Очистить форму после сохранения
-            clearGenerated();
-            document.getElementById('phraseInput').value = '';
-            document.getElementById('keywordInput').value = '';
+            if (confirm(`Сохранить ${selectedPhrases.length} выбранных карточек в колоду?`)) {
+                // Здесь будет логика сохранения в базу данных
+                updateStatus(`Сохранено ${selectedPhrases.length} фраз`);
+                
+                // Очистить форму после сохранения (без подтверждения)
+                clearGenerated(true);
+                document.getElementById('phraseInput').value = '';
+                document.getElementById('keywordInput').value = '';
+                
+                // Переход на главную страницу
+                setTimeout(() => {
+                    goHome();
+                }, 1000);
+            }
         }
         
-        function clearGenerated() {
-            if (generatedPhrasesData.length > 0 && !confirm('Вы уверены, что хотите очистить все сгенерированные фразы?')) {
+        function clearGenerated(skipConfirm = false) {
+            if (!skipConfirm && generatedPhrasesData.length > 0 && !confirm('Вы уверены, что хотите очистить все сгенерированные фразы?')) {
                 return;
             }
             generatedPhrasesData = [];

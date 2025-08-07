@@ -38,7 +38,7 @@ class CardEnricher {
                             </div>
                             <div class="form-actions">
                                 <button type="submit" class="btn-primary" id="enrich-btn">
-                                    <span class="btn-text">Обогатить</span>
+                                    <span class="btn-text">Сгенерировать фразы</span>
                                     <span class="loading-spinner" style="display: none;">⏳</span>
                                 </button>
                             </div>
@@ -180,6 +180,8 @@ class CardEnricher {
     displayResults(data) {
         this.generatedPhrases = data.phrases || [];
         this.imageQuery = data.image_query;
+        this.sourceLanguage = data.source_language;
+        this.targetLanguage = data.target_language;
 
         // Показываем запрос для поиска изображения
         if (this.imageQuery) {
@@ -194,24 +196,36 @@ class CardEnricher {
         this.generatedPhrases.forEach((phrase, index) => {
             const phraseItem = document.createElement('div');
             phraseItem.className = 'phrase-item';
+            
+            // Получаем флаги языков
+            const sourceFlag = this.getLanguageFlag(this.sourceLanguage);
+            const targetFlag = this.getLanguageFlag(this.targetLanguage);
+            
             phraseItem.innerHTML = `
-                <label class="phrase-checkbox">
-                    <input type="checkbox" ${phrase.selected ? 'checked' : ''} data-index="${index}">
+                <div class="phrase-card">
                     <div class="phrase-content">
-                        <div class="phrase-original">${phrase.original}</div>
-                        <div class="phrase-translation">${phrase.translation}</div>
+                        <div class="phrase-line">
+                            <span class="language-flag">${sourceFlag}</span>
+                            <span class="language-code">${this.sourceLanguage}:</span>
+                            <span class="phrase-text">${phrase.original}</span>
+                        </div>
+                        <div class="phrase-line">
+                            <span class="language-flag">${targetFlag}</span>
+                            <span class="language-code">${this.targetLanguage}:</span>
+                            <span class="phrase-text">${phrase.translation}</span>
+                        </div>
                     </div>
-                </label>
+                    <div class="phrase-actions">
+                        <button class="btn-select ${phrase.selected ? 'selected' : ''}" data-index="${index}" onclick="cardEnricher.togglePhraseSelection(${index})">
+                            ${phrase.selected ? 'Выбрано' : 'Выбрать'}
+                        </button>
+                        <button class="btn-delete" data-index="${index}" onclick="cardEnricher.deletePhrase(${index})">
+                            Удалить
+                        </button>
+                    </div>
+                </div>
             `;
             phrasesList.appendChild(phraseItem);
-        });
-
-        // Добавляем обработчики для чекбоксов
-        phrasesList.addEventListener('change', (e) => {
-            if (e.target.type === 'checkbox') {
-                const index = parseInt(e.target.dataset.index);
-                this.generatedPhrases[index].selected = e.target.checked;
-            }
         });
 
         document.getElementById('enricher-results').style.display = 'block';
@@ -220,11 +234,50 @@ class CardEnricher {
     selectAllPhrases(selected) {
         this.generatedPhrases.forEach((phrase, index) => {
             phrase.selected = selected;
-            const checkbox = document.querySelector(`input[data-index="${index}"]`);
-            if (checkbox) {
-                checkbox.checked = selected;
+            const selectBtn = document.querySelector(`button.btn-select[data-index="${index}"]`);
+            if (selectBtn) {
+                selectBtn.textContent = selected ? 'Выбрано' : 'Выбрать';
+                selectBtn.className = `btn-select ${selected ? 'selected' : ''}`;
             }
         });
+    }
+
+    togglePhraseSelection(index) {
+        if (index >= 0 && index < this.generatedPhrases.length) {
+            this.generatedPhrases[index].selected = !this.generatedPhrases[index].selected;
+            const selectBtn = document.querySelector(`button.btn-select[data-index="${index}"]`);
+            if (selectBtn) {
+                const isSelected = this.generatedPhrases[index].selected;
+                selectBtn.textContent = isSelected ? 'Выбрано' : 'Выбрать';
+                selectBtn.className = `btn-select ${isSelected ? 'selected' : ''}`;
+            }
+        }
+    }
+
+    deletePhrase(index) {
+        if (index >= 0 && index < this.generatedPhrases.length) {
+            this.generatedPhrases.splice(index, 1);
+            this.displayResults({
+                phrases: this.generatedPhrases,
+                image_query: this.imageQuery,
+                source_language: this.sourceLanguage,
+                target_language: this.targetLanguage
+            });
+        }
+    }
+
+    getLanguageFlag(code) {
+        const flags = {
+            'en': '🇺🇸',
+            'ru': '🇷🇺',
+            'fr': '🇫🇷',
+            'de': '🇩🇪',
+            'es': '🇪🇸',
+            'it': '🇮🇹',
+            'pt': '🇵🇹',
+            'pl': '🇵🇱',
+        };
+        return flags[code] || '🌐';
     }
 
     async addSelectedCards() {

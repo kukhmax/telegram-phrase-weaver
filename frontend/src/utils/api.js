@@ -6,7 +6,7 @@
 // Конфигурация API
 const API_CONFIG = {
     // URL базового API (в разработке используем localhost)
-    BASE_URL: 'http://localhost:8001/api',
+    BASE_URL: 'http://localhost:8000/api',
     
     // Таймауты для запросов
     TIMEOUT: 10000, // 10 секунд

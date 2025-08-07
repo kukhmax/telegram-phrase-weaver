@@ -205,7 +205,7 @@
 
 /* Список фраз */
 #phrases-list {
-    max-height: 300px;
+    max-height: 400px;
     overflow-y: auto;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
@@ -225,34 +225,46 @@
     background: #f9fafb;
 }
 
-.phrase-checkbox {
-    display: flex;
-    align-items: flex-start;
+/* Новый формат карточки фразы */
+.phrase-card {
     padding: 16px;
-    cursor: pointer;
+    display: flex;
+    flex-direction: column;
     gap: 12px;
 }
 
-.phrase-checkbox input[type="checkbox"] {
-    margin: 0;
-    margin-top: 2px;
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-}
-
 .phrase-content {
-    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.phrase-original {
-    font-weight: 500;
-    color: #1f2937;
-    margin-bottom: 4px;
+.phrase-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     line-height: 1.4;
 }
 
-.phrase-original b {
+.language-flag {
+    font-size: 1.2rem;
+    min-width: 24px;
+}
+
+.language-code {
+    font-weight: 600;
+    color: #374151;
+    min-width: 32px;
+    font-size: 0.9rem;
+}
+
+.phrase-text {
+    flex: 1;
+    color: #1f2937;
+    font-size: 1rem;
+}
+
+.phrase-text b {
     background: #fef3c7;
     color: #92400e;
     padding: 2px 4px;
@@ -260,10 +272,56 @@
     font-weight: 600;
 }
 
-.phrase-translation {
-    color: #6b7280;
-    font-size: 0.9rem;
-    line-height: 1.4;
+/* Действия с фразами */
+.phrase-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.btn-select {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 80px;
+}
+
+.btn-select:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.btn-select.selected {
+    background: #6b7280;
+}
+
+.btn-select.selected:hover {
+    background: #4b5563;
+}
+
+.btn-delete {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 80px;
+}
+
+.btn-delete:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
 }
 
 /* Действия с результатами */
@@ -364,12 +422,12 @@
         background: #4b5563;
     }
     
-    .phrase-original {
-        color: #f9fafb;
+    .language-code {
+        color: #f3f4f6;
     }
     
-    .phrase-translation {
-        color: #d1d5db;
+    .phrase-text {
+        color: #f9fafb;
     }
     
     .results-header h3 {

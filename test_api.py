@@ -1,39 +1,19 @@
+#!/usr/bin/env python3
 import requests
 import json
 
-print('Создание новой колоды с французским языком...')
+url = 'http://localhost:8001/api/cards/enrich/?user_id=1'
 data = {
-    'name': 'Французский тест',
-    'description': 'Тестовая колода',
-    'source_language': 'fr',
-    'target_language': 'ru'
+    'original_phrase': 'beber',
+    'keyword': 'beber',
+    'deck_id': 2
 }
 
-r = requests.post('http://localhost:8000/api/decks/?user_id=1', json=data)
-print('Status:', r.status_code)
+headers = {'Content-Type': 'application/json'}
 
-if r.status_code == 201:
-    response = r.json()
-    print('Создана колода:', response['name'])
-    print('ID:', response['id'])
-    print('Языки:', response['source_language'], '->', response['target_language'])
-    
-    # Тестируем API enrich с новой колодой
-    print('\nТестирование API enrich с новой колодой...')
-    enrich_data = {
-        'original_phrase': 'Bonjour le monde',
-        'keyword': 'bonjour',
-        'deck_id': response['id']
-    }
-    
-    r2 = requests.post('http://localhost:8000/api/cards/enrich?user_id=1', json=enrich_data)
-    if r2.status_code == 200:
-        enrich_response = r2.json()
-        print('Языки из API enrich:')
-        print('source_language:', enrich_response.get('source_language'))
-        print('target_language:', enrich_response.get('target_language'))
-        print('deck_id:', enrich_response.get('deck_id'))
-    else:
-        print('Ошибка enrich:', r2.text)
-else:
-    print('Ошибка создания колоды:', r.text)
+try:
+    response = requests.post(url, json=data, headers=headers)
+    print(f"Status Code: {response.status_code}")
+    print(f"Response: {json.dumps(response.json(), indent=2, ensure_ascii=False)}")
+except Exception as e:
+    print(f"Error: {e}")

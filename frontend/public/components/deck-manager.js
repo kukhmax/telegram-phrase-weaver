@@ -349,7 +349,7 @@ class DeckManager {
             
             // Отправляем запрос на создание колоды
             const response = await this.apiClient.client.post(
-                `/decks?user_id=${this.currentUser.id}`,
+                `/api/decks/?user_id=${this.currentUser.id}`,
                 formData
             );
             
@@ -386,7 +386,7 @@ class DeckManager {
             
             // Запрашиваем колоды с сервера
             const response = await this.apiClient.client.get(
-                `/decks?user_id=${this.currentUser.id}`
+                `/api/decks/?user_id=${this.currentUser.id}`
             );
             
             this.decks = response.decks || [];
@@ -652,7 +652,7 @@ class DeckManager {
             
             // Отправляем запрос на удаление
             await this.apiClient.client.delete(
-                `/decks/${deckId}?user_id=${this.currentUser.id}`
+                `/api/decks/${deckId}?user_id=${this.currentUser.id}`
             );
             
             console.log('[DeckManager] Deck deleted successfully');
