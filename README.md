@@ -1,3 +1,220 @@
+# 🧠 PhraseWeaver - Telegram Mini App
+
+AI-powered language learning application with spaced repetition system built as a Telegram Mini App.
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Docker Desktop installed and running
+- Git
+- A Telegram account for testing
+
+### Setup Steps
+
+1. **Clone the repository:**
+```bash
+git clone <your-repository-url>
+cd telegram-phrase-weaver
+```
+
+2. **Configure environment:**
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+3. **Start the application:**
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+4. **Open in browser:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+
+## 📁 Project Structure
+
+```
+phraseweaver-telegram/
+├── backend/                 # FastAPI backend
+│   ├── app/
+│   │   ├── api/            # API endpoints
+│   │   ├── core/           # Configuration & database
+│   │   ├── models/         # SQLAlchemy models
+│   │   ├── services/       # Business logic
+│   │   └── main.py         # FastAPI app entry point
+│   ├── sql/                # Database initialization
+│   ├── logs/               # Application logs
+│   ├── uploads/            # File storage
+│   ├── requirements.txt    # Python dependencies
+│   └── Dockerfile          # Backend container config
+├── frontend/               # HTML/CSS/JS frontend
+│   └── index.html          # Main application page
+├── docker-compose.yml      # Container orchestration
+├── .env.example           # Environment template
+├── start.sh               # Startup script
+└── README.md              # This file
+```
+
+## 🐳 Docker Services
+
+- **db**: PostgreSQL 15 database
+- **redis**: Redis 7 cache
+- **backend**: FastAPI Python application
+- **frontend**: Static file server
+
+## 🔧 Development Commands
+
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+
+# Restart specific service
+docker-compose restart backend
+
+# Execute commands in container
+docker-compose exec backend python -m pytest
+docker-compose exec db psql -U postgres -d phraseweaver
+```
+
+## 🌐 API Endpoints
+
+### System
+- `GET /health` - Health check
+- `GET /` - API info
+
+### Test Endpoints
+- `GET /api/test` - Test API connectivity
+
+### Future Endpoints (to be implemented)
+- `POST /auth/telegram` - Telegram authentication
+- `GET /api/decks` - Get user decks
+- `POST /api/decks` - Create new deck
+- `POST /api/decks/{id}/enrich` - AI content generation
+
+## 📊 Database Schema
+
+### Current Tables
+- **users** - User profiles from Telegram
+- **decks** - Language learning decks
+- **concepts** - Keywords with associated media
+- **phrases** - Generated text content
+- **cards** - Spaced repetition cards
+- **reviews** - Learning session history
+
+## 🔑 Required Environment Variables
+
+```bash
+# Telegram Bot (required for production)
+TELEGRAM_BOT_TOKEN=your_bot_token
+
+# AI Services (choose one)
+GOOGLE_API_KEY=your_gemini_key
+OPENAI_API_KEY=your_openai_key
+
+# Image Services (choose one)  
+UNSPLASH_ACCESS_KEY=your_unsplash_key
+PIXABAY_API_KEY=your_pixabay_key
+```
+
+## 🧪 Testing
+
+The application includes a built-in testing interface at the frontend that checks:
+- ✅ Frontend connectivity
+- ✅ Backend API status
+- ✅ Database connection
+- ✅ Redis connection
+- ✅ Telegram WebApp integration
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Docker containers not starting:**
+```bash
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+**Database connection errors:**
+```bash
+# Check if PostgreSQL is running
+docker-compose ps
+docker-compose logs db
+```
+
+**Permission errors on Linux/Mac:**
+```bash
+chmod +x start.sh
+sudo chown -R $USER:$USER .
+```
+
+**Port conflicts:**
+```bash
+# Check what's using the ports
+lsof -i :8000
+lsof -i :3000
+lsof -i :5432
+```
+
+### View Logs
+```bash
+# All services
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f backend
+docker-compose logs -f db
+```
+
+## 🚢 Deployment
+
+This project is designed to be deployed on free platforms:
+- Railway.app
+- Render.com  
+- Fly.io
+
+Detailed deployment instructions will be provided in the next development phase.
+
+## 📝 Development Status
+
+**Current Phase: Infrastructure Setup (✅ Completed)**
+- [x] Docker environment
+- [x] FastAPI backend basic structure
+- [x] PostgreSQL database with schema
+- [x] Redis caching
+- [x] Basic frontend with system monitoring
+- [x] Health checks and logging
+
+**Next Phase: Authentication & User Management**
+- [ ] Telegram WebApp authentication
+- [ ] User registration and profiles
+- [ ] JWT token management
+- [ ] Protected API endpoints
+
+## 🤝 Contributing
+
+1. Each development step is implemented incrementally
+2. All changes are tested in the development environment
+3. Database migrations are handled through Alembic
+4. Frontend updates are tested across different devices
+
+## 📄 License
+
+This project is for educational and development purposes.
+
+
+
+
 
 Техническое задание: PhraseWeaver Telegram Mini App
 1. Общее описание проекта

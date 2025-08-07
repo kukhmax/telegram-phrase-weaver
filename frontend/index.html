@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhraseWeaver - Language Learning</title>
+    
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--tg-theme-link-color, #0088cc);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--tg-theme-hint-color, #999999);
+            font-size: 14px;
+        }
+
+        .status-card {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--tg-theme-section-separator-color, #e5e5e5);
+        }
+
+        .status-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--tg-theme-section-separator-color, #e5e5e5);
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .status-value {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .status-success {
+            color: #4CAF50;
+        }
+
+        .status-error {
+            color: #f44336;
+        }
+
+        .status-warning {
+            color: #ff9800;
+        }
+
+        .btn {
+            background: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 12px;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--tg-theme-button-color, #0088cc);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .user-info {
+            background: linear-gradient(135deg, var(--tg-theme-button-color, #0088cc), #00a0d1);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .user-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .user-id {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🧠 PhraseWeaver</div>
+            <div class="subtitle">AI-Powered Language Learning</div>
+        </div>
+
+        <!-- User Info -->
+        <div id="userInfo" class="user-info" style="display: none;">
+            <div class="user-name" id="userName">Loading...</div>
+            <div class="user-id" id="userId">ID: Loading...</div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <!-- System Status -->
+        <div class="status-card">
+            <div class="status-title">System Status</div>
+            <div class="status-item">
+                <span class="status-label">Frontend</span>
+                <span class="status-value status-success">✓ Connected</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Backend API</span>
+                <span class="status-value" id="backendStatus">⏳ Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Database</span>
+                <span class="status-value" id="databaseStatus">⏳ Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Redis Cache</span>
+                <span class="status-value" id="redisStatus">⏳ Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Telegram WebApp</span>
+                <span class="status-value" id="telegramStatus">⏳ Checking...</span>
+            </div>
+        </div>
+
+        <!-- Test Buttons -->
+        <div class="status-card">
+            <div class="status-title">Development Tools</div>
+            <button class="btn" onclick="testAPI()">
+                <span id="testApiText">Test API Connection</span>
+            </button>
+            <button class="btn" onclick="testHealth()">
+                <span id="testHealthText">Check System Health</span>
+            </button>
+            <button class="btn" onclick="refreshStatus()">
+                <span id="refreshText">Refresh All Status</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:8000';
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTelegramWebApp();
+            checkSystemStatus();
+        });
+
+        // Initialize Telegram WebApp
+        function initializeTelegramWebApp() {
+            try {
+                if (window.Telegram && window.Telegram.WebApp) {
+                    const tg = window.Telegram.WebApp;
+                    
+                    // Initialize the app
+                    tg.ready();
+                    
+                    // Set theme
+                    document.body.style.backgroundColor = tg.themeParams.bg_color || '#ffffff';
+                    
+                    // Display user info if available
+                    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                        const user = tg.initDataUnsafe.user;
+                        document.getElementById('userName').textContent = 
+                            `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username || 'User';
+                        document.getElementById('userId').textContent = `ID: ${user.id}`;
+                        document.getElementById('userInfo').style.display = 'block';
+                        
+                        updateStatus('telegramStatus', '✓ Connected', 'status-success');
+                    } else {
+                        updateStatus('telegramStatus', '⚠ No user data', 'status-warning');
+                    }
+                } else {
+                    updateStatus('telegramStatus', '✗ Not available', 'status-error');
+                    showError('Telegram WebApp SDK not loaded. Running in development mode.');
+                }
+            } catch (error) {
+                console.error('Error initializing Telegram WebApp:', error);
+                updateStatus('telegramStatus', '✗ Error', 'status-error');
+                showError(`Telegram initialization error: ${error.message}`);
+            }
+        }
+
+        // Check system status
+        async function checkSystemStatus() {
+            // Test API connection
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/test`);
+                if (response.ok) {
+                    updateStatus('backendStatus', '✓ Online', 'status-success');
+                } else {
+                    updateStatus('backendStatus', '✗ Error', 'status-error');
+                }
+            } catch (error) {
+                updateStatus('backendStatus', '✗ Offline', 'status-error');
+                showError('Backend API is not accessible. Make sure Docker containers are running.');
+            }
+
+            // Test health endpoint
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                if (response.ok) {
+                    const health = await response.json();
+                    
+                    // Update database status
+                    updateStatus('databaseStatus', 
+                        health.components.database === 'healthy' ? '✓ Connected' : '✗ Error',
+                        health.components.database === 'healthy' ? 'status-success' : 'status-error'
+                    );
+                    
+                    // Update Redis status
+                    updateStatus('redisStatus', 
+                        health.components.redis === 'healthy' ? '✓ Connected' : '✗ Error',
+                        health.components.redis === 'healthy' ? 'status-success' : 'status-error'
+                    );
+                } else {
+                    updateStatus('databaseStatus', '✗ Unknown', 'status-error');
+                    updateStatus('redisStatus', '✗ Unknown', 'status-error');
+                }
+            } catch (error) {
+                updateStatus('databaseStatus', '✗ Unknown', 'status-error');
+                updateStatus('redisStatus', '✗ Unknown', 'status-error');
+            }
+        }
+
+        // Test API function
+        async function testAPI() {
+            const button = document.getElementById('testApiText');
+            const originalText = button.textContent;
+            
+            button.innerHTML = '<span class="loading"></span>Testing...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/test`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    button.textContent = '✓ API Test Successful';
+                    button.style.color = '#4CAF50';
+                    
+                    // Show success message
+                    showError(`API Response: ${data.message}`, 'success');
+                    
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.color = '';
+                    }, 2000);
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                button.textContent = '✗ API Test Failed';
+                button.style.color = '#f44336';
+                showError(`API Test Error: ${error.message}`);
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.color = '';
+                }, 2000);
+            }
+        }
+
+        // Test health function
+        async function testHealth() {
+            const button = document.getElementById('testHealthText');
+            const originalText = button.textContent;
+            
+            button.innerHTML = '<span class="loading"></span>Checking...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    button.textContent = '✓ Health Check Passed';
+                    button.style.color = '#4CAF50';
+                    
+                    // Show detailed health info
+                    const healthInfo = `
+                        Status: ${data.status}
+                        Database: ${data.components.database}
+                        Redis: ${data.components.redis}
+                        Version: ${data.version}
+                    `;
+                    showError(`Health Check Results:\n${healthInfo}`, 'success');
+                    
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.color = '';
+                    }, 2000);
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                button.textContent = '✗ Health Check Failed';
+                button.style.color = '#f44336';
+                showError(`Health Check Error: ${error.message}`);
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.color = '';
+                }, 2000);
+            }
+        }
+
+        // Refresh all status
+        async function refreshStatus() {
+            const button = document.getElementById('refreshText');
+            const originalText = button.textContent;
+            
+            button.innerHTML = '<span class="loading"></span>Refreshing...';
+            
+            // Reset all status to checking
+            updateStatus('backendStatus', '⏳ Checking...', '');
+            updateStatus('databaseStatus', '⏳ Checking...', '');
+            updateStatus('redisStatus', '⏳ Checking...', '');
+            updateStatus('telegramStatus', '⏳ Checking...', '');
+            
+            // Re-initialize everything
+            initializeTelegramWebApp();
+            await checkSystemStatus();
+            
+            button.textContent = '✓ Refreshed';
+            button.style.color = '#4CAF50';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.color = '';
+            }, 1000);
+        }
+
+        // Utility functions
+        function updateStatus(elementId, text, className) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = text;
+                element.className = `status-value ${className}`;
+            }
+        }
+
+        function showError(message, type = 'error') {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            
+            if (type === 'success') {
+                errorDiv.style.background = '#e8f5e8';
+                errorDiv.style.color = '#2e7d32';
+                errorDiv.style.borderLeftColor = '#4caf50';
+            } else {
+                errorDiv.style.background = '#ffebee';
+                errorDiv.style.color = '#c62828';
+                errorDiv.style.borderLeftColor = '#f44336';
+            }
+            
+            errorDiv.style.display = 'block';
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Handle Telegram WebApp events
+        if (window.Telegram && window.Telegram.WebApp) {
+            // Handle main button
+            window.Telegram.WebApp.onEvent('mainButtonClicked', () => {
+                console.log('Main button clicked');
+            });
+            
+            // Handle back button
+            window.Telegram.WebApp.onEvent('backButtonClicked', () => {
+                console.log('Back button clicked');
+            });
+        }
+    </script>
+</body>
+</html>
