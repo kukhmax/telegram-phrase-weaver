@@ -1,4 +1,4 @@
-# Файл: core/ai_generator.py (ФИНАЛЬНАЯ АРХИТЕКТУРНАЯ ВЕРСИЯ)
+# Файл: core/ai_generator.py (ОБНОВЛЕННАЯ ВЕРСИЯ)
 
 import os
 import google.generativeai as genai
@@ -6,36 +6,43 @@ import logging
 import json
 from typing import Optional
 
-# Промпт может оставаться глобальным, это просто константа
+# Обновленный промпт с поддержкой исходной фразы
 PROMPT_TEMPLATE = """
-Твоя задача - помочь в изучении языков. 
-Для слова или фразы "{keyword}" на языке "{language}":
-1.  Придумай одно-два ключевых слова на английском для поиска картинки, которая лучше всего визуально ассоциируется с "{keyword}". Назови это поле "image_query".
-2.  Создай 5 реалистичных примеров предложений со словом "{keyword}". Используй разные грамматические формы.
-3.  Для каждого предложения предоставь точный перевод на {target_language} язык.
-4.  Критически важно: в каждом оригинальном предложении найди слово "{keyword}" (в любой его форме) и оберни его в HTML-теги <b> и </b>.
-Верни ответ ТОЛЬКО в виде валидного JSON-объекта, без каких-либо других слов или форматирования.
-Пример формата:
+Your task is to help with language learning.
+Given:
+- Original phrase: "{phrase}" 
+- Keyword to focus on: "{keyword}"
+- Language: "{language}"
+- Target language for translation: "{target_language}"
+
+Please:
+1. Create an English search query (1-2 words) for finding an image that best visually represents the keyword "{keyword}". Call this field "image_query".
+2. Take the original phrase "{phrase}" and provide its accurate translation to {target_language}. In the original phrase, wrap the keyword "{keyword}" (in any of its forms) with HTML tags <b> and </b>.
+3. Generate 5 additional realistic example sentences using the keyword "{keyword}" in different grammatical forms (conjugations, declensions, etc.).
+4. For each of the 5 additional examples, provide accurate translations to {target_language}.
+5. In each of the 5 additional examples, find and wrap the keyword "{keyword}" (in any of its forms) with HTML tags <b> and </b>.
+
+Return ONLY a valid JSON object without any other words or formatting.
+Format example:
 {{
   "image_query": "walking home sunset",
-  "examples": [
-    {{"original": "Eu estou <b>vou</b> em casa.", "translation": "Я иду домой."}},
-    {{"original": "Eles <b>vão</b> para a praia.", "translation": "Они пошли на пляж."}}
+  "original_phrase": {{"original": "Eu estou <b>indo</b> para casa.", "translation": "Я иду домой."}},
+  "additional_examples": [
+    {{"original": "Eles <b>vão</b> para a praia.", "translation": "Они идут на пляж."}},
+    {{"original": "Nós <b>fomos</b> ao cinema.", "translation": "Мы пошли в кино."}},
+    {{"original": "Ela <b>vai</b> trabalhar.", "translation": "Она идет работать."}},
+    {{"original": "Vocês <b>foram</b> embora.", "translation": "Вы ушли."}},
+    {{"original": "Eu <b>irei</b> amanhã.", "translation": "Я пойду завтра."}}
   ]
 }}
 """
 
-async def generate_examples_with_ai(keyword: str, language: str, target_language: str) -> Optional[dict]:
+async def generate_examples_with_ai(phrase: str, keyword: str, language: str, target_language: str) -> Optional[dict]:
     """
-    Генерирует примеры фраз с помощью AI, создавая новый клиент для каждого вызова.
+    Генерирует примеры фраз с помощью AI, включая исходную фразу и дополнительные примеры.
     """
     
-    # logging.info(f"Отправка AI-запроса для '{keyword}'...")
-
-    
-    # --- КЛЮЧЕВОЕ АРХИТЕКТУРНОЕ ИСПРАВЛЕНИЕ ---
-    # Мы создаем и настраиваем модель ВНУТРИ функции.
-    # Это гарантирует, что для каждого асинхронного "движка" будет свой, свежий клиент.
+    # Создаем и настраиваем модель ВНУТРИ функции для каждого асинхронного вызова
     try:
         api_key = os.environ["GOOGLE_API_KEY"]
         genai.configure(api_key=api_key)
@@ -50,14 +57,19 @@ async def generate_examples_with_ai(keyword: str, language: str, target_language
     if not model:
         return None
 
-    prompt = PROMPT_TEMPLATE.format(keyword=keyword, language=language, target_language=target_language)
-    logging.info(f"Отправка AI-запроса для '{keyword}'...")
+    prompt = PROMPT_TEMPLATE.format(
+        phrase=phrase,
+        keyword=keyword, 
+        language=language, 
+        target_language=target_language
+    )
+    logging.info(f"Отправка AI-запроса для фразы '{phrase}' с ключевым словом '{keyword}'...")
 
     try:
         response = await model.generate_content_async(prompt)
         raw_text = response.text.strip().replace("```json", "").replace("```", "").strip()
         data = json.loads(raw_text)
-        logging.info(f"AI успешно сгенерировал данные для '{keyword}'.")
+        logging.info(f"AI успешно сгенерировал данные для '{phrase}'.")
         return data
     except Exception as e:
         logging.error(f"Ошибка при работе с AI: {e}")

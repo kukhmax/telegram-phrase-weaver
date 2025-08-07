@@ -1,4 +1,4 @@
-# Файл: core/enrichment.py (ФИНАЛЬНАЯ ВЕРСИЯ v6)
+# Файл: core/enrichment.py (ОБНОВЛЕННАЯ ВЕРСИЯ v7)
 
 import asyncio, logging, os, hashlib, aiohttp
 from pathlib import Path
@@ -20,7 +20,6 @@ async def get_translation(text: str, from_lang: str, to_lang: str) -> Optional[s
         return await asyncio.get_running_loop().run_in_executor(None, translate_sync)
     except Exception as e: logging.error(f"Ошибка перевода: {e}"); return None
 
-# --- ИЗМЕНЕНИЕ ЗДЕСЬ: Убираем ненужный параметр 'target_lang' ---
 async def generate_audio(text: str, lang: str, prefix: str):
     try:
         path = AUDIO_DIR / f"{prefix}_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
@@ -46,36 +45,69 @@ async def download_and_save_image(image_url: str, query: str) -> Optional[str]:
                 return str(path)
     except Exception as e: logging.error(f"Ошибка скачивания картинки: {e}"); return None
 
-async def enrich_phrase(keyword: str, full_sentence: str, lang_code: str, target_lang: str) -> Optional[dict]:
-    logging.info(f"--- НАЧАЛО ОБОГАЩЕНИЯ (v6) для '{keyword}' на '{target_lang}' ---")
+async def enrich_phrase(phrase: str, keyword: str, lang_code: str, target_lang: str) -> Optional[dict]:
+    """
+    Обогащает фразу, используя исходную фразу и ключевое слово.
+    
+    Args:
+        phrase: Исходная фраза для изучения
+        keyword: Ключевое слово в фразе
+        lang_code: Код языка изучения
+        target_lang: Код языка перевода
+    """
+    logging.info(f"--- НАЧАЛО ОБОГАЩЕНИЯ (v7) для фразы '{phrase}' с ключевым словом '{keyword}' на '{target_lang}' ---")
+    
     lang_map = {'en': 'English', 'ru': 'Russian', 'es': 'Spanish', 'pt': 'Portuguese', 'pl': 'Polish'}
     target_lang_full = lang_map.get(target_lang, target_lang)
+    language_full = lang_map.get(lang_code, lang_code)
     
-    ai_data = await generate_examples_with_ai(keyword, lang_map.get(lang_code, lang_code), target_lang_full)
-    if not ai_data: return None
+    # Вызываем AI с новой сигнатурой функции
+    ai_data = await generate_examples_with_ai(phrase, keyword, language_full, target_lang_full)
+    if not ai_data: 
+        logging.error("Не удалось получить данные от AI")
+        return None
 
-    image_query, examples = ai_data.get("image_query", keyword), ai_data.get("examples", [])
+    # Извлекаем данные из нового формата JSON
+    image_query = ai_data.get("image_query", keyword)
+    original_phrase_data = ai_data.get("original_phrase", {})
+    additional_examples = ai_data.get("additional_examples", [])
     
+    # Переводим запрос для поиска картинки на английский, если нужно
     english_image_query = image_query
     if lang_code != 'en':
         translated_query = await get_translation(image_query, from_lang=lang_code, to_lang='en')
-        if translated_query: english_image_query = translated_query
+        if translated_query: 
+            english_image_query = translated_query
         
+    # Находим картинку
     image_url_from_api = await find_image_via_api(english_image_query)
 
+    # Параллельные задачи
     tasks = [
-        get_translation(keyword, from_lang=lang_code, to_lang=target_lang),
-        download_and_save_image(image_url_from_api, english_image_query),
-        generate_audio(keyword, lang_code, "keyword") # <-- Вызов теперь снова правильный
+        get_translation(keyword, from_lang=lang_code, to_lang=target_lang),  # перевод ключевого слова
+        download_and_save_image(image_url_from_api, english_image_query),    # скачивание картинки
+        generate_audio(keyword, lang_code, "keyword"),                       # аудио ключевого слова
+        generate_audio(phrase, lang_code, "phrase")                          # аудио исходной фразы
     ]
-    if full_sentence and full_sentence != keyword:
-        tasks.append(get_translation(full_sentence, from_lang=lang_code, to_lang=target_lang))
 
     gathered_results = await asyncio.gather(*tasks)
     
-    keyword_translation, image_path, keyword_audio_path = gathered_results[0], gathered_results[1], gathered_results[2]
-    full_sentence_translation = gathered_results[3] if (full_sentence and full_sentence != keyword) else None
+    keyword_translation = gathered_results[0]
+    image_path = gathered_results[1]
+    keyword_audio_path = gathered_results[2]
+    phrase_audio_path = gathered_results[3]
     
-    return {'keyword': keyword, 'translation': keyword_translation,
-            'full_sentence_translation': full_sentence_translation, 'examples': examples,
-            'image_path': image_path, 'audio_path': keyword_audio_path}
+    # Формируем результат в новом формате
+    result = {
+        'keyword': keyword,
+        'keyword_translation': keyword_translation,
+        'keyword_audio_path': keyword_audio_path,
+        'phrase': phrase,
+        'phrase_audio_path': phrase_audio_path,
+        'original_phrase': original_phrase_data,  # содержит original и translation
+        'additional_examples': additional_examples,  # список из 5 примеров
+        'image_path': image_path
+    }
+    
+    logging.info(f"--- ОБОГАЩЕНИЕ ЗАВЕРШЕНО для '{phrase}' ---")
+    return result
