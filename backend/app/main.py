@@ -1,9 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 from .core.config import settings
 from .core.database import engine, Base
 from .core.logging_config import setup_logging
 from .api import auth, decks, cards
+
+# Загружаем переменные окружения
+load_dotenv()
 
 # Настраиваем логирование
 setup_logging()

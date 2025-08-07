@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -6,7 +6,7 @@ from datetime import datetime
 from ..core.database import get_db
 from ..models.card import Card
 from ..models.deck import Deck
-from ..services.ai_service import ai_service
+from ..services.ai_service import generate_examples_with_ai
 
 router = APIRouter()
 
@@ -198,7 +198,7 @@ class CardBatchResponse(BaseModel):
 @router.post("/enrich", response_model=CardEnrichResponse)
 async def enrich_cards(
     enrich_data: CardEnrichRequest,
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    user_id: int = Query(...),  # Пока передаем как параметр, позже добавим JWT аутентификацию
     db: Session = Depends(get_db)
 ):
     """
@@ -218,10 +218,9 @@ async def enrich_cards(
             )
         
         # Генерируем фразы через AI
-        ai_result = await ai_service.generate_phrases(
-            original_phrase=enrich_data.original_phrase,
+        ai_result = await generate_examples_with_ai(
             keyword=enrich_data.keyword,
-            source_language=deck.source_language,
+            language=deck.source_language,
             target_language=deck.target_language
         )
         

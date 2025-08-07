@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -59,7 +59,7 @@ class DeckListResponse(BaseModel):
 @router.post("/", response_model=DeckResponse, status_code=status.HTTP_201_CREATED)
 async def create_deck(
     deck_data: DeckCreate,
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    user_id: int = Query(...),  # Пока передаем как параметр, позже добавим JWT аутентификацию
     db: Session = Depends(get_db)
 ):
     """

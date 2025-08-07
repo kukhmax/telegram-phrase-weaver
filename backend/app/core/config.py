@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     app_name: str = "PhraseWeaver API"
     debug: bool = True
     version: str = "0.1.0"
+    environment: str = "development"
+    log_level: str = "INFO"
     
     # Database
     database_url: str = "sqlite:///./phraseweaver.db"
@@ -24,6 +26,7 @@ class Settings(BaseSettings):
     openai_api_key: Optional[str] = None
     unsplash_access_key: Optional[str] = None
     gemini_api_key: Optional[str] = None
+    google_api_key: Optional[str] = None
     
     # CORS
     allowed_origins: list = ["*"]  # В продакшене ограничить
