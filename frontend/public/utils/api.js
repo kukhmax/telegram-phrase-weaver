@@ -6,7 +6,7 @@
 // Конфигурация API
 const API_CONFIG = {
     // URL базового API (в разработке используем localhost)
-    BASE_URL: 'https://e78656b52c67.ngrok-free.app',
+    BASE_URL: 'http://localhost:8000/api',
     
     // Таймауты для запросов
     TIMEOUT: 10000, // 10 секунд

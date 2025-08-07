@@ -793,6 +793,8 @@
     <script>
         // Простая логика приложения без внешних зависимостей
         let currentView = 'main';
+
+        const URL = 'http://localhost:8000'
         
         function showView(viewName) {
             // Скрыть все виды
@@ -853,7 +855,7 @@
             } else {
                 // Пытаемся загрузить из API
                 try {
-                    const response = await fetch(`http://localhost:8000/api/decks/${deckId}/?user_id=1`);
+                    const response = await fetch(URL + `/api/decks/${deckId}/?user_id=1`);
                     if (response.ok) {
                         const deck = await response.json();
                         currentDeck = {
@@ -1032,7 +1034,7 @@
             
             try {
                 // Отправляем POST запрос к API для создания колоды
-                const response = await fetch('http://localhost:8000/api/decks/?user_id=1', {
+                const response = await fetch(URL + '/api/decks/?user_id=1', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1134,7 +1136,7 @@
         async function testAPI() {
             updateStatus('Проверка подключения к API...');
             try {
-                const response = await fetch('http://localhost:8000/api/health/');
+                const response = await fetch(URL + '/api/health/');
                 if (response.ok) {
                     const data = await response.json();
                     updateStatus(`API работает: ${data.status || 'OK'}`);
@@ -1168,7 +1170,7 @@
             updateStatus('Генерация фраз...');
             
             try {
-                const response = await fetch('http://localhost:8000/api/cards/enrich/?user_id=1', {
+                const response = await fetch(URL + '/api/cards/enrich/?user_id=1', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1406,7 +1408,7 @@
         // Функция загрузки колод из API
         async function loadDecksFromAPI() {
             try {
-                const response = await fetch('http://localhost:8000/api/decks/?user_id=1');
+                const response = await fetch(URL + '/api/decks/?user_id=1');
                 if (response.ok) {
                     const apiDecks = await response.json();
                     
@@ -1472,8 +1474,8 @@
             try {
                 updateStatus('Удаление колоды...');
                 
-                const response = await fetch(`http://localhost:8000/api/decks/${deckId}?user_id=1`, {
-                    method: 'DELETE'
+                const response = await fetch(URL + '/api/decks/${deckId}?user_id=1', {
+                    method: 'DELETE',
                 });
                 
                 if (!response.ok) {

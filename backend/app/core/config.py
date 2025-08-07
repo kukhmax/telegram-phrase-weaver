@@ -3,48 +3,51 @@ from typing import Optional
 import os
 
 class Settings(BaseSettings):
-    # App settings
-    app_name: str = "PhraseWeaver API"
-    debug: bool = True
-    version: str = "0.1.0"
-    environment: str = "development"
-    log_level: str = "INFO"
+    # Application
+    APP_NAME: str = "PhraseWeaver"
+    ENVIRONMENT: str = "development"
+    SECRET_KEY: str = "your-secret-key-change-in-production"
     
     # Database
-    database_url: str = "sqlite:///./phraseweaver.db"
+    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/phraseweaver"
     
-    # Security
-    secret_key: str = "your-secret-key-change-in-production"
-    algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    # Redis
+    REDIS_URL: str = "redis://localhost:6379"
     
     # Telegram
-    telegram_bot_token: Optional[str] = None
-    telegram_webhook_url: Optional[str] = None
+    TELEGRAM_BOT_TOKEN: Optional[str] = None
+    TELEGRAM_WEBAPP_URL: Optional[str] = None
     
-    # External APIs (будем добавлять позже)
-    openai_api_key: Optional[str] = None
-    unsplash_access_key: Optional[str] = None
-    gemini_api_key: Optional[str] = None
-    google_api_key: Optional[str] = None
+    # AI Services
+    GOOGLE_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: Optional[str] = None
     
-    # CORS
-    allowed_origins: list = ["*"]  # В продакшене ограничить
+    # External APIs
+    UNSPLASH_ACCESS_KEY: Optional[str] = None
+    PIXABAY_API_KEY: Optional[str] = None
     
-    # Supported languages
-    supported_languages: dict = {
+    # File Upload
+    MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB
+    UPLOAD_DIR: str = "uploads"
+    
+    # Rate Limiting
+    RATE_LIMIT_PER_MINUTE: int = 60
+    
+    # Supported Languages
+    SUPPORTED_LANGUAGES: dict = {
         'en': 'English',
-        'ru': 'Русский', 
         'es': 'Español',
         'pt': 'Português',
+        'ru': 'Русский',
         'pl': 'Polski',
         'de': 'Deutsch',
         'fr': 'Français',
-        'it': 'Italiano'
+        'it': 'Italiano',
     }
     
     class Config:
         env_file = ".env"
-        case_sensitive = False
+        case_sensitive = True
 
+# Create global settings instance
 settings = Settings()

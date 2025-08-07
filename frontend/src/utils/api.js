@@ -2,11 +2,12 @@
  * API клиент для взаимодействия с backend сервером PhraseWeaver
  * Обеспечивает централизованное управление HTTP запросами
  */
+const url = 'https://316fbdc32e47.ngrok-free.app'
 
 // Конфигурация API
 const API_CONFIG = {
     // URL базового API (в разработке используем localhost)
-    BASE_URL: 'http://localhost:8000/api',
+    BASE_URL: url + '/api',
     
     // Таймауты для запросов
     TIMEOUT: 10000, // 10 секунд
