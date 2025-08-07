@@ -14,7 +14,6 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f5f5f5;
             color: #000000;
-            line-height: 1.6;
             margin: 0;
             padding: 0;
             min-height: 100vh;
@@ -89,9 +88,9 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
-        .decks-section {
+        /* .decks-section {
             margin-top: 0px;
-        }
+        } */
         .section-title {
             color: white;
             font-size: 16px;
@@ -289,6 +288,7 @@
                  display: flex;
                  justify-content: space-between;
                  align-items: center;
+                 position: relative;
              }
              
              .deck-item:hover {
@@ -325,7 +325,15 @@
                  display: flex;
                  flex-direction: column;
                  gap: 8px;
-                 margin-left: 20px;
+                 margin:0 20px;
+             }
+
+             .deck-delete {
+                 position: absolute;
+                 bottom: 10px;
+                 right: 10px;
+                 display: flex;
+                 margin-top: 0;
              }
              
              .deck-btn {
@@ -349,13 +357,37 @@
                  color: #333;
              }
              
+             .deck-header {
+                 display: flex;
+                 justify-content: space-between;
+                 align-items: flex-start;
+                 margin-bottom: 10px;
+             }
+             
+             .delete-btn {
+                 background: none;
+                 border: none;
+                 font-size: 18px;
+                 cursor: pointer;
+                 padding: 5px;
+                 border-radius: 50%;
+                 transition: background-color 0.2s ease;
+                 color: #666;
+                 min-width: auto;
+             }
+             
+             .delete-btn:hover {
+                 background-color: rgba(255, 0, 0, 0.1);
+                 color: #ff0000;
+             }
+             
              .deck-btn:hover {
                  transform: translateY(-1px);
              }
              
              .mascot-container {
                  text-align: center;
-                 margin: 0;
+                 margin-top: 6px;
              }
              
              .mascot {
@@ -570,10 +602,6 @@
                 <img src="images/duo_main.png" alt="PhraseWeaver Mascot">
             </div>
         </div>
-
-        <button class="main-create-button" onclick="showCreateDeckForm()">
-            СОЗДАТЬ КОЛОДУ
-        </button>
 
         <div class="decks-section">
             <div class="section-title">Мои колоды</div>
@@ -947,7 +975,9 @@
             
             deckElement.innerHTML = `
                 <div class="deck-content">
-                    <h3 class="deck-title">${deck.name}<br><small>${sourceFlag} ${sourceLanguageName} → ${targetFlag} ${targetLanguageName}</small></h3>
+                    <div class="deck-header">
+                        <h3 class="deck-title">${deck.name}<br><small>${sourceFlag} ${sourceLanguageName} → ${targetFlag} ${targetLanguageName}</small></h3>
+                    </div>
                     <div class="deck-stats">
                         <span>Total: ${deck.card_count}</span>
                         <span>To repeat: ${deck.cards_to_review}</span>
@@ -956,6 +986,9 @@
                 <div class="deck-actions">
                     <button class="deck-btn cards" onclick="event.stopPropagation(); viewDeckCards(${deck.id})">карточки</button>
                     <button class="deck-btn training" onclick="event.stopPropagation(); startTraining(${deck.id})">тренировка</button>
+                </div>
+                <div class="deck-delete">
+                     <button class="delete-btn" onclick="event.stopPropagation(); deleteDeck(${deck.id})" title="Удалить колоду">🗑️</button>
                 </div>
             `;
             
@@ -1056,28 +1089,28 @@
         
         function loadDeckCards(deckId) {
             // Здесь будет загрузка карточек из API
-            const mockCards = [
-                { phrase: 'Hello', translation: 'Привет' },
-                { phrase: 'Good morning', translation: 'Доброе утро' },
-                { phrase: 'Thank you', translation: 'Спасибо' },
-                { phrase: 'How are you?', translation: 'Как дела?' },
-                { phrase: 'See you later', translation: 'Увидимся позже' }
-            ];
+            // const mockCards = [
+            //     { phrase: 'Hello', translation: 'Привет' },
+            //     { phrase: 'Good morning', translation: 'Доброе утро' },
+            //     { phrase: 'Thank you', translation: 'Спасибо' },
+            //     { phrase: 'How are you?', translation: 'Как дела?' },
+            //     { phrase: 'See you later', translation: 'Увидимся позже' }
+            // ];
             
             const cardsContainer = document.getElementById('cards-list');
             if (cardsContainer) {
                 cardsContainer.innerHTML = '';
                 
-                mockCards.forEach((card, index) => {
-                    const cardElement = document.createElement('div');
-                    cardElement.className = 'card-item';
-                    cardElement.innerHTML = `
-                        <div class="card-phrase">${card.phrase}</div>
-                        <div class="card-arrow">→</div>
-                        <div class="card-translation">${card.translation}</div>
-                    `;
-                    cardsContainer.appendChild(cardElement);
-                });
+                // mockCards.forEach((card, index) => {
+                //     const cardElement = document.createElement('div');
+                //     cardElement.className = 'card-item';
+                //     cardElement.innerHTML = `
+                //         <div class="card-phrase">${card.phrase}</div>
+                //         <div class="card-arrow">→</div>
+                //         <div class="card-translation">${card.translation}</div>
+                //     `;
+                //     cardsContainer.appendChild(cardElement);
+                // });
             }
         }
         
@@ -1354,12 +1387,31 @@
             updateStatus('Сгенерированные фразы очищены');
         }
         
+        // Функция очистки существующих колод из интерфейса
+        function clearExistingDecks() {
+            const decksContainer = document.getElementById('decks-container');
+            if (!decksContainer) return;
+            
+            // Удаляем все элементы колод (кроме кнопки API)
+            const deckItems = decksContainer.querySelectorAll('.deck-item');
+            deckItems.forEach(item => item.remove());
+            
+            // Показываем заглушку если нет колод
+            const emptyMessage = document.getElementById('empty-decks-message');
+            if (emptyMessage) {
+                emptyMessage.style.display = 'block';
+            }
+        }
+        
         // Функция загрузки колод из API
         async function loadDecksFromAPI() {
             try {
                 const response = await fetch('http://localhost:8000/api/decks/?user_id=1');
                 if (response.ok) {
                     const apiDecks = await response.json();
+                    
+                    // Очищаем существующие колоды перед загрузкой новых
+                    clearExistingDecks();
                     
                     // Сохраняем колоды в localStorage
                     localStorage.setItem('phraseweaver_decks', JSON.stringify(apiDecks.decks || apiDecks));
@@ -1410,6 +1462,34 @@
             // Загружаем колоды из API
             await loadDecksFromAPI();
         });
+        
+        // Функция удаления колоды
+        async function deleteDeck(deckId) {
+            if (!confirm('Вы уверены, что хотите удалить эту колоду? Все карточки в ней также будут удалены.')) {
+                return;
+            }
+            
+            try {
+                updateStatus('Удаление колоды...');
+                
+                const response = await fetch(`http://localhost:8000/api/decks/${deckId}?user_id=1`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                updateStatus('Колода успешно удалена');
+                
+                // Перезагружаем список колод
+                await loadDecksFromAPI();
+                
+            } catch (error) {
+                console.error('Ошибка при удалении колоды:', error);
+                updateStatus('Ошибка при удалении колоды: ' + error.message);
+            }
+        }
     </script>
 </body>
 </html>
