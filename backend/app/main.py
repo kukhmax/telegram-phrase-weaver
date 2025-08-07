@@ -9,6 +9,8 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 from app.core.database import engine, SessionLocal
+from app.api import api_router
+from app.models import User, Deck, Concept, Phrase, Card, Review  # Import models for SQLAlchemy
 import os
 
 # Configure structured logging
@@ -83,6 +85,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include API routes
+app.include_router(api_router)
+
 # Mount static files
 app.mount("/static", StaticFiles(directory="uploads"), name="static")
 
@@ -116,7 +121,8 @@ async def health_check():
             "database": db_status,
             "redis": redis_status
         },
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "environment": settings.ENVIRONMENT
     }
 
 # Root endpoint
@@ -127,7 +133,8 @@ async def root():
         "message": "PhraseWeaver API is running",
         "version": "1.0.0",
         "docs": "/docs",
-        "health": "/health"
+        "health": "/health",
+        "environment": settings.ENVIRONMENT
     }
 
 # Basic API endpoint for testing
@@ -139,7 +146,9 @@ async def test_api():
         "message": "API is working correctly",
         "environment": settings.ENVIRONMENT,
         "database_connected": True,
-        "redis_connected": True
+        "redis_connected": True,
+        "auth_configured": bool(settings.TELEGRAM_BOT_TOKEN),
+        "supported_languages": settings.SUPPORTED_LANGUAGES
     }
 
 # Telegram webhook endpoint placeholder

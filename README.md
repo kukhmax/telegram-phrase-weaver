@@ -213,7 +213,9 @@ Detailed deployment instructions will be provided in the next development phase.
 This project is for educational and development purposes.
 
 
-
+--------------------------------------------
+--------------------------------------------
+--------------------------------------------
 
 
 Техническое задание: PhraseWeaver Telegram Mini App
