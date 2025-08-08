@@ -43,3 +43,11 @@ pytest==7.4.3
 pytest-asyncio==0.21.1
 black==23.11.0
 isort==5.12.0
+
+# FastAPI
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-dotenv==1.0.0
+PyJWT==2.8.0
+SQLAlchemy==2.0.23
+redis==5.0.1

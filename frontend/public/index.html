@@ -582,6 +582,7 @@
             pointer-events: none;
         }
     </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
     <!-- Основной контейнер приложения -->
@@ -794,7 +795,12 @@
         // Простая логика приложения без внешних зависимостей
         let currentView = 'main';
 
-        const URL = 'http://localhost:8000'
+        const getApiBaseUrl = () => {
+    const meta = document.querySelector('meta[name="api-base-url"]');
+    if (meta && meta.content) return meta.content;
+    return `${location.protocol}//${location.host}`;
+};
+const API_BASE_URL = getApiBaseUrl();
         
         function showView(viewName) {
             // Скрыть все виды
@@ -1090,29 +1096,13 @@
         }
         
         function loadDeckCards(deckId) {
-            // Здесь будет загрузка карточек из API
-            // const mockCards = [
-            //     { phrase: 'Hello', translation: 'Привет' },
-            //     { phrase: 'Good morning', translation: 'Доброе утро' },
-            //     { phrase: 'Thank you', translation: 'Спасибо' },
-            //     { phrase: 'How are you?', translation: 'Как дела?' },
-            //     { phrase: 'See you later', translation: 'Увидимся позже' }
-            // ];
+
             
             const cardsContainer = document.getElementById('cards-list');
             if (cardsContainer) {
                 cardsContainer.innerHTML = '';
                 
-                // mockCards.forEach((card, index) => {
-                //     const cardElement = document.createElement('div');
-                //     cardElement.className = 'card-item';
-                //     cardElement.innerHTML = `
-                //         <div class="card-phrase">${card.phrase}</div>
-                //         <div class="card-arrow">→</div>
-                //         <div class="card-translation">${card.translation}</div>
-                //     `;
-                //     cardsContainer.appendChild(cardElement);
-                // });
+
             }
         }
         
@@ -1474,7 +1464,7 @@
             try {
                 updateStatus('Удаление колоды...');
                 
-                const response = await fetch(URL + '/api/decks/${deckId}?user_id=1', {
+                const response = await fetch(`${API_BASE_URL}/api/decks/${deckId}`, {
                     method: 'DELETE',
                 });
                 
@@ -1493,5 +1483,28 @@
             }
         }
     </script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        const initData = tg.initData || null;
+        if (initData) {
+            fetch(`${API_BASE_URL}/api/auth/telegram/verify`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ init_data: tg.initData })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.token) {
+                    localStorage.setItem('pw_auth_token', data.token);
+                }
+            })
+            .catch(err => console.error('Auth error:', err));
+        }
+    }
+});
+</script>
 </body>
 </html>
