@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timedelta
@@ -10,6 +11,26 @@ import jwt
 import redis
 from sqlalchemy import Column, Integer, String, create_engine, DateTime, Text
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
+
+from .auth import router as auth_router
+
+
+app = FastAPI(title="PhraseWeaver API", version="1.0.0")
+
+# CORS для работы с фронтендом
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # В продакшене указать конкретные домены
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth_router)
+
+# Статические файлы (фронтенд)
+if os.path.exists("../frontend/public"):
+    app.mount("/static", StaticFiles(directory="../frontend/public"), name="static")
 
 # === CONFIG ===
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "TEST_BOT_TOKEN")
@@ -157,6 +178,14 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
     return user
 
 # === ROUTES ===
+@app.get("/")
+async def root():
+    return {"message": "PhraseWeaver API работает!"}
+
+@app.get("/api/health")
+async def health_check():
+    return {"status": "healthy", "service": "PhraseWeaver"}
+
 @app.post("/api/auth/telegram/verify", response_model=AuthResp)
 def auth_verify(payload: VerifyIn, db: Session = Depends(get_db)):
     # Check if init_data already verified and cached

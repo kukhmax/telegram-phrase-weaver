@@ -1,0 +1,552 @@
+/**
+ * Стили для компонента управления колодами
+ * Обеспечивает современный и удобный интерфейс
+ */
+
+/* Основной контейнер менеджера колод */
+.deck-manager {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Заголовок с кнопкой создания */
+.deck-manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e1e8ed;
+}
+
+.deck-manager-header h2 {
+    margin: 0;
+    color: #1da1f2;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+/* Кнопки */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    background: none;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: #1da1f2;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #1991db;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #657786;
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #5a6c7a;
+}
+
+.btn-icon {
+    font-size: 16px;
+}
+
+/* Иконочные кнопки */
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: rgba(29, 161, 242, 0.1);
+}
+
+/* Форма создания колоды */
+.create-deck-form {
+    background: white;
+    border: 1px solid #e1e8ed;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-header h3 {
+    margin: 0 0 20px 0;
+    color: #14171a;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* Группы полей формы */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #14171a;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #1da1f2;
+    box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Строка с двумя полями */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+@media (max-width: 600px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Действия формы */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e1e8ed;
+}
+
+/* Ошибки формы */
+.form-error {
+    background: #ffebee;
+    color: #c62828;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 16px;
+    font-size: 14px;
+    border-left: 4px solid #c62828;
+}
+
+/* Список колод */
+.decks-list {
+    display: grid;
+    gap: 20px;
+}
+
+/* Карточка колоды */
+.deck-card {
+    background: white;
+    border: 1px solid #e1e8ed;
+    border-radius: 16px;
+    padding: 20px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.deck-card:hover {
+    border-color: #1da1f2;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+/* Заголовок карточки */
+.deck-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.deck-name {
+    margin: 0;
+    color: #14171a;
+    font-size: 18px;
+    font-weight: 600;
+    flex: 1;
+    margin-right: 12px;
+}
+
+.clickable-deck-name {
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.clickable-deck-name:hover {
+    color: #1da1f2;
+    text-decoration: underline;
+}
+
+.deck-actions {
+    display: flex;
+    gap: 4px;
+}
+
+/* Описание колоды */
+.deck-description {
+    color: #657786;
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 0 0 16px 0;
+}
+
+/* Информация о колоде */
+.deck-info {
+    margin-bottom: 16px;
+}
+
+/* Языки */
+.deck-languages {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.language-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.language-badge.source {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.language-badge.target {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.arrow {
+    color: #657786;
+    font-weight: bold;
+}
+
+/* Статистика */
+.deck-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1da1f2;
+}
+
+.stat-label {
+    display: block;
+    font-size: 12px;
+    color: #657786;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+/* Подвал карточки */
+.deck-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid #e1e8ed;
+}
+
+.deck-date {
+    font-size: 12px;
+    color: #657786;
+}
+
+/* Пустое состояние */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #657786;
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    margin: 0 0 12px 0;
+    color: #14171a;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.empty-state p {
+    margin: 0 0 24px 0;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+/* Индикатор загрузки */
+.loading-indicator {
+    text-align: center;
+    padding: 40px 20px;
+    color: #657786;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e1e8ed;
+    border-top: 4px solid #1da1f2;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 16px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .deck-manager {
+        padding: 16px;
+    }
+    
+    .deck-manager-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+    
+    .deck-manager-header h2 {
+        text-align: center;
+    }
+    
+    .create-deck-form {
+        padding: 20px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .deck-card {
+        padding: 16px;
+    }
+    
+    .deck-card-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .deck-actions {
+        align-self: flex-end;
+    }
+    
+    .deck-footer {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .deck-stats {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .deck-manager {
+        padding: 12px;
+    }
+    
+    .deck-manager-header h2 {
+        font-size: 20px;
+    }
+    
+    .btn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    
+    .create-deck-form {
+        padding: 16px;
+    }
+    
+    .deck-card {
+        padding: 12px;
+    }
+    
+    .deck-name {
+        font-size: 16px;
+    }
+    
+    .empty-state {
+        padding: 40px 16px;
+    }
+    
+    .empty-icon {
+        font-size: 48px;
+    }
+    
+    .empty-state h3 {
+        font-size: 20px;
+    }
+}
+
+/* Темная тема (если потребуется) */
+@media (prefers-color-scheme: dark) {
+    .deck-manager {
+        background: #15202b;
+        color: #ffffff;
+    }
+    
+    .deck-manager-header {
+        border-bottom-color: #38444d;
+    }
+    
+    .deck-manager-header h2 {
+        color: #1da1f2;
+    }
+    
+    .create-deck-form,
+    .deck-card {
+        background: #192734;
+        border-color: #38444d;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        background: #253341;
+        border-color: #38444d;
+        color: #ffffff;
+    }
+    
+    .form-group label,
+    .deck-name {
+        color: #ffffff;
+    }
+    
+    .deck-description,
+    .deck-date,
+    .stat-label {
+        color: #8899a6;
+    }
+    
+    .deck-footer {
+        border-top-color: #38444d;
+    }
+    
+    .empty-state {
+        color: #8899a6;
+    }
+    
+    .empty-state h3 {
+        color: #ffffff;
+    }
+}
+
+/* Анимации */
+.deck-card {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.create-deck-form {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Улучшения доступности */
+.btn:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: 2px solid #1da1f2;
+    outline-offset: 2px;
+}
+
+/* Состояния наведения для touch устройств */
+@media (hover: none) {
+    .deck-card:hover {
+        transform: none;
+    }
+    
+    .btn-primary:hover {
+        transform: none;
+    }
+}
