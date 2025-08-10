@@ -27,12 +27,11 @@ app = FastAPI(title="PhraseWeaver API", version="1.0.0", description="Telegram M
 # CORS настройки
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://web.telegram.org", "*"],  # В продакшене ограничить
+    allow_origins=["https://frontend.onrender.com", "https://*.onrender.com"],  # Add your frontend URL
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.include_router(auth_router)
 
 # Статические файлы (фронтенд)
