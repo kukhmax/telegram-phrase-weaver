@@ -64,3 +64,7 @@ node_modules/
 # Temporary files
 tmp/
 temp/
+
+.venv/
+.python-version
+.env.example

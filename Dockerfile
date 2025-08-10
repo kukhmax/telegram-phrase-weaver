@@ -1,4 +1,3 @@
-# 1. Dockerfile (в корне проекта)
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -7,25 +6,30 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     gcc \
     postgresql-client \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Копирование requirements.txt и установка Python зависимостей
-COPY backend/requirements.txt .
+# Копирование и установка Python зависимостей
+COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копирование кода приложения
-COPY backend/ ./backend/
-COPY frontend/ ./frontend/
+# Копирование кода
+COPY . .
 
-# Создание директории для логов
-RUN mkdir -p /app/logs
-
-# Открытие порта
-EXPOSE 8000
+# Создание необходимых директорий
+RUN mkdir -p /app/logs /app/static
 
 # Переменные окружения
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
+ENV PORT=8000
+
+# Открытие порта
+EXPOSE $PORT
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:$PORT/api/health || exit 1
 
 # Запуск приложения
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT

@@ -1,12 +1,13 @@
-# Файл: core/enrichment.py (ОБНОВЛЕННАЯ ВЕРСИЯ v7)
-
 import asyncio, logging, os, hashlib, aiohttp
 from pathlib import Path
 from typing import Optional
-from core.ai_generator import generate_examples_with_ai
-from core.image_finder import find_image_via_api
+# The imports below were corrected. The project structure seems to have been refactored,
+# but these imports were not updated. Using relative imports to sibling modules
+# within the 'services' package is the correct approach.
+from .ai_service import generate_examples_with_ai
+from .image_finder import find_image_via_api  # Assuming image_finder.py is a sibling module
 from gtts import gTTS
-from googletrans import Translator
+from deep_translator import GoogleTranslator
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - ENRICH - %(levelname)s - %(message)s')
 AUDIO_DIR, IMAGE_DIR = Path("assets/audio"), Path("assets/images")
@@ -16,7 +17,9 @@ ensure_dir_exists(AUDIO_DIR, IMAGE_DIR)
 
 async def get_translation(text: str, from_lang: str, to_lang: str) -> Optional[str]:
     try:
-        def translate_sync(): return Translator().translate(text, src=from_lang, dest=to_lang).text
+        # deep-translator is used here as a more stable alternative to googletrans
+        def translate_sync():
+            return GoogleTranslator(source=from_lang, target=to_lang).translate(text)
         return await asyncio.get_running_loop().run_in_executor(None, translate_sync)
     except Exception as e: logging.error(f"Ошибка перевода: {e}"); return None
 

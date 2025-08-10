@@ -1,12 +1,16 @@
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 import os
-import hmac, hashlib
+import hmac
+import hashlib
 from urllib.parse import parse_qsl, quote
+from pathlib import Path
 import jwt
 import redis
 from sqlalchemy import Column, Integer, String, create_engine, DateTime, Text
@@ -14,23 +18,27 @@ from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
 from .auth import router as auth_router
 
+import json
 
-app = FastAPI(title="PhraseWeaver API", version="1.0.0")
+load_dotenv() # Загружаем переменные из .env файла
 
-# CORS для работы с фронтендом
+app = FastAPI(title="PhraseWeaver API", version="1.0.0", description="Telegram Mini App for language learning")
+
+# CORS настройки
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # В продакшене указать конкретные домены
+    allow_origins=["https://web.telegram.org", "*"],  # В продакшене ограничить
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
 app.include_router(auth_router)
 
 # Статические файлы (фронтенд)
-if os.path.exists("../frontend/public"):
-    app.mount("/static", StaticFiles(directory="../frontend/public"), name="static")
+frontend_path = Path(__file__).parent.parent.parent / "frontend" / "public"
+if frontend_path.exists():
+    app.mount("/static", StaticFiles(directory=str(frontend_path)), name="static")
 
 # === CONFIG ===
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "TEST_BOT_TOKEN")
@@ -69,24 +77,27 @@ class Deck(Base):
     description = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
+# Примечание: Эта строка закомментирована, так как управление схемой базы данных
+# осуществляется через Alembic. Запуск `create_all` может конфликтовать с миграциями.
+# Миграции применяются автоматически при запуске через `start.sh`.
 
 # === APP SETUP ===
-app = FastAPI(title="Phrase Weaver - Backend")
+# app = FastAPI(title="Phrase Weaver - Backend")
 
-origins = os.getenv("CORS_ORIGINS", "*")
-if origins == "*":
-    allow_origins = ["*"]
-else:
-    allow_origins = [o.strip() for o in origins.split(",")]
+# origins = os.getenv("CORS_ORIGINS", "*")
+# if origins == "*":
+#     allow_origins = ["*"]
+# else:
+#     allow_origins = [o.strip() for o in origins.split(",")]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allow_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=allow_origins,
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 # === TELEGRAM INIT_DATA VERIFICATION ===
 def verify_telegram_init(init_data: str, max_age_seconds: int = 86400):
@@ -178,13 +189,23 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
     return user
 
 # === ROUTES ===
+# Основной роут - отдача index.html
 @app.get("/")
-async def root():
-    return {"message": "PhraseWeaver API работает!"}
+async def read_root():
+    index_path = frontend_path / "index.html"
+    if index_path.exists():
+        return FileResponse(str(index_path))
+    return {"message": "PhraseWeaver API активен!", "status": "healthy"}
 
+# Health check для Railway
 @app.get("/api/health")
 async def health_check():
-    return {"status": "healthy", "service": "PhraseWeaver"}
+    return {
+        "status": "healthy",
+        "service": "PhraseWeaver",
+        "version": "1.0.0",
+        "environment": os.getenv("RAILWAY_ENVIRONMENT", "development")
+    }
 
 @app.post("/api/auth/telegram/verify", response_model=AuthResp)
 def auth_verify(payload: VerifyIn, db: Session = Depends(get_db)):

@@ -2,12 +2,25 @@
  * API клиент для взаимодействия с backend сервером PhraseWeaver
  * Обеспечивает централизованное управление HTTP запросами
  */
-const url = 'https://316fbdc32e47.ngrok-free.app'
+
+/**
+ * Определяет базовый URL API в зависимости от окружения.
+ * @returns {string} Базовый URL API.
+ */
+const getApiBaseUrl = () => {
+    // Для локальной разработки, когда frontend запущен на localhost или 127.0.0.1
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // Используем порт 8000, как указано в скрипте restart_servers.sh
+        return 'http://localhost:8000/api';
+    }
+    // Для production или тестирования через ngrok.
+    // В идеале, этот URL должен внедряться в процессе сборки (build).
+    return 'https://316fbdc32e47.ngrok-free.app/api'; // ЗАМЕНИТЬ НА ВАШ PROD/NGROK URL
+};
 
 // Конфигурация API
 const API_CONFIG = {
-    // URL базового API (в разработке используем localhost)
-    BASE_URL: url + '/api',
+    BASE_URL: getApiBaseUrl(),
     
     // Таймауты для запросов
     TIMEOUT: 10000, // 10 секунд
