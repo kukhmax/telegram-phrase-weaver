@@ -1,20 +1,56 @@
 services:
   - type: web
-    name: phraseweaver
+    name: backend
     env: docker
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./backend/Dockerfile
     plan: free
     envVars:
-      - key: DATABASE_URL
+      - key: POSTGRES_HOST
         fromDatabase:
-          name: phraseweaver-db
-          property: connectionString
+          name: db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: db
+          property: port
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: db
+          property: password
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: redis
+          property: port
       - key: TELEGRAM_BOT_TOKEN
-        value: YOUR_BOT_TOKEN
-    buildCommand: "echo 'Building PhraseWeaver...'"
-    startCommand: "uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT"
+        value: your_bot_token_here  # Replace later
+      - key: GOOGLE_API_KEY
+        value: your_gemini_key_here
+      # Add other env vars similarly
+
+  - type: static
+    name: frontend
+    buildCommand: ""  # No build needed for static
+    staticPublishPath: ./frontend
+    plan: free
 
 databases:
-  - name: phraseweaver-db
-    databaseName: phraseweaver
+  - name: db
+    plan: free  # Starter plan
+
+redis:
+  - name: redis
     plan: free
