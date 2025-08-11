@@ -1016,20 +1016,26 @@ const API_BASE_URL = "https://telegram-phrase-weaver.onrender.com"    // getApiB
             console.log('createNewDeck called');
             console.log('authToken:', authToken);
             console.log('API_BASE_URL:', API_BASE_URL);
+
+            let authToken = localStorage.getItem('authToken');  // Or fetch from /auth/telegram
+
             
-            // Проверяем наличие токена
+            // If not set, authenticate
             if (!authToken) {
-                authToken = localStorage.getItem('pw_auth_token');
-                console.log('authToken from localStorage:', authToken);
+            const initData = Telegram.WebApp.initData;
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/telegram`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ init_data: initData })
+                });
+                const data = await response.json();
+                authToken = data.access_token;
+                localStorage.setItem('authToken', authToken);
+            } catch (error) {
+                console.error('Auth failed:', error);
             }
-            
-            if (!authToken) {
-                 console.log('No authToken, calling handleTestMode');
-                 handleTestMode();
-                 // Ждем, пока handleTestMode установит токен
-                 authToken = 'test-token';
-                 console.log('authToken set to:', authToken);
-             }
+            }
             
             // Валидация
             console.log('Validation - deckName:', deckName);
