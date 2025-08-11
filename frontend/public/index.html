@@ -605,7 +605,7 @@
             <div class="section-title">Мои колоды</div>
 
             <!-- Основной контент приложения -->
-        <div class="content" id="main-content">
+        <div class="content" id="main-content" style="padding: 0 1em">
             <div id="main-view">
                 
                 <!-- Список колод -->
@@ -628,7 +628,7 @@
                 </div>
             </div>
             
-            <div id="create-deck-view" style="display: none;">
+            <div id="create-deck-view" style="display: none; padding: 0 1em">
                 <h3>Создать новую колоду</h3>
                 
                 <!-- Форма создания колоды -->
@@ -795,7 +795,8 @@
         const getApiBaseUrl = () => {
     const meta = document.querySelector('meta[name="api-base-url"]');
     if (meta && meta.content) return meta.content;
-    return `${location.protocol}//${location.host}`;
+    // Для локальной разработки используем backend на порту 8000
+    return 'http://127.0.0.1:8000';
 };
 const API_BASE_URL = getApiBaseUrl();
         
@@ -852,29 +853,22 @@ const API_BASE_URL = getApiBaseUrl();
                 currentDeck = {
                     id: foundDeck.id,
                     name: foundDeck.name,
+                    description: foundDeck.description,
                     source_language: foundDeck.source_language,
                     target_language: foundDeck.target_language
                 };
             } else {
                 // Пытаемся загрузить из API
                 try {
-                    const response = await fetch(URL + `/api/decks/${deckId}/?user_id=1`);
+                    const response = await fetch(API_BASE_URL + `/api/decks/${deckId}`);
                     if (response.ok) {
                         const deck = await response.json();
                         currentDeck = {
                             id: deck.id,
                             name: deck.name,
+                            description: deck.description,
                             source_language: deck.source_language,
                             target_language: deck.target_language
-                        };
-                    } else {
-                        // Если не удалось загрузить колоду, используем значения по умолчанию
-                        console.warn('Не удалось загрузить информацию о колоде, используем значения по умолчанию');
-                        currentDeck = {
-                            id: deckId,
-                            name: 'Неизвестная колода',
-                            source_language: 'pt',
-                            target_language: 'ru'
                         };
                     }
                 } catch (error) {
@@ -968,10 +962,11 @@ const API_BASE_URL = getApiBaseUrl();
                 emptyMessage.style.display = 'none';
             }
             
-            const sourceLanguageName = getLanguageName(deck.source_language);
-            const targetLanguageName = getLanguageName(deck.target_language);
-            const sourceFlag = getLanguageFlag(deck.source_language);
-            const targetFlag = getLanguageFlag(deck.target_language);
+            // Используем значения по умолчанию, если языки не указаны
+            const sourceLanguageName = getLanguageName(deck.source_language || 'en');
+            const targetLanguageName = getLanguageName(deck.target_language || 'ru');
+            const sourceFlag = getLanguageFlag(deck.source_language || 'en');
+            const targetFlag = getLanguageFlag(deck.target_language || 'ru');
             
             // Создаем элемент колоды
             const deckElement = document.createElement('div');
@@ -981,11 +976,17 @@ const API_BASE_URL = getApiBaseUrl();
             deckElement.innerHTML = `
                 <div class="deck-content">
                     <div class="deck-header">
-                        <h3 class="deck-title">${deck.name}<br><small>${sourceFlag} ${sourceLanguageName} → ${targetFlag} ${targetLanguageName}</small></h3>
+                        <h3 class="deck-title">${deck.title || deck.name || 'Без названия'}<br><small>${deck.description || 'Без описания'}</small></h3>
                     </div>
+
+                    <div class="deck-languages">
+                        <strong>From: </strong><span>${sourceFlag} ${sourceLanguageName}</span><br>
+                        <strong>To: </strong><span>${targetFlag} ${targetLanguageName}</span><br>
+                    </div>
+                    
                     <div class="deck-stats">
-                        <span>Total: ${deck.card_count}</span>
-                        <span>To repeat: ${deck.cards_to_review}</span>
+                        <span>Total: ${deck.card_count || 0}</span>
+                        <span>To repeat: ${deck.cards_to_review || 0}</span>
                     </div>
                 </div>
                 <div class="deck-actions">
@@ -1012,41 +1013,89 @@ const API_BASE_URL = getApiBaseUrl();
             const sourceLanguage = getSelectedLanguage('sourceLanguageSelect');
             const targetLanguage = getSelectedLanguage('targetLanguageSelect');
             
+            console.log('createNewDeck called');
+            console.log('authToken:', authToken);
+            console.log('API_BASE_URL:', API_BASE_URL);
+            
+            // Проверяем наличие токена
+            if (!authToken) {
+                authToken = localStorage.getItem('pw_auth_token');
+                console.log('authToken from localStorage:', authToken);
+            }
+            
+            if (!authToken) {
+                 console.log('No authToken, calling handleTestMode');
+                 handleTestMode();
+                 // Ждем, пока handleTestMode установит токен
+                 authToken = 'test-token';
+                 console.log('authToken set to:', authToken);
+             }
+            
             // Валидация
+            console.log('Validation - deckName:', deckName);
+            console.log('Validation - sourceLanguage:', sourceLanguage);
+            console.log('Validation - targetLanguage:', targetLanguage);
+            
             if (!deckName.trim()) {
+                console.log('Validation failed: empty deck name');
                 updateStatus('Введите название колоды');
                 return;
             }
             
             if (!sourceLanguage) {
+                console.log('Validation failed: no source language');
                 updateStatus('Выберите изучаемый язык');
                 return;
             }
             
             if (!targetLanguage) {
+                console.log('Validation failed: no target language');
                 updateStatus('Выберите язык перевода');
                 return;
             }
             
             if (sourceLanguage === targetLanguage) {
+                console.log('Validation failed: same languages');
                 updateStatus('Изучаемый язык и язык перевода должны быть разными');
                 return;
             }
+            
+            console.log('Validation passed, proceeding with API call');
             
             updateStatus('Создание колоды...');
             
             try {
                 // Отправляем POST запрос к API для создания колоды
-                const response = await fetch(URL + '/api/decks/?user_id=1', {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({
-                        name: deckName,
-                        description: deckDesc,
-                        source_language: sourceLanguage,
-                        target_language: targetLanguage
-                    })
-                });
+                console.log('About to send POST request');
+                console.log('URL:', API_BASE_URL + '/api/decks');
+                console.log('Headers:', getAuthHeaders());
+                console.log('Body:', JSON.stringify({
+                    title: deckName,
+                    description: deckDesc
+                }));
+                
+                let response;
+                try {
+                    console.log('Executing fetch...');
+                    response = await fetch(API_BASE_URL + '/api/decks', {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({
+                            title: deckName,
+                            description: deckDesc,
+                            source_language: sourceLanguage,
+                            target_language: targetLanguage
+                        })
+                    });
+                    console.log('Fetch completed successfully');
+                    console.log('Response status:', response.status);
+                    console.log('Response ok:', response.ok);
+                } catch (fetchError) {
+                    console.error('Fetch failed:', fetchError);
+                    console.error('Error name:', fetchError.name);
+                    console.error('Error message:', fetchError.message);
+                    throw fetchError;
+                }
                 
                 if (!response.ok) {
                     console.error('Ошибка при создании колоды:', response.statusText);
@@ -1065,7 +1114,9 @@ const API_BASE_URL = getApiBaseUrl();
                     console.error('Ошибка при сохранении колоды в localStorage:', error);
                 }
                 
-                addDeckToMainScreen(newDeck);
+                // Перезагружаем все колоды с сервера для актуальности данных
+                await loadDecksFromAPI();
+                
                 updateStatus(`Колода "${deckName}" успешно создана!`);
                 
                 // Очистить форму
@@ -1122,7 +1173,7 @@ const API_BASE_URL = getApiBaseUrl();
         async function testAPI() {
             updateStatus('Проверка подключения к API...');
             try {
-                const response = await fetch(URL + '/api/health/');
+                const response = await fetch(API_BASE_URL + '/api/health/');
                 if (response.ok) {
                     const data = await response.json();
                     updateStatus(`API работает: ${data.status || 'OK'}`);
@@ -1156,7 +1207,7 @@ const API_BASE_URL = getApiBaseUrl();
             updateStatus('Генерация фраз...');
             
             try {
-                const response = await fetch(URL + '/api/cards/enrich/?user_id=1', {
+                const response = await fetch(API_BASE_URL + '/api/cards/enrich', {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({
@@ -1392,7 +1443,11 @@ const API_BASE_URL = getApiBaseUrl();
         // Функция загрузки колод из API
         async function loadDecksFromAPI() {
             try {
-                const response = await fetch(URL + '/api/decks/?user_id=1');
+                console.log('Loading decks from API with auth headers');
+                const response = await fetch(API_BASE_URL + '/api/decks', {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
                 if (response.ok) {
                     const apiDecks = await response.json();
                     
@@ -1478,13 +1533,50 @@ const API_BASE_URL = getApiBaseUrl();
         }
     </script>
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Улучшенная Telegram аутентификация
-
 // Глобальные переменные для Telegram
 let tg = window.Telegram?.WebApp;
 let currentUser = null;
 let authToken = null;
+
+// Добавление авторизационных заголовков к API запросам
+function getAuthHeaders() {
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    
+    if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    
+    return headers;
+}
+
+// Тестовый режим (для разработки вне Telegram)
+function handleTestMode() {
+    console.log('Переход в тестовый режим');
+    currentUser = {
+        id: 123456789,
+        first_name: "Тест",
+        last_name: "Пользователь",
+        username: "testuser",
+        language_code: "ru"
+    };
+    
+    authToken = 'test-token';
+    localStorage.setItem('pw_auth_token', authToken);
+    localStorage.setItem('pw_user', JSON.stringify(currentUser));
+    
+    updateStatus('Тестовый режим активирован');
+    if (typeof updateUserInterface === 'function') {
+        updateUserInterface();
+    }
+    if (typeof loadUserData === 'function') {
+        loadUserData();
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Улучшенная Telegram аутентификация
 
 // Инициализация Telegram WebApp
 function initializeTelegramApp() {
@@ -1573,25 +1665,7 @@ async function authenticateWithTelegram() {
     }
 }
 
-// Тестовый режим (для разработки вне Telegram)
-function handleTestMode() {
-    console.log('Переход в тестовый режим');
-    currentUser = {
-        id: 123456789,
-        first_name: "Тест",
-        last_name: "Пользователь",
-        username: "testuser",
-        language_code: "ru"
-    };
-    
-    authToken = 'test-token';
-    localStorage.setItem('pw_auth_token', authToken);
-    localStorage.setItem('pw_user', JSON.stringify(currentUser));
-    
-    updateStatus('Тестовый режим активирован');
-    updateUserInterface();
-    loadUserData();
-}
+
 
 // Обновление интерфейса пользователя
 function updateUserInterface() {
@@ -1717,19 +1791,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     updateStatus('Приложение загружено успешно');
     showView('main');
 });
-
-// Добавление авторизационных заголовков к API запросам
-function getAuthHeaders() {
-    const headers = {
-        'Content-Type': 'application/json'
-    };
-    
-    if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-    }
-    
-    return headers;
-}
 
 // Обработка ошибок аутентификации
 function handleAuthError() {

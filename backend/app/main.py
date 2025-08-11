@@ -27,10 +27,22 @@ app = FastAPI(title="PhraseWeaver API", version="1.0.0", description="Telegram M
 # CORS настройки
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://frontend.onrender.com", "https://*.onrender.com","https://frontend-q7zq.onrender.com"],  # Add your frontend URL
+    allow_origins=[
+        "https://frontend.onrender.com", 
+        "https://*.onrender.com",
+        "https://frontend-q7zq.onrender.com",
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "https://6894b8bb989c6e0970a79362--rainbow-hummingbird-773b08.netlify.app",
+        "https://*.netlify.app",
+        "*"  # Разрешаем все origins для разработки
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 app.include_router(auth_router)
 
@@ -45,18 +57,29 @@ JWT_SECRET = os.getenv("SECRET_KEY", "change_me_in_env")
 JWT_ALGORITHM = "HS256"
 DEBUG_MODE = os.getenv("ENVIRONMENT", "development") == "development"
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:postgres@db:5432/phraseweaver"
-)
-REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
+# Используем SQLite для локальной разработки
+if DEBUG_MODE:
+    DATABASE_URL = "sqlite:///./phraseweaver.db"
+    REDIS_URL = None  # Отключаем Redis в режиме разработки
+else:
+    DATABASE_URL = os.getenv(
+        "DATABASE_URL",
+        "postgresql://postgres:postgres@db:5432/phraseweaver"
+    )
+    REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
 
 # === REDIS CONNECTION ===
-redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+if REDIS_URL:
+    redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+else:
+    redis_client = None
 
 # === DB SETUP ===
 Base = declarative_base()
-engine = create_engine(DATABASE_URL)
+if DEBUG_MODE:
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 class User(Base):
@@ -74,7 +97,13 @@ class Deck(Base):
     owner_id = Column(Integer, nullable=False)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
+    source_language = Column(String, nullable=True)
+    target_language = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+# Создаем таблицы в режиме разработки (после определения всех моделей)
+if DEBUG_MODE:
+    Base.metadata.create_all(bind=engine)
 
 # Base.metadata.create_all(bind=engine)
 # Примечание: Эта строка закомментирована, так как управление схемой базы данных
@@ -132,7 +161,8 @@ def create_jwt(payload: dict, expires_minutes: int = 60*24*7):
     token = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
     # store in Redis (session)
     session_key = f"session:{payload['telegram_id']}"
-    redis_client.set(session_key, token, ex=expires_minutes*60)
+    if redis_client:
+        redis_client.set(session_key, token, ex=expires_minutes*60)
     return token
 
 def verify_jwt(token: str):
@@ -140,8 +170,11 @@ def verify_jwt(token: str):
         data = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         # check session in Redis
         session_key = f"session:{data['telegram_id']}"
-        stored_token = redis_client.get(session_key)
-        if stored_token != token:
+        if redis_client:
+            stored_token = redis_client.get(session_key)
+        else:
+            stored_token = None
+        if stored_token and stored_token != token:
             return None
         return data
     except jwt.PyJWTError:
@@ -158,12 +191,16 @@ class AuthResp(BaseModel):
 class DeckCreate(BaseModel):
     title: str
     description: Optional[str] = None
+    source_language: Optional[str] = None
+    target_language: Optional[str] = None
 
 class DeckOut(BaseModel):
     id: int
     owner_id: int
     title: str
     description: Optional[str]
+    source_language: Optional[str]
+    target_language: Optional[str]
 
 # === DEPENDENCIES ===
 def get_db():
@@ -178,6 +215,23 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
     if not auth.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing auth token")
     token = auth.split(" ", 1)[1]
+    
+    # Обход для тестового режима в разработке
+    if DEBUG_MODE and token == "test-token":
+        # Создаем или находим тестового пользователя
+        test_user = db.query(User).filter(User.telegram_id == 123456789).first()
+        if not test_user:
+            test_user = User(
+                telegram_id=123456789,
+                first_name="Тест",
+                last_name="Пользователь",
+                username="testuser"
+            )
+            db.add(test_user)
+            db.commit()
+            db.refresh(test_user)
+        return test_user
+    
     data = verify_jwt(token)
     if not data or "telegram_id" not in data:
         raise HTTPException(status_code=401, detail="Invalid token or expired session")
@@ -210,7 +264,10 @@ async def health_check():
 def auth_verify(payload: VerifyIn, db: Session = Depends(get_db)):
     # Check if init_data already verified and cached
     cache_key = f"initdata:{hashlib.sha256(payload.init_data.encode()).hexdigest()}"
-    cached_user = redis_client.hgetall(cache_key)
+    if redis_client:
+        cached_user = redis_client.hgetall(cache_key)
+    else:
+        cached_user = {}
     if cached_user:
         token = create_jwt({"telegram_id": int(cached_user["telegram_id"]), "user_db_id": int(cached_user["user_db_id"])})
         return {"token": token, "user": cached_user}
@@ -263,22 +320,43 @@ def auth_verify(payload: VerifyIn, db: Session = Depends(get_db)):
         "last_name": last_name or "",
         "username": username or ""
     }
-    redis_client.hset(cache_key, mapping=user_data)
-    redis_client.expire(cache_key, 86400)  # 1 день
+    if redis_client:
+        redis_client.hset(cache_key, mapping=user_data)
+        redis_client.expire(cache_key, 86400)  # 1 день
     return {"token": token, "user": user_data}
 
 @app.post("/api/decks", response_model=DeckOut)
 def create_deck(d: DeckCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    deck = Deck(owner_id=current_user.telegram_id, title=d.title, description=d.description)
+    deck = Deck(
+        owner_id=current_user.telegram_id, 
+        title=d.title, 
+        description=d.description,
+        source_language=d.source_language,
+        target_language=d.target_language
+    )
     db.add(deck)
     db.commit()
     db.refresh(deck)
-    return DeckOut(id=deck.id, owner_id=deck.owner_id, title=deck.title, description=deck.description)
+    return DeckOut(
+        id=deck.id, 
+        owner_id=deck.owner_id, 
+        title=deck.title, 
+        description=deck.description,
+        source_language=deck.source_language,
+        target_language=deck.target_language
+    )
 
 @app.get("/api/decks", response_model=List[DeckOut])
 def list_decks(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     decks = db.query(Deck).filter(Deck.owner_id == current_user.telegram_id).all()
-    return [DeckOut(id=deck.id, owner_id=deck.owner_id, title=deck.title, description=deck.description) for deck in decks]
+    return [DeckOut(
+        id=deck.id,
+        owner_id=deck.owner_id, 
+        title=deck.title, 
+        description=deck.description,
+        source_language=deck.source_language,
+        target_language=deck.target_language
+    ) for deck in decks]
 
 @app.delete("/api/decks/{deck_id}")
 def delete_deck(deck_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
