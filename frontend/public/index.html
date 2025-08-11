@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<!-- Основная HTML страница для Telegram Mini App PhraseWeaver -->
+
 <html lang="ru">
 <head>
-    <!-- Кодировка символов UTF-8 для поддержки русского языка -->
     <meta charset="UTF-8">
-    <!-- Настройка viewport для корректного отображения на мобильных устройствах -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Заголовок страницы, отображается в браузере -->
     <title>PhraseWeaver</title>
     
     <style>
@@ -22,7 +18,6 @@
             max-width: 400px;
             margin: 0 auto;
             background: white;
-            padding: 20px;
             min-height: 100vh;
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
@@ -47,12 +42,14 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            padding-left: 20px;
         }
         
         .header-right {
             display: flex;
             align-items: center;
             gap: 15px;
+            padding-right: 20px;
         }
         
         .header-icon {
@@ -1052,6 +1049,7 @@ const API_BASE_URL = getApiBaseUrl();
                 });
                 
                 if (!response.ok) {
+                    console.error('Ошибка при создании колоды:', response.statusText);
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
