@@ -792,13 +792,13 @@
         // Простая логика приложения без внешних зависимостей
         let currentView = 'main';
 
-        const getApiBaseUrl = () => {
-    const meta = document.querySelector('meta[name="api-base-url"]');
-    if (meta && meta.content) return meta.content;
-    // Для локальной разработки используем backend на порту 8000
-    return 'http://127.0.0.1:8000';
-};
-const API_BASE_URL = getApiBaseUrl();
+    //     const getApiBaseUrl = () => {
+    // const meta = document.querySelector('meta[name="api-base-url"]');
+    // if (meta && meta.content) return meta.content;
+    // // Для локальной разработки используем backend на порту 8000
+    // return 'http://127.0.0.1:8000';
+// };
+const API_BASE_URL = "https://telegram-phrase-weaver.onrender.com"    // getApiBaseUrl();
         
         function showView(viewName) {
             // Скрыть все виды
