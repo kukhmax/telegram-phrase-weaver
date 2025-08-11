@@ -27,18 +27,7 @@ app = FastAPI(title="PhraseWeaver API", version="1.0.0", description="Telegram M
 # CORS настройки
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://frontend.onrender.com", 
-        "https://*.onrender.com",
-        "https://frontend-q7zq.onrender.com",
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-        "https://6894b8bb989c6e0970a79362--rainbow-hummingbird-773b08.netlify.app",
-        "https://*.netlify.app",
-        "*"  # Разрешаем все origins для разработки
-    ],
+    allow_origins=["https://frontend-q7zq.onrender.com", "*"], 
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
