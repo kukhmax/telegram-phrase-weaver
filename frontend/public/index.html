@@ -973,16 +973,28 @@
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({
-                        name: nameInput.value, // <--- ПРАВИЛЬНО
+                        title: nameInput.value, // <--- ПРАВИЛЬНО
                         description: descInput.value,
                         source_language: sourceLangInput.value,
                         target_language: targetLangInput.value
                     })
                 });
                 if (!response.ok) {
-                    const errData = await response.json();
-                    throw new Error(`HTTP ${response.status}: ${JSON.stringify(errData)}`);
-                }
+    // Пытаемся получить JSON с деталями ошибки
+    let errorDetails = 'Сервер не вернул подробностей.';
+    try {
+        const errData = await response.json();
+        // Красиво форматируем JSON, чтобы его было удобно читать
+        errorDetails = JSON.stringify(errData, null, 2); 
+    } catch (e) {
+        // Если ответ не JSON, получаем его как текст
+        errorDetails = await response.text();
+    }
+    // Выводим ошибку в alert и в консоль
+    const errorMessage = `Ошибка ${response.status}: ${response.statusText}\n\nПодробности от сервера:\n${errorDetails}`;
+    alert(errorMessage);
+    throw new Error(errorMessage);
+}
                 
                 // Получаем созданную колоду из ответа сервера
                 const newDeck = await response.json(); 

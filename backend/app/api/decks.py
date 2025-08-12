@@ -35,7 +35,7 @@ class DeckResponse(BaseModel):
     Модель ответа с информацией о колоде
     """
     id: int
-    name: str
+    title: str
     description: Optional[str]
     source_language: str
     target_language: str
