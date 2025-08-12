@@ -1096,21 +1096,23 @@ const API_BASE_URL = "https://telegram-phrase-weaver.onrender.com"    // getApiB
                 }
                 
                 const newDeck = await response.json();
-                
-                // Сохраняем колоду в localStorage для быстрого доступа
+
+                // Просто добавляем новую колоду в интерфейс, не перезагружая всё
+                addDeckToMainScreen(newDeck);
+
+                // ... (можно оставить сохранение в localStorage, если оно нужно для оффлайн режима)
                 try {
                     const storedDecks = localStorage.getItem('phraseweaver_decks');
                     let decks = storedDecks ? JSON.parse(storedDecks) : [];
+                    // Важно: нужно проверить, что decks это массив
+                    if (!Array.isArray(decks)) decks = [];
                     decks.push(newDeck);
                     localStorage.setItem('phraseweaver_decks', JSON.stringify(decks));
                 } catch (error) {
                     console.error('Ошибка при сохранении колоды в localStorage:', error);
                 }
-                
-                // Перезагружаем все колоды с сервера для актуальности данных
-                await loadDecksFromAPI();
-                
-                updateStatus(`Колода "${deckName}" успешно создана!`);
+
+                updateStatus(`Колода "${deckName}" успешно создана!`)
                 
                 // Очистить форму
                 document.getElementById('deckNameInput').value = '';
@@ -1478,21 +1480,6 @@ const API_BASE_URL = "https://telegram-phrase-weaver.onrender.com"    // getApiB
                 console.error('Ошибка при загрузке колод из localStorage:', error);
             }
         }
-        
-        // Инициализация при загрузке страницы
-        document.addEventListener('DOMContentLoaded', async function() {
-            updateStatus('Приложение загружено успешно');
-            showView('main');
-            
-            // Обновление информации о пользователе
-            const userInfo = document.getElementById('user-info');
-            if (userInfo) {
-                userInfo.textContent = 'Пользователь: Тестовый режим';
-            }
-            
-            // Очищаем localStorage от старых дефолтных колод
-            localStorage.removeItem('phraseweaver_decks');
-        });
         
         // Функция удаления колоды
         async function deleteDeck(deckId) {
