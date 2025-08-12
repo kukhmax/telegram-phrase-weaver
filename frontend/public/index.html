@@ -990,7 +990,10 @@
                 sourceLangInput.value = '';
                 targetLangInput.value = '';
                 goHome();
-                await loadDecks(); // Перезагружаем список
+                console.log('[CREATE] Ждем 1 секунду, чтобы база данных успела обновиться...');
+                    setTimeout(() => {
+                        loadDecks();
+                    }, 1000);
             } catch(error) {
                 console.error('[CREATE] Ошибка создания колоды:', error);
                 alert('Не удалось создать колоду. Подробности в консоли.');
