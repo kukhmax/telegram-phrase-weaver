@@ -893,20 +893,12 @@
         // ШАГ 3: КЛЮЧЕВЫЕ ФУНКЦИИ (API-запросы)
         // ======================================================================
 
-        async function authenticateUser() {
-            console.log('[AUTH] Начало аутентификации...');
-            // Пытаемся получить токен из localStorage
-            const savedToken = localStorage.getItem('pw_auth_token');
-            if (savedToken) {
-                console.log('[AUTH] Найден сохраненный токен. Проверяем его.');
-                authToken = savedToken;
-                // Тут можно было бы добавить проверку токена через /api/auth/me, но пока пропустим
-                return true;
-            }
+         async function authenticateAndLoadData() {
+            console.log('[INIT] Начало процесса аутентификации и загрузки данных.');
+            authToken = localStorage.getItem('pw_auth_token');
 
-            // Если токена нет, и мы в Telegram, получаем новый
-            if (tg && tg.initData) {
-                console.log('[AUTH] Токен не найден, запрашиваем новый у сервера...');
+            if (!authToken && tg && tg.initData) {
+                console.log('[AUTH] Токен не найден в localStorage, запрашиваем новый у сервера...');
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/auth/telegram`, {
                         method: 'POST',
@@ -919,19 +911,25 @@
                         authToken = authData.access_token;
                         localStorage.setItem('pw_auth_token', authToken);
                         console.log('[AUTH] Новый токен получен и сохранен.');
-                        return true;
                     }
                 } catch (error) {
-                    console.error('[AUTH] Ошибка получения токена:', error);
-                    return false;
+                    console.error('[AUTH] Ошибка получения нового токена:', error);
                 }
+            } else if (!authToken) {
+                console.log('[AUTH] Тестовый режим (или нет данных Telegram). Используем "test-token".');
+                authToken = 'test-token';
+                localStorage.setItem('pw_auth_token', authToken);
+            } else {
+                console.log('[AUTH] Токен найден в localStorage.');
             }
-            
-            // Если мы не в Telegram и нет сохраненного токена (режим разработки)
-            console.log('[AUTH] Тестовый режим. Используем "test-token".');
-            authToken = 'test-token';
-            localStorage.setItem('pw_auth_token', authToken);
-            return true;
+
+            if (authToken) {
+                console.log('[DATA] Токен есть. Загружаем колоды...');
+                await loadDecks();
+            } else {
+                console.error('[CRITICAL] Не удалось получить токен. Данные не будут загружены.');
+                alert('Ошибка аутентификации. Невозможно загрузить данные.');
+            }
         }
 
         async function loadDecks() {
@@ -959,71 +957,55 @@
         }
         
         async function createNewDeck() {
-            const deckName = document.getElementById('deckNameInput').value;
-            const deckDesc = document.getElementById('deckDescInput').value;
-            const sourceLanguage = document.getElementById('sourceLanguageSelect').value;
-            const targetLanguage = document.getElementById('targetLanguageSelect').value;
-            
-            if (!deckName.trim() || !sourceLanguage || !targetLanguage) {
+            const nameInput = document.getElementById('deckNameInput');
+            const descInput = document.getElementById('deckDescInput');
+            const sourceLangInput = document.getElementById('sourceLanguageSelect');
+            const targetLangInput = document.getElementById('targetLanguageSelect');
+
+            if (!nameInput.value.trim() || !sourceLangInput.value || !targetLangInput.value) {
                 alert('Пожалуйста, заполните все обязательные поля.');
                 return;
             }
             
             console.log('[CREATE] Создание новой колоды...');
             try {
-                 const response = await fetch(`${API_BASE_URL}/api/decks`, {
+                const response = await fetch(`${API_BASE_URL}/api/decks`, {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({
-                        name: deckName, // <--- Убедитесь, что модель Pydantic ожидает 'name', а не 'title'
-                        description: deckDesc,
-                        source_language: sourceLanguage,
-                        target_language: targetLanguage
+                        name: nameInput.value,
+                        description: descInput.value,
+                        source_language: sourceLangInput.value,
+                        target_language: targetLangInput.value
                     })
                 });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(`HTTP ${response.status}: ${JSON.stringify(errData)}`);
+                }
                 
-                console.log('[CREATE] Колода успешно создана на сервере.');
-                
-                // Очистка формы
-                document.getElementById('deckNameInput').value = '';
-                document.getElementById('deckDescInput').value = '';
-                document.getElementById('sourceLanguageSelect').value = '';
-                document.getElementById('targetLanguageSelect').value = '';
-
+                console.log('[CREATE] Колода успешно создана.');
+                nameInput.value = '';
+                descInput.value = '';
+                sourceLangInput.value = '';
+                targetLangInput.value = '';
                 goHome();
-                await loadDecks(); // Перезагружаем список после создания
-
+                await loadDecks(); // Перезагружаем список
             } catch(error) {
                 console.error('[CREATE] Ошибка создания колоды:', error);
                 alert('Не удалось создать колоду. Подробности в консоли.');
             }
         }
 
-
         // ======================================================================
         // ШАГ 4: ТОЧКА ВХОДА (инициализация приложения)
         // ======================================================================
         
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             console.log('--- DOM ЗАГРУЖЕН. ЗАПУСК ПРИЛОЖЕНИЯ ---');
-            
             showView('main');
-            if (tg) {
-                tg.ready();
-                tg.expand();
-            }
-
-            const isAuthenticated = await authenticateUser();
-
-            if (isAuthenticated) {
-                console.log('Аутентификация пройдена. Загружаем колоды...');
-                await loadDecks();
-            } else {
-                console.error('Критическая ошибка: не удалось аутентифицировать пользователя.');
-                alert('Ошибка аутентификации. Невозможно загрузить данные.');
-            }
-            
+            if (tg) tg.ready();
+            authenticateAndLoadData();
             console.log('--- ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА ---');
         });
 
