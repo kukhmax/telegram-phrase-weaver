@@ -1616,48 +1616,56 @@ function initializeTelegramApp() {
 
 // Аутентификация через Telegram
 async function authenticateWithTelegram() {
+    if (!tg || !tg.initData) {
+        console.warn('Telegram initData not found, switching to test mode.');
+        handleTestMode();
+        return;
+    }
+
     try {
         updateStatus('Аутентификация через Telegram...');
-        
-        const response = await fetch(`${API_BASE_URL}/api/auth/telegram/verify`, {
+
+        const response = await fetch(`${API_BASE_URL}/api/auth/telegram`, { // <-- ПРАВИЛЬНЫЙ ЭНДПОИНТ
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-                init_data: tg.initData,
-                user: currentUser
+            body: JSON.stringify({
+                init_data: tg.initData // <-- ПРАВИЛЬНОЕ ТЕЛО ЗАПРОСА
             })
         });
 
         if (!response.ok) {
-            throw new Error(`Ошибка аутентификации: ${response.status}`);
+            const errorData = await response.json();
+            throw new Error(`Ошибка аутентификации: ${errorData.detail || response.status}`);
         }
 
-        const data = await response.json();
-        
-        if (data.token) {
-            authToken = data.token;
-            localStorage.setItem('pw_auth_token', data.token);
-            localStorage.setItem('pw_user', JSON.stringify(currentUser));
-            
+        const authData = await response.json();
+
+        if (authData.access_token) {
+            authToken = authData.access_token; // Сохраняем токен в глобальную переменную
+            localStorage.setItem('pw_auth_token', authToken); // И в localStorage
+            localStorage.setItem('pw_user', JSON.stringify(authData.user));
+
+            currentUser = authData.user;
+
             updateStatus(`Добро пожаловать, ${currentUser.first_name}!`);
             updateUserInterface();
-            
-            // Загружаем данные пользователя
-            await loadUserData();
-            
+
+            // Сразу после успешной аутентификации загружаем колоды
+            await loadDecksFromAPI();
+
         } else {
-            throw new Error('Токен не получен');
+            throw new Error('Токен не получен от сервера');
         }
 
     } catch (error) {
         console.error('Ошибка аутентификации:', error);
         updateStatus(`Ошибка аутентификации: ${error.message}`);
-        handleTestMode();
+        // Можно раскомментировать для отладки без Telegram
+        // handleTestMode();
     }
 }
-
 
 
 // Обновление интерфейса пользователя

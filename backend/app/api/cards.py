@@ -7,6 +7,8 @@ from ..core.database import get_db
 from ..models.card import Card
 from ..models.deck import Deck
 from ..services.ai_service import generate_examples_with_ai
+from ..core.dependencies import get_current_user
+from ..models.user import User
 
 router = APIRouter()
 
@@ -74,7 +76,7 @@ class CardReviewResponse(BaseModel):
 @router.post("/", response_model=CardResponse, status_code=status.HTTP_201_CREATED)
 async def create_card(
     card_data: CardCreate,
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -90,7 +92,7 @@ async def create_card(
     # Проверяем, существует ли колода и принадлежит ли она пользователю
     deck = db.query(Deck).filter(
         Deck.id == card_data.deck_id,
-        Deck.user_id == user_id
+        Deck.user_id == current_user.id
     ).first()
     
     if not deck:
@@ -118,7 +120,7 @@ async def create_card(
 @router.get("/deck/{deck_id}", response_model=CardListResponse)
 async def get_deck_cards(
     deck_id: int,
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db)
@@ -133,7 +135,7 @@ async def get_deck_cards(
     # Проверяем, существует ли колода и принадлежит ли она пользователю
     deck = db.query(Deck).filter(
         Deck.id == deck_id,
-        Deck.user_id == user_id
+        Deck.user_id == current_user.id
     ).first()
     
     if not deck:
@@ -198,7 +200,7 @@ class CardBatchResponse(BaseModel):
 @router.post("/enrich", response_model=CardEnrichResponse)
 async def enrich_cards(
     enrich_data: CardEnrichRequest,
-    user_id: int = Query(...),  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -208,7 +210,7 @@ async def enrich_cards(
         # Проверяем существование колоды и права доступа
         deck = db.query(Deck).filter(
             Deck.id == enrich_data.deck_id,
-            Deck.user_id == user_id
+            Deck.user_id == current_user.id
         ).first()
         
         if not deck:
@@ -253,7 +255,7 @@ async def enrich_cards(
 @router.post("/batch", response_model=CardBatchResponse)
 async def create_cards_batch(
     batch_data: CardBatchCreate,
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -263,7 +265,7 @@ async def create_cards_batch(
         # Проверяем существование колоды и права доступа
         deck = db.query(Deck).filter(
             Deck.id == batch_data.deck_id,
-            Deck.user_id == user_id
+            Deck.user_id == current_user.id
         ).first()
         
         if not deck:
@@ -338,7 +340,7 @@ async def create_cards_batch(
 @router.get("/{card_id}", response_model=CardResponse)
 async def get_card(
     card_id: int,
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -349,7 +351,7 @@ async def get_card(
     # Получаем карточку и проверяем права доступа через колоду
     card = db.query(Card).join(Deck).filter(
         Card.id == card_id,
-        Deck.user_id == user_id
+        Deck.user_id == current_user.id
     ).first()
     
     if not card:
@@ -364,7 +366,7 @@ async def get_card(
 async def update_card(
     card_id: int,
     card_data: CardUpdate,
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -376,7 +378,7 @@ async def update_card(
     # Получаем карточку и проверяем права доступа
     card = db.query(Card).join(Deck).filter(
         Card.id == card_id,
-        Deck.user_id == user_id
+        Deck.user_id == current_user.id
     ).first()
     
     if not card:
@@ -398,7 +400,7 @@ async def update_card(
 @router.delete("/{card_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_card(
     card_id: int,
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -409,7 +411,7 @@ async def delete_card(
     # Получаем карточку и проверяем права доступа
     card = db.query(Card).join(Deck).filter(
         Card.id == card_id,
-        Deck.user_id == user_id
+        Deck.user_id == current_user.id
     ).first()
     
     if not card:
@@ -427,7 +429,7 @@ async def delete_card(
 async def review_card(
     card_id: int,
     review_data: CardReviewResponse,
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -441,7 +443,7 @@ async def review_card(
     # Получаем карточку и проверяем права доступа
     card = db.query(Card).join(Deck).filter(
         Card.id == card_id,
-        Deck.user_id == user_id
+        Deck.user_id == current_user.id
     ).first()
     
     if not card:
@@ -464,7 +466,7 @@ async def review_card(
 @router.get("/deck/{deck_id}/due", response_model=CardListResponse)
 async def get_due_cards(
     deck_id: int,
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     limit: int = 20,
     db: Session = Depends(get_db)
 ):
@@ -477,7 +479,7 @@ async def get_due_cards(
     # Проверяем, существует ли колода и принадлежит ли она пользователю
     deck = db.query(Deck).filter(
         Deck.id == deck_id,
-        Deck.user_id == user_id
+        Deck.user_id == current_user.id
     ).first()
     
     if not deck:

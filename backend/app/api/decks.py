@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
+from ..core.dependencies import get_current_user
 from ..core.database import get_db
 from ..models.deck import Deck
 from ..models.user import User
@@ -59,7 +60,7 @@ class DeckListResponse(BaseModel):
 @router.post("/", response_model=DeckResponse, status_code=status.HTTP_201_CREATED)
 async def create_deck(
     deck_data: DeckCreate,
-    user_id: int = Query(...),  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -72,7 +73,7 @@ async def create_deck(
     """
     
     # Проверяем существование пользователя
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == current_user.id).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -85,7 +86,7 @@ async def create_deck(
         description=deck_data.description,
         source_language=deck_data.source_language,
         target_language=deck_data.target_language,
-        user_id=user_id
+        user_id=current_user.id # <-- Использование ID из токена
     )
     
     # Сохраняем в базе данных
@@ -97,7 +98,7 @@ async def create_deck(
 
 @router.get("/", response_model=DeckListResponse)
 async def get_user_decks(
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db)
@@ -110,7 +111,7 @@ async def get_user_decks(
     """
     
     # Проверяем существование пользователя
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == current_user.id).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -118,17 +119,17 @@ async def get_user_decks(
         )
     
     # Получаем колоды пользователя с пагинацией
-    decks = db.query(Deck).filter(Deck.user_id == user_id).offset(skip).limit(limit).all()
+    decks = db.query(Deck).filter(Deck.user_id == current_user.id).offset(skip).limit(limit).all()
     
     # Подсчитываем общее количество колод
-    total = db.query(Deck).filter(Deck.user_id == user_id).count()
+    total = db.query(Deck).filter(Deck.user_id == current_user.id).count()
     
     return DeckListResponse(decks=decks, total=total)
 
 @router.get("/{deck_id}", response_model=DeckResponse)
 async def get_deck(
     deck_id: int,
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -140,7 +141,7 @@ async def get_deck(
     # Ищем колоду, принадлежащую пользователю
     deck = db.query(Deck).filter(
         Deck.id == deck_id,
-        Deck.user_id == user_id
+        Deck.user_id == current_user.id
     ).first()
     
     if not deck:
@@ -155,7 +156,7 @@ async def get_deck(
 async def update_deck(
     deck_id: int,
     deck_data: DeckUpdate,
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -168,7 +169,7 @@ async def update_deck(
     # Ищем колоду, принадлежащую пользователю
     deck = db.query(Deck).filter(
         Deck.id == deck_id,
-        Deck.user_id == user_id
+        Deck.user_id == current_user.id
     ).first()
     
     if not deck:
@@ -191,7 +192,7 @@ async def update_deck(
 @router.delete("/{deck_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_deck(
     deck_id: int,
-    user_id: int,  # Пока передаем как параметр, позже добавим JWT аутентификацию
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -204,7 +205,7 @@ async def delete_deck(
     # Ищем колоду, принадлежащую пользователю
     deck = db.query(Deck).filter(
         Deck.id == deck_id,
-        Deck.user_id == user_id
+        Deck.user_id == current_user.id
     ).first()
     
     if not deck:
