@@ -1097,14 +1097,10 @@ const API_BASE_URL = "https://telegram-phrase-weaver.onrender.com"    // getApiB
                 
                 const newDeck = await response.json();
 
-                // Просто добавляем новую колоду в интерфейс, не перезагружая всё
-                addDeckToMainScreen(newDeck);
-
-                // ... (можно оставить сохранение в localStorage, если оно нужно для оффлайн режима)
+                // Сохраняем в localStorage (опционально, но пусть будет)
                 try {
                     const storedDecks = localStorage.getItem('phraseweaver_decks');
                     let decks = storedDecks ? JSON.parse(storedDecks) : [];
-                    // Важно: нужно проверить, что decks это массив
                     if (!Array.isArray(decks)) decks = [];
                     decks.push(newDeck);
                     localStorage.setItem('phraseweaver_decks', JSON.stringify(decks));
@@ -1112,7 +1108,10 @@ const API_BASE_URL = "https://telegram-phrase-weaver.onrender.com"    // getApiB
                     console.error('Ошибка при сохранении колоды в localStorage:', error);
                 }
 
-                updateStatus(`Колода "${deckName}" успешно создана!`)
+                // Перезагружаем все колоды с сервера для актуальности данных
+                await loadDecksFromAPI();
+
+                updateStatus(`Колода "${deckName}" успешно создана!`);
                 
                 // Очистить форму
                 document.getElementById('deckNameInput').value = '';
@@ -1547,9 +1546,10 @@ function handleTestMode() {
     if (typeof updateUserInterface === 'function') {
         updateUserInterface();
     }
-    if (typeof loadUserData === 'function') {
-        loadUserData();
-    }
+    
+    // Загружаем данные пользователя (включая колоды)
+    // Добавляем этот вызов сюда!
+    loadDecksFromAPI(); 
 }
 
 document.addEventListener("DOMContentLoaded", function() {
