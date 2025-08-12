@@ -973,7 +973,7 @@
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({
-                        title: nameInput.value, // <--- ПРАВИЛЬНО
+                        name: nameInput.value, // <--- ПРАВИЛЬНО
                         description: descInput.value,
                         source_language: sourceLangInput.value,
                         target_language: targetLangInput.value
@@ -984,16 +984,21 @@
                     throw new Error(`HTTP ${response.status}: ${JSON.stringify(errData)}`);
                 }
                 
-                console.log('[CREATE] Колода успешно создана.');
+                // Получаем созданную колоду из ответа сервера
+                const newDeck = await response.json(); 
+                console.log('[CREATE] Колода успешно создана и получена от сервера:', newDeck);
+
+                // Добавляем именно эту новую колоду на экран
+                addDeckToMainScreen(newDeck);
+
+                // Очищаем форму
                 nameInput.value = '';
                 descInput.value = '';
                 sourceLangInput.value = '';
                 targetLangInput.value = '';
+                
+                // Возвращаемся на главный экран
                 goHome();
-                console.log('[CREATE] Ждем 1 секунду, чтобы база данных успела обновиться...');
-                    setTimeout(() => {
-                        loadDecks();
-                    }, 1000);
             } catch(error) {
                 console.error('[CREATE] Ошибка создания колоды:', error);
                 alert('Не удалось создать колоду. Подробности в консоли.');
