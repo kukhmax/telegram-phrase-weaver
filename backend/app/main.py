@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.routers import router
+from app.routers import cards
 
 app = FastAPI(title="PhraseWeaver API")
 
@@ -14,10 +14,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
+
 
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
 
-# Позже добавим routers
+app.include_router(cards.router)
