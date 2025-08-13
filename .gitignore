@@ -68,3 +68,20 @@ temp/
 .venv/
 .python-version
 .env.example
+
+legacy/
+
+echo "
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+assets/audio/*
+assets/images/*
+*.db
+migrations/
+" > .gitignore
