@@ -1,0 +1,17 @@
+fastapi  # Latest stable (~0.115+)
+uvicorn[standard]  # Для server
+sqlalchemy==2.0.43
+asyncpg  # Для async Postgres
+redis  # Latest for redis-py
+aiohttp==3.12.15
+gtts==2.5.4
+deep-translator==1.11.4
+google-generativeai==0.8.5
+python-unsplash  # Latest for Unsplash
+apscheduler==3.11.0
+alembic  # Latest
+pydantic
+pydantic-settings
+pyjwt
+cryptography  # Для AES in auth
+httpx  # Для Telegram API calls
