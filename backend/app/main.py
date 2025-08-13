@@ -5,6 +5,13 @@ from alembic import command, config as alembic_config
 from app.core.config import settings
 from app.routers import cards
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from app.services.notifications import send_daily_reminders  # TODO: implement
+
+scheduler = AsyncIOScheduler()
+scheduler.add_job(send_daily_reminders, 'interval', days=1)
+scheduler.start()
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Run migrations on startup
