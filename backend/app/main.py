@@ -1,7 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from alembic import command, config as alembic_config
 from app.core.config import settings
 from app.routers import cards
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Run migrations on startup
+    alembic_cfg = alembic_config.Config("alembic.ini")
+    command.upgrade(alembic_cfg, "head")
+    yield  # App runs here
+    # Optional shutdown logic
 
 app = FastAPI(title="PhraseWeaver API")
 

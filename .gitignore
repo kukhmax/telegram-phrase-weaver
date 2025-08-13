@@ -83,7 +83,7 @@ venv/
 assets/audio/*
 assets/images/*
 *.db
-migrations/
+# migrations/
 " > .gitignore
 
 *.png
