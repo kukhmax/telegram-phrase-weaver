@@ -85,3 +85,5 @@ assets/images/*
 *.db
 migrations/
 " > .gitignore
+
+*.png
