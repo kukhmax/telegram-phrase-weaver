@@ -1,1 +1,145 @@
-Generic single-database configuration.
+### Решение Проблемы с Pre-Deploy Command в Free Tier Render
+
+Привет! Как твой ментор, я проверил Render docs и community (via fresh search на 2025): Да, Pre-Deploy Command действительно ограничен paid instances (Starter+ tiers, от $7/month). Free tier (Hobby) не поддерживает его, как на твоём скрине (tooltip "available for paid instances only"). Это limitation для free: нет pre-deploy, ограниченный CPU/RAM (512MB/0.5 CPU), auto-suspend после 15min idle, и max 750 hours/month. Но free хватит для dev/testing нашего app (20 users low load).
+
+**Как решить без paid**:
+- **Лучший способ**: Запускать миграции автоматически при старте app (внутри кода FastAPI). Используем lifespan events (async on_startup) – это run'ит миграции каждый раз при deploy/restart, но idempotent (Alembic skip'нет если tables существуют). Работает в free, т.к. не зависит от Render features.
+- Альтернативы (если не подходит):
+  - Manual миграции: После deploy вызови endpoint /migrate (добавим роут), но manual.
+  - Switch host: Railway.app (free credits ~$5/month, full features incl. pre-deploy) или Fly.io (free с volume для DB). Но Render OK для start – fix'нем lifespan.
+  - Если upgrade to paid: Рекомендую для prod, но для dev – используем lifespan.
+
+Мы адаптируем Подшаг 3.1: Добавим lifespan в main.py для миграций. Это standard practice (из FastAPI docs). Продолжим этап с этим.
+
+#### Подшаг 3.1: Настройка Alembic для Миграций (с Fix для Free Tier)
+**Почему**: Alembic auto-генерит миграции. Вместо pre-deploy – lifespan в FastAPI run'ит их on startup (async-safe).
+**Как**:
+1. Install Alembic local: Уже в requirements.txt; `pip install alembic` если нужно.
+2. Init Alembic в backend/: `cd backend; alembic init migrations` (создаст migrations/ folder).
+3. Edit `backend/alembic.ini`: Убедись `sqlalchemy.url =` пусто (используем env).
+4. Edit `backend/migrations/env.py` (полный код, с async engine):
+   ```python
+   import asyncio
+   from logging.config import fileConfig
+   from sqlalchemy import pool
+   from sqlalchemy.engine import Connection
+   from sqlalchemy.ext.asyncio import async_engine_from_config
+   from alembic import context
+   from app.db import Base  # Импорт Base с моделями
+   from app.core.config import settings
+
+   config = context.config
+   if config.config_file_name is not None:
+       fileConfig(config.config_file_name)
+
+   target_metadata = Base.metadata
+
+   def run_migrations_offline() -> None:
+       url = settings.DATABASE_URL
+       context.configure(
+           url=url,
+           target_metadata=target_metadata,
+           literal_binds=True,
+           dialect_opts={"paramstyle": "named"},
+       )
+       with context.begin_transaction():
+           context.run_migrations()
+
+   async def run_async_migrations() -> None:
+       connectable = async_engine_from_config(
+           config.get_section(config.config_ini_section, {}),
+           prefix="sqlalchemy.",
+           poolclass=pool.NullPool,
+           url=settings.DATABASE_URL,
+       )
+       async with connectable.connect() as connection:
+           await connection.run_sync(do_run_migrations)
+
+   def do_run_migrations(connection: Connection) -> None:
+       context.configure(connection=connection, target_metadata=target_metadata)
+       with context.begin_transaction():
+           context.run_migrations()
+
+   def run_migrations_online() -> None:
+       asyncio.run(run_async_migrations())
+
+   if context.is_offline_mode():
+       run_migrations_offline()
+   else:
+       run_migrations_online()
+   ```
+   - **Объяснение**: Async version для PostgreSQL (из Alembic docs). Поддерживает наш asyncpg.
+
+5. Генерируй миграцию: `alembic revision --autogenerate -m "Initial models"` (проверь versions/ file: create_table для User/Deck/Card).
+6. **Fix для free tier**: В backend/app/main.py добавь lifespan для auto-migrations on startup:
+   ```python
+   from contextlib import asynccontextmanager
+   from alembic import command, config as alembic_config
+   # ... existing imports
+
+   @asynccontextmanager
+   async def lifespan(app: FastAPI):
+       # Run migrations on startup
+       alembic_cfg = alembic_config.Config("alembic.ini")
+       command.upgrade(alembic_cfg, "head")
+       yield  # App runs here
+       # Optional shutdown logic
+
+   app = FastAPI(title="PhraseWeaver API", lifespan=lifespan)  # Добавь lifespan
+   # ... rest of main.py
+   ```
+   - **Объяснение**: `@asynccontextmanager` – FastAPI lifespan (run before app starts). `command.upgrade` programmatic'ally run'ит миграции (без subprocess). Safe: Alembic checks versions.
+
+**Ожидание**: Local: `alembic upgrade head` manual. Deploy: Auto on start (check Render logs: Alembic output).
+**Commit & Push**:
+```
+git add alembic.ini migrations/ backend/app/main.py
+git commit -m "Setup Alembic with async env.py and lifespan migrations for free tier"
+git push origin dev-branch
+```
+
+Подшаг 3.2: Обновление DB.py для Async и Dependency
+Почему: Убедимся, что get_db async. Добавим Base.create_all для dev (но prod – migrations).
+Как:
+
+Update backend/app/db.py (добавь import models):
+pythonfrom sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker, declarative_base
+from app.core.config import settings
+from app.models import *  # Импорт всех моделей для Base
+
+engine = create_async_engine(settings.DATABASE_URL, echo=True)
+async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+Base = declarative_base()
+
+async def get_db():
+    async with async_session() as session:
+        yield session
+
+Если нужно для local dev: Добавь async def init_db(): async with engine.begin() as conn: await conn.run_sync(Base.metadata.create_all)
+
+
+
+Ожидание: Роуты с Depends(get_db) теперь async-safe.
+Commit & Push:
+textgit add backend/app/db.py
+git commit -m "Update DB: Async setup and model imports"
+git push origin dev-branch
+Подшаг 3.3: Интеграция Миграций в Render и Scheduler
+Почему: Auto-migrations on deploy. Для notifications (из Этапа 2) – APScheduler start в main.py.
+Как:
+
+В Render dashboard: Pre-Deploy Command → "alembic upgrade head" (теперь работает, т.к. Alembic ready).
+В main.py: Добавь scheduler (для daily reminders):
+pythonfrom apscheduler.schedulers.asyncio import AsyncIOScheduler
+from app.services.notifications import send_daily_reminders  # TODO: implement
+
+scheduler = AsyncIOScheduler()
+scheduler.add_job(send_daily_reminders, 'interval', days=1)
+scheduler.start()
+
+Создай backend/app/services/notifications.py (stub):
+pythonasync def send_daily_reminders():
+    # Query due cards, send via Telegram API (httpx.post)
+    pass
