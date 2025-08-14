@@ -30,5 +30,15 @@ services:
     ports:
       - "6379:6379"
 
+  frontend:
+    image: nginx:alpine  # Lightweight static server
+    ports:
+      - "80:80"  # Frontend on 80 (local: http://localhost)
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro  # Mount frontend files
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro  # Config
+    depends_on:
+      - backend  # If JS calls local API
+
 volumes:
   postgres_data:
