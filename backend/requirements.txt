@@ -17,3 +17,4 @@ cryptography  # Для AES in auth
 httpx  # Для Telegram API calls
 python-dotenv  # For .env file support
 python-unsplash  # For Unsplash API
+psycopg2
