@@ -86,4 +86,3 @@ assets/images/*
 # migrations/
 " > .gitignore
 
-*.png
