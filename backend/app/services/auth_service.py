@@ -1,3 +1,5 @@
+# backend/app/services/auth_service.py
+
 import hashlib
 import hmac
 import json
@@ -10,9 +12,13 @@ import redis.asyncio as aioredis
 import jwt
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession # Убедитесь, что используете AsyncSession
+from fastapi.security import OAuth2PasswordBearer
 
 from ..core.config import settings
 from ..models.user import User
+import backend.app.schemas as schemas
 
 class TelegramAuthService:
     """Service for Telegram WebApp authentication"""
@@ -113,6 +119,7 @@ class AuthService:
     
     def __init__(self):
         self.telegram_auth = TelegramAuthService()
+        self.oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/telegram")
     
     def create_access_token(self, data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
         """Create JWT access token"""
@@ -155,7 +162,7 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
     
-    def get_or_create_user(self, db: Session, telegram_data: Dict[str, Any]) -> User:
+    async def get_or_create_user(self, db: AsyncSession, telegram_data: Dict[str, Any]) -> User:
         """Get existing user or create new one from Telegram data"""
         user_info = telegram_data['user']
         telegram_id = user_info.get('id')
@@ -166,8 +173,9 @@ class AuthService:
                 detail="Missing Telegram user ID"
             )
         
-        # Try to find existing user
-        user = db.query(User).filter(User.telegram_id == telegram_id).first()
+        # Асинхронный запрос к БД
+        result = await db.execute(select(User).where(User.telegram_id == telegram_id))
+        user = result.scalars().first()
         
         if user:
             # Update user info and last active time
@@ -176,11 +184,7 @@ class AuthService:
             user.last_name = user_info.get('last_name')
             user.language_code = user_info.get('language_code', 'en')
             user.is_premium = user_info.get('is_premium', False)
-            user.is_bot = user_info.get('is_bot', False)
             user.last_active = datetime.utcnow()
-            
-            db.commit()
-            db.refresh(user)
         else:
             # Create new user
             user = User(
@@ -190,17 +194,16 @@ class AuthService:
                 last_name=user_info.get('last_name'),
                 language_code=user_info.get('language_code', 'en'),
                 is_premium=user_info.get('is_premium', False),
-                is_bot=user_info.get('is_bot', False),
                 settings={}
             )
-            
             db.add(user)
-            db.commit()
-            db.refresh(user)
+
+        await db.commit()
+        await db.refresh(user)
         
         return user
     
-    def authenticate_telegram_user(self, db: Session, init_data: str) -> Dict[str, Any]:
+    async def authenticate_telegram_user(self, db: AsyncSession, init_data: str) -> Dict[str, Any]:
         """Complete Telegram authentication flow"""
         if not settings.TELEGRAM_BOT_TOKEN:
             raise HTTPException(
@@ -214,22 +217,24 @@ class AuthService:
             settings.TELEGRAM_BOT_TOKEN
         )
         
-        # Get or create user
-        user = self.get_or_create_user(db, telegram_data)
+        # Get or create user (теперь с await)
+        user = await self.get_or_create_user(db, telegram_data)
         
         # Create access token
         access_token = self.create_access_token(
             data={
-                "sub": str(user.id),
+                "sub": str(user.id), # sub - стандартное поле для ID пользователя в JWT
                 "telegram_id": user.telegram_id,
-                "username": user.username
             }
         )
+        
+        # Используем User схему для ответа
+        user_schema = schemas.User.model_validate(user)
         
         return {
             "access_token": access_token,
             "token_type": "bearer",
-            "user": user.to_dict(),
+            "user": user_schema.model_dump(),
             "expires_in": 86400  # 24 hours in seconds
         }
 
