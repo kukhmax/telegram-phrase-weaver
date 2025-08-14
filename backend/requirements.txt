@@ -18,4 +18,4 @@ httpx  # Для Telegram API calls
 python-dotenv  # For .env file support
 python-unsplash  # For Unsplash API
 psycopg2-binary
-# psycopg2==2.9.10
+psycopg2==2.9.10
