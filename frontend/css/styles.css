@@ -1,0 +1,19 @@
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; color: #333; }
+.header { display: flex; justify-content: space-between; align-items: center; background: #FFD700; padding: 10px; position: fixed; width: 100%; top: 0; z-index: 10; }
+.header button { background: none; border: none; font-size: 16px; cursor: pointer; }
+.header h1 { margin: 0; font-size: 20px; }
+.screen { padding: 60px 10px 80px; display: none; } /* Space for header/footer */
+.active { display: block; }
+.mascot { display: block; margin: 20px auto; width: 100px; }
+h2 { text-align: center; color: #00008B; }
+#decks-list { margin: 20px 0; }
+.deck-card { background: #FFFACD; border: 1px solid #D3D3D3; border-radius: 10px; padding: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.deck-info { flex: 1; }
+.deck-buttons { display: flex; flex-direction: column; }
+.deck-btn { margin: 5px 0; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; }
+.btn-cards { background: #FFD700; color: white; }
+.btn-train { background: #FFD700; color: white; }
+.btn-delete { background: #FF4500; color: white; }
+.add-btn { position: fixed; bottom: 20px; right: 20px; background: #FFD700; color: #00008B; font-size: 24px; width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer; }
+.no-decks { text-align: center; color: #00008B; }
+/* Flags: Use emoji in JS, or img if needed */

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phrase Weaver</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/main.js" defer></script> <!-- Defer для load after HTML -->
+</head>
+<body>
+    <!-- Header (fixed top) -->
+    <header class="header">
+        <button id="stats-btn">Статистика</button>
+        <h1>PHRASE WEAVER</h1>
+        <button id="settings-btn">Настройки</button>
+    </header>
+
+    <!-- Main Screen (id for toggle) -->
+    <div id="main-screen" class="screen active">
+        <img src="assets/mascot.png" alt="Mascot" class="mascot">
+        <h2>Мои колоды</h2>
+        <div id="decks-list"></div> <!-- Dynamic render decks -->
+        <button id="create-deck-btn" class="add-btn">+</button>
+    </div>
+
+    <!-- Other screens as hidden divs (e.g., stats, settings, create-deck, etc.) -->
+    <div id="stats-screen" class="screen"> <!-- TODO: Impl later -->
+        <h2>Статистика</h2>
+        <!-- Stats content -->
+    </div>
+    <div id="settings-screen" class="screen">
+        <h2>Настройки</h2>
+        <!-- Settings content -->
+    </div>
+    <!-- Add more: create-deck, generate-cards, etc. -->
+
+</body>
+</html>
