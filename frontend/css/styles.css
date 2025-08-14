@@ -1,7 +1,28 @@
-body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; color: #333; }
-.header { display: flex; justify-content: space-between; align-items: center; background: #FFD700; padding: 10px; position: fixed; width: 100%; top: 0; z-index: 10; }
-.header button { background: none; border: none; font-size: 16px; cursor: pointer; }
-.header h1 { margin: 0; font-size: 20px; }
+body { 
+    font-family: Fraunces; 
+    margin: 0; 
+    padding: 0; 
+    background: white; 
+    color: #1800ad;
+ }
+.header {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    background: #FFD700; 
+    position: fixed; 
+    width: 100%; 
+    top: 0; 
+    z-index: 10;
+ }
+.header button {
+    background: none; 
+    border: none; 
+    font-size: 16px; 
+    cursor: pointer;
+    margin: 10px;
+}
+.header h1 { margin: 0; font-size: 27px; }
 .screen { padding: 60px 10px 80px; display: none; } /* Space for header/footer */
 .active { display: block; }
 .mascot { display: block; margin: 20px auto; width: 100px; }
