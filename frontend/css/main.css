@@ -170,3 +170,73 @@ body {
 .fab:hover .tooltip {
     opacity: 0.5;
 }
+
+
+/* Стили для формы создания колоды */
+.form-container {
+    background-color: #f8f9fa;
+    padding: 24px;
+    border-radius: var(--border-radius);
+    margin-top: 16px;
+    text-align: left;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: var(--brand-blue);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box; /* Важно для правильного расчета ширины */
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-submit-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: var(--button-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.back-btn {
+    background: none;
+    border: 1px solid var(--hint-color);
+    color: var(--hint-color);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 24px;
+}
+
+.app-footer {
+    margin-top: 30px;
+    color: var(--hint-color);
+    font-size: 12px;
+    text-align: center;
+}

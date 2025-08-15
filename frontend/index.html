@@ -43,8 +43,74 @@
     <div id="create-deck-view" style="display: none; padding: 0 1em">
                 <h3>Создать новую колоду</h3>
 
-    <!-- Другие окна приложения будут здесь (например, окно создания колоды) -->
-    <!-- <div id="create-deck-window" class="app-window hidden"> ... </div> -->
+    <!-- ... ваш существующий <div id="main-window"> ... -->
+
+    <!-- ============================================ -->
+    <!--       ОКНО СОЗДАНИЯ НОВОЙ КОЛОДЫ         -->
+    <!-- ============================================ -->
+    <div id="create-deck-window" class="app-window hidden">
+        <header class="app-header">
+            <button id="stats-btn" class="header-btn">
+                <img src="assets/icons/stats.png" alt="Stats" class="stats-icon" style="height: 1em">
+            </button>
+            <h1>PHRASE WEAVER</h1>
+            <button id="settings-btn" class="header-btn">
+                <img src="assets/icons/setting.png" alt="Settings" class="settings-icon" style="height: 1em">
+            </button>
+        </header>
+
+        <main class="app-main">
+            <img src="assets/images/mascot.png" alt="Mascot" class="mascot">
+            <h2>Создать новую колоду</h2>
+            
+            <form id="create-deck-form" class="form-container">
+                <div class="form-group">
+                    <label for="deck-name">Название колоды:</label>
+                    <input type="text" id="deck-name" name="name" placeholder="Введите название колоды" required>
+                </div>
+                <div class="form-group">
+                    <label for="deck-description">Описание:</label>
+                    <textarea id="deck-description" name="description" placeholder="Введите описание колоды"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="lang-from">Изучаемый язык *</label>
+                    <select id="lang-from" name="lang_from" required>
+                        <option value="" disabled selected>Выберите язык</option>
+                        <option value="en">🇺🇸 English</option>
+                        <option value="ru">🇷🇺 Русский</option>
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="de">🇩🇪 Deutsch</option>
+                        <option value="es">🇪🇸 Español</option>
+                        <option value="pl">🇵🇱 Polski</option>
+                        <option value="pt">🇵🇹 Portuguese</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="lang-to">Язык перевода *</label>
+                    <select id="lang-to" name="lang_to" required>
+                        <option value="" disabled selected>Выберите язык</option>
+                        <option value="en">🇺🇸 English</option>
+                        <option value="ru">🇷🇺 Русский</option>
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="de">🇩🇪 Deutsch</option>
+                        <option value="es">🇪🇸 Español</option>
+                        <option value="pl">🇵🇱 Polski</option>
+                        <option value="pt">🇵🇹 Portuguese</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="form-submit-btn">➕ Создать колоду</button>
+            </form>
+
+            <button id="back-to-main-btn" class="back-btn">← Назад на главную</button>
+        </main>
+        <footer class="app-footer">
+            PhraseWeaver v0.1.0
+        </footer>
+    </div>
+
+
+<!-- ... ваш существующий <template> и <script> ... -->
 
 
     <!-- Шаблон для одной карточки колоды. JS будет его клонировать -->
@@ -71,7 +137,7 @@
 
     <!-- Подключаем наши скрипты. Config должен идти первым! -->
     <script src="js/config.js"></script>
-    <script src="js/main.js" defer></script>
+    <script src="js/app.js" type="module" defer></script>
 </body>
 </html>
 
