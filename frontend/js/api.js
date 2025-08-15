@@ -1,8 +1,10 @@
 // Этот файл будет отвечать за все запросы к нашему бэкенду.
 
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:8000' // URL для локальной разработки
-        : 'https://telegram-phrase-weaver.onrender.com'; // ЗАМЕНИТЕ НА ВАШ URL
+// const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+//         ? 'http://localhost:8000' // URL для локальной разработки
+//         : 'https://telegram-phrase-weaver.onrender.com'; // ЗАМЕНИТЕ НА ВАШ URL
+
+const API_BASE_URL = 'https://telegram-phrase-weaver.onrender.com';
 
 // Глобальная переменная для токена. В более крупных приложениях это лучше хранить в классе или State Manager.
 let authToken = null;
@@ -47,6 +49,7 @@ async function request(endpoint, method = 'GET', body = null) {
 // Функции для каждого эндпоинта
 export const api = {
     authenticate: (initData) => request('/auth/telegram', 'POST', { init_data: initData }),
+    authenticateDebug: () => request('/auth/telegram/debug', 'POST'), 
     getDecks: () => request('/decks/'),
     createDeck: (deckData) => request('/decks/', 'POST', deckData),
     // ... здесь будут другие методы API: deleteDeck, getCards, etc.

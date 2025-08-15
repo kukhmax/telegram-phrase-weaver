@@ -23,25 +23,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Главная функция инициализации
     async function main() {
-        try {
-            if (!tg.initData) {
-                 throw new Error("Telegram.WebApp.initData is empty. Run in Telegram.");
-            }
-            // 1. Аутентификация
-            const authData = await api.authenticate(tg.initData);
-            setAuthToken(authData.access_token);
-            
-            // 2. Первоначальная загрузка и отрисовка колод
-            await refreshDecks();
+    try {
+        let authData;
 
-            // 3. Показываем главный экран
-            showWindow('main-window');
-        } catch (error) {
-            console.error("Initialization failed:", error);
-            DOMElements.decksContainer.innerHTML = `<p style='color: red;'>${error.message}</p>`;
+        // ПРОВЕРКА НА ОТЛАДОЧНЫЙ РЕЖИМ
+        const isDebugMode = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+        if (tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0) {
+            // Режим продакшена (внутри Telegram)
+            console.log("Running in Production Mode (inside Telegram)");
+            authData = await api.authenticate(tg.initData);
+        } else if (isDebugMode) {
+            // Режим отладки (локально в браузере)
+            console.log("Running in Debug Mode (localhost)");
+            authData = await api.authenticateDebug(); // Вызываем новый метод API
+        } else {
+            // Запуск в браузере, но не локально (как у вас на Render)
+            throw new Error("Telegram.WebApp.initData is empty. Please run the app inside Telegram.");
         }
-    }
+        
+        // 1. Аутентификация
+        setAuthToken(authData.access_token);
+        console.log("Authentication successful, token set.");
+        
+        // 2. Первоначальная загрузка и отрисовка колод
+        await refreshDecks();
 
+        // 3. Показываем главный экран
+        showWindow('main-window');
+    } catch (error) {
+        console.error("Initialization failed:", error);
+        DOMElements.decksContainer.innerHTML = `<p style='color: red;'>${error.message}</p>`;
+    }
+}
     // ============================================
     //             ОБРАБОТЧИКИ СОБЫТИЙ
     // ============================================
