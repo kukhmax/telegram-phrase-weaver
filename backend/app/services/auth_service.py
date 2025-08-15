@@ -18,7 +18,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from ..core.config import settings
 from ..models.user import User
-import backend.app.schemas as schemas
+import app.schemas as schemas
 
 class TelegramAuthService:
     """Service for Telegram WebApp authentication"""

@@ -1,104 +1,169 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const WebApp = window.Telegram.WebApp;
-    WebApp.ready(); // Init Telegram
-    WebApp.expand(); // Full screen
+    // =================================================================
+    // 1. ИНИЦИАЛИЗАЦИЯ И ПОЛУЧЕНИЕ ЭЛЕМЕНТОВ DOM
+    // =================================================================
 
-    // Dynamic API URL
-    const API_URL = window.location.hostname.includes('onrender') ? 'https://your-app.onrender.com' : 'http://localhost:8000';
+    // Получаем объект Telegram Web App для взаимодействия с клиентом Telegram
+    const tg = window.Telegram.WebApp;
+    // Говорим Telegram, что наше приложение готово к отображению
+    tg.ready(); 
 
-    // Screens toggle func
-    function showScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
-    }
+    // Находим ключевые элементы на странице, с которыми будем работать
+    const decksContainer = document.getElementById('decks-container');
+    const noDecksMessage = document.getElementById('no-decks-message');
+    const deckCardTemplate = document.getElementById('deck-card-template');
+    
+    // Состояние приложения. Здесь мы будем хранить данные, полученные с сервера.
+    const state = {
+        token: null, // Наш JWT токен для авторизации
+        user: null,  // Информация о пользователе
+        decks: []    // Список колод
+    };
 
-    // Header events
-    document.getElementById('stats-btn').addEventListener('click', () => showScreen('stats-screen'));
-    document.getElementById('settings-btn').addEventListener('click', () => showScreen('settings-screen'));
 
-    // + button
-    document.getElementById('create-deck-btn').addEventListener('click', () => showScreen('create-deck-screen')); // TODO: Add div
+    // =================================================================
+    // 2. ЛОГИКА АУТЕНТИФИКАЦИИ И ВЗАИМОДЕЙСТВИЯ С API
+    // =================================================================
 
-
-    let token = localStorage.getItem('access_token');
-
-    async function authenticate() {
-        if (!token) {
-            const initData = WebApp.initData; // Safe string
-            const response = await fetch(`${API_URL}/auth/telegram`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ init_data: initData })
-            });
-            if (response.ok) {
-                const data = await response.json();
-                token = data.access_token;
-                localStorage.setItem('access_token', token);
-            } else {
-                alert('Auth failed');
-            }
-        }
-    }
-
-    async function fetchDecks() {
-        await authenticate(); // Ensure token
-        const response = await fetch(`${API_URL}/decks`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-            const decks = await response.json();
-            renderDecks(decks);
-        } else {
-            alert('Fetch decks failed');
-        }
-    }
-
-    function renderDecks(decks) {
-        const list = document.getElementById('decks-list');
-        list.innerHTML = '';
-        if (decks.length === 0) {
-            list.innerHTML = '<p class="no-decks">Здесь появятся ваши колоды</p>';
+    /**
+     * Отправляет initData на бэкенд для верификации и получения JWT токена.
+     * Это первый и самый важный запрос к нашему API.
+     */
+    async function authenticateUser() {
+        // Проверяем, есть ли вообще initData. Если запускать в обычном браузере, его не будет.
+        if (!tg.initData) {
+            console.error("Telegram.WebApp.initData is empty. Are you running in Telegram?");
+            // В режиме отладки можно показать сообщение прямо на экране
+            decksContainer.innerHTML = "<p style='color: red;'>Ошибка: Запустите приложение через Telegram.</p>";
             return;
         }
-        decks.forEach(deck => {
-            const card = document.createElement('div');
-            card.className = 'deck-card';
-            card.innerHTML = `
-                <div class="deck-info">
-                    <h3>${deck.name}</h3>
-                    <p>${deck.description || ''}</p>
-                    <p>${getFlag(deck.lang_from)} ${deck.lang_from} → ${getFlag(deck.lang_to)} ${deck.lang_to}</p>
-                    <p>Total: ${deck.cards_count} | Repeat: ${deck.due_count}</p>
-                </div>
-                <div class="deck-buttons">
-                    <button class="deck-btn btn-cards">Карточки</button>
-                    <button class="deck-btn btn-train">Тренировки</button>
-                    <button class="deck-btn btn-delete">Удалить</button>
-                </div>
-            `;
-            // Events
-            card.addEventListener('click', () => showGenerateScreen(deck.id)); // TODO: Impl screen
-            card.querySelector('.btn-cards').addEventListener('click', (e) => { e.stopPropagation(); showCardsPopup(deck.id); });
-            card.querySelector('.btn-train').addEventListener('click', (e) => { e.stopPropagation(); showTrainScreen(deck.id); });
-            card.querySelector('.btn-delete').addEventListener('click', (e) => { e.stopPropagation(); deleteDeck(deck.id); });
-            list.appendChild(card);
-        });
-    }
 
-    function getFlag(lang) {
-        const flags = { pt: '🇵🇹', fr: '🇫🇷', en: '🇺🇸', pl: '🇵🇱', ru: '🇷🇺' /* add more */ };
-        return flags[lang] || '';
-    }
+        try {
+            const response = await fetch(`${config.API_BASE_URL}/auth/telegram`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ init_data: tg.initData })
+            });
 
-    async function deleteDeck(id) {
-        if (confirm('Удалить колоду?')) {
-            const response = await fetch(`${API_URL}/decks/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-            if (response.ok) fetchDecks();
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Authentication failed: ${errorData.detail || response.statusText}`);
+            }
+
+            const data = await response.json();
+            console.log("Authentication successful:", data);
+            
+            // Сохраняем токен и информацию о пользователе в нашем состоянии
+            state.token = data.access_token;
+            state.user = data.user;
+
+        } catch (error) {
+            console.error(error);
+            decksContainer.innerHTML = `<p style='color: red;'>Не удалось подключиться к серверу. Попробуйте позже.</p>`;
+        }
+    }
+    
+    /**
+     * Запрашивает список всех колод для текущего пользователя.
+     * Использует JWT токен, полученный при аутентификации.
+     */
+    async function fetchDecks() {
+        if (!state.token) {
+            console.error("Cannot fetch decks without an auth token.");
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${config.API_BASE_URL}/decks/`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${state.token}`
+                }
+            });
+
+            if (!response.ok) {
+                 throw new Error(`Failed to fetch decks: ${response.statusText}`);
+            }
+
+            const decks = await response.json();
+            console.log("Decks fetched:", decks);
+            state.decks = decks; // Обновляем состояние
+
+        } catch (error) {
+            console.error(error);
         }
     }
 
-    // TODO: Functions for showCardsPopup (modal), showGenerateScreen, showTrainScreen
 
-    // On load
-    fetchDecks();
+    // =================================================================
+    // 3. ЛОГИКА ОТОБРАЖЕНИЯ (РЕНДЕРИНГ)
+    // =================================================================
+
+    /**
+     * Отображает колоды на экране на основе данных из state.decks.
+     */
+    function renderDecks() {
+        // Очищаем контейнер перед отрисовкой
+        decksContainer.innerHTML = ''; 
+
+        if (state.decks.length === 0) {
+            // Если колод нет, показываем сообщение-заглушку
+            noDecksMessage.classList.remove('hidden');
+        } else {
+            // Если колоды есть, скрываем заглушку и рендерим их
+            noDecksMessage.classList.add('hidden');
+
+            state.decks.forEach(deck => {
+                // Клонируем содержимое нашего шаблона <template>
+                const cardNode = deckCardTemplate.content.cloneNode(true);
+                
+                // Находим элементы внутри клонированного узла и заполняем их данными
+                cardNode.querySelector('.deck-name').textContent = deck.name;
+                cardNode.querySelector('.deck-description').textContent = deck.description || '';
+                cardNode.querySelector('.lang-from').textContent = getFlagEmoji(deck.lang_from) + ` ${deck.lang_from.toUpperCase()}`;
+                cardNode.querySelector('.lang-to').textContent = getFlagEmoji(deck.lang_to) + ` ${deck.lang_to.toUpperCase()}`;
+                cardNode.querySelector('.cards-total').textContent = deck.cards_count;
+                cardNode.querySelector('.cards-repeat').textContent = deck.due_count;
+                
+                // Добавляем готовую карточку в контейнер
+                decksContainer.appendChild(cardNode);
+            });
+        }
+    }
+    
+    /**
+     * Вспомогательная функция для получения эмодзи флага по коду языка.
+     * @param {string} langCode - Двухбуквенный код языка (напр., 'en', 'ru').
+     * @returns {string} - Эмодзи флага.
+     */
+    function getFlagEmoji(langCode) {
+        const flagMap = {
+            en: '🇺🇸', ru: '🇷🇺', fr: '🇫🇷', de: '🇩🇪',
+            es: '🇪🇸', pl: '🇵🇱', pt: '🇵🇹', it: '🇮🇹'
+        };
+        return flagMap[langCode] || '🏳️';
+    }
+
+
+    // =================================================================
+    // 4. ГЛАВНАЯ ФУНКЦИЯ ЗАПУСКА ПРИЛОЖЕНИЯ
+    // =================================================================
+
+    /**
+     * Основная асинхронная функция, которая запускает всю логику:
+     * 1. Аутентификация
+     * 2. Загрузка данных
+     * 3. Отображение данных
+     */
+    async function main() {
+        await authenticateUser();
+        // Если аутентификация прошла успешно и мы получили токен
+        if (state.token) {
+            await fetchDecks();
+            renderDecks();
+        }
+    }
+
+    // Запускаем!
+    main();
 });
