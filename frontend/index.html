@@ -3,42 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phrase Weaver</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="js/main.js" defer></script> <!-- Defer для load after HTML -->
+    <title>PhraseWeaver</title>
+    <link rel="stylesheet" href="css/main.css">
+    <!-- Скрипт для интеграции с Telegram -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <!-- Header (fixed top) -->
-    <header class="header">
-        <button id="stats-btn">
-            <img src="assets/stats.png" alt="Stats" style="height: 2em">
+
+    <div id="main-window" class="app-window">
+        <header class="app-header">
+            <button id="stats-btn" class="header-btn">
+                <img src="assets/icons/stats.png" alt="Stats" class="stats-icon" style="height: 1em">
+            </button>
+            <h1>PHRASE WEAVER</h1>
+            <button id="settings-btn" class="header-btn">
+                <img src="assets/icons/setting.png" alt="Settings" class="settings-icon" style="height: 1em">
+            </button>
+        </header>
+
+        <main class="app-main">
+            <img src="assets/images/mascot.png" alt="Mascot" class="mascot">
+            <h2>Мои колоды:</h2>
+            
+            <div id="decks-container">
+                <!-- Сюда JS будет добавлять карточки колод -->
+            </div>
+
+            <div id="no-decks-message" class="hidden">
+                <p>Здесь появятся ваши колоды</p>
+            </div>
+        </main>
+        
+        <button id="add-deck-btn" class="fab">
+            <span class="tooltip">Создать новую колоду</span>
+                    +
         </button>
-        <h1>PHRASE WEAVER</h1>
-        <button id="settings-btn">
-            <img src="assets/setting.png" alt="Settings" style="height: 2em">
-        </button>
-    </header>
-
-    <!-- Main Screen (id for toggle) -->
-    <div id="main-screen" class="screen active">
-        <img src="assets/mascot.png" alt="Mascot" class="mascot">
-        <h2>Мои колоды</h2>
-        <div id="decks-list"></div> <!-- Dynamic render decks -->
-        <button id="create-deck-btn" class="add-btn">+</button>
     </div>
 
-    <!-- Other screens as hidden divs (e.g., stats, settings, create-deck, etc.) -->
-    <div id="stats-screen" class="screen"> <!-- TODO: Impl later -->
-        <img src="assets/stats.png" alt="Stats">
-        <!-- <h2>Статистика</h2> -->
-        <!-- Stats content -->
-    </div>
-    <div id="settings-screen" class="screen">
-        <img src="assets/setting.png" alt="Settings">
-        <!-- <h2>Настройки</h2> -->
-        <!-- Settings content -->
-    </div>
-    <!-- Add more: create-deck, generate-cards, etc. -->
+    <div id="create-deck-view" style="display: none; padding: 0 1em">
+                <h3>Создать новую колоду</h3>
 
+    <!-- Другие окна приложения будут здесь (например, окно создания колоды) -->
+    <!-- <div id="create-deck-window" class="app-window hidden"> ... </div> -->
+
+
+    <!-- Шаблон для одной карточки колоды. JS будет его клонировать -->
+    <template id="deck-card-template">
+        <div class="deck-card">
+            <div class="deck-info">
+                <h3 class="deck-name">Название колоды</h3>
+                <p class="deck-description">Описание</p>
+                <div class="deck-langs">
+                    <span class="lang-from"></span> → <span class="lang-to"></span>
+                </div>
+                <div class="deck-stats">
+                    Total: <span class="cards-total">0</span> | Repeat: <span class="cards-repeat">0</span>
+                </div>
+            </div>
+            <div class="deck-actions">
+                <button class="action-btn cards-btn">Карточки</button>
+                <button class="action-btn train-btn">Тренировка</button>
+                <button class="action-btn delete-btn">Удалить</button>
+            </div>
+        </div>
+    </template>
+    
+
+    <!-- Подключаем наши скрипты. Config должен идти первым! -->
+    <script src="js/config.js"></script>
+    <script src="js/main.js" defer></script>
 </body>
 </html>
+
+
+

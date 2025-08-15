@@ -1,0 +1,172 @@
+/* Используем переменные Telegram для плавности интеграции */
+:root {
+    --bg-color: var(--tg-theme-bg-color, #fff);
+    --text-color: var(--tg-theme-text-color, #1800ad);
+    --hint-color: var(--tg-theme-hint-color, #4258bb);
+    --button-color: var(--tg-theme-button-color, #f4c300);
+    --button-text-color: var(--tg-theme-button-text-color, #1800ad);
+    
+    --brand-yellow: #f4c300;
+    --brand-blue: #1800ad;
+    --brand-red: #e74c3c;
+    --border-radius: 12px;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Header */
+.app-header {
+    background-color: #f4c300;
+    font-family: Fraunces;
+    color: var(--text-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+}
+.app-header h1 {
+    font-size: 24px;
+    color: var(--brand-blue);
+    margin: 0;
+}
+.header-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Main Content */
+.app-main {
+    text-align: center;
+}
+.mascot {
+    width: 100px;
+    height: auto;
+    margin-bottom: 16px;
+}
+.app-main h2 {
+    color: var(--brand-blue);
+    font-weight: bold;
+}
+#no-decks-message p {
+    color: var(--hint-color);
+    font-size: 18px;
+    margin-top: 40px;
+}
+
+/* Deck Cards */
+#decks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.deck-card {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: var(--border-radius);
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.deck-info .deck-name {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--brand-blue);
+    margin: 0 0 4px 0;
+}
+.deck-info .deck-description {
+    font-size: 14px;
+    color: #6c757d;
+    margin: 0 0 8px 0;
+}
+.deck-info .deck-langs {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+.deck-info .deck-stats {
+    font-size: 14px;
+    color: #343a40;
+}
+
+.deck-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.action-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    min-width: 100px;
+}
+.cards-btn, .train-btn {
+    background-color: var(--brand-yellow);
+}
+.delete-btn {
+    background-color: var(--brand-red);
+}
+
+/* Floating Action Button */
+.fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--brand-yellow);
+    color: var(--brand-blue);
+    border: none;
+    font-size: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.fab:hover {
+    background: #f5eb63;
+    transform: scale(1.1);
+}
+
+.tooltip {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.fab:hover .tooltip {
+    opacity: 0.5;
+}
