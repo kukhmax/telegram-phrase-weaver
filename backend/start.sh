@@ -3,7 +3,7 @@ set -e
 
 # Устанавливаем PYTHONPATH на текущую директорию (которая /app в контейнере)
 # Это скажет Python'у и Alembic'у, что здесь нужно искать модули (например, папку 'app')
-export PYTHONPATH=.
+# export PYTHONPATH=.
 
 # Теперь Alembic сможет найти 'app.db' и 'app.core'
 echo "Running Alembic migrations..."
