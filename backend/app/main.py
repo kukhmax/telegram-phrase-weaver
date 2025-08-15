@@ -40,7 +40,7 @@ origins = [
 # CORS для Telegram Mini App (prod + local)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # В prod restrict to Telegram domains
+    allow_origins=["*"],  # В prod restrict to Telegram domains
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

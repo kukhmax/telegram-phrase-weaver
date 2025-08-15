@@ -1,6 +1,8 @@
 file: backend/migrations/README
 
 
+
+
 ### Решение Проблемы с Pre-Deploy Command в Free Tier Render
 
 Привет! Как твой ментор, я проверил Render docs и community (via fresh search на 2025): Да, Pre-Deploy Command действительно ограничен paid instances (Starter+ tiers, от $7/month). Free tier (Hobby) не поддерживает его, как на твоём скрине (tooltip "available for paid instances only"). Это limitation для free: нет pre-deploy, ограниченный CPU/RAM (512MB/0.5 CPU), auto-suspend после 15min idle, и max 750 hours/month. Но free хватит для dev/testing нашего app (20 users low load).
