@@ -58,3 +58,5 @@ git commit -m "fix(frontend): correct window routing, theme adaptation and netwo
 git commit -m "refactor(auth): improve get_current_user dependency and add FE logging"
 
 ```
+
+-------
