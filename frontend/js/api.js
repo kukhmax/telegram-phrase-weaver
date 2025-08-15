@@ -2,7 +2,7 @@
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:8000' // URL для локальной разработки
-        : 'https://phrase-weaver-jpcj.onrender.com'; // ЗАМЕНИТЕ НА ВАШ URL
+        : 'https://telegram-phrase-weaver.onrender.com'; // ЗАМЕНИТЕ НА ВАШ URL
 
 // Глобальная переменная для токена. В более крупных приложениях это лучше хранить в классе или State Manager.
 let authToken = null;
