@@ -5,7 +5,7 @@ set -e
 
 # 1. Запуск миграций Alembic
 echo "Running Alembic migrations..."
-alembic upgrade head
+alembic -c alembic.ini upgrade head
 
 # 2. Запуск веб-сервера Uvicorn
 echo "Starting Uvicorn server..."
