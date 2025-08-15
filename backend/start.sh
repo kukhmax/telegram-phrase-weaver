@@ -1,12 +1,14 @@
 #!/bin/sh
-
-# Выход из скрипта, если любая из команд завершится с ошибкой
 set -e
 
-# 1. Запуск миграций Alembic
+# Устанавливаем PYTHONPATH на текущую директорию (которая /app в контейнере)
+# Это скажет Python'у и Alembic'у, что здесь нужно искать модули (например, папку 'app')
+export PYTHONPATH=.
+
+# Теперь Alembic сможет найти 'app.db' и 'app.core'
 echo "Running Alembic migrations..."
 alembic -c alembic.ini upgrade head
 
-# 2. Запуск веб-сервера Uvicorn
+# Uvicorn'у это тоже не повредит
 echo "Starting Uvicorn server..."
 uvicorn app.main:app --host 0.0.0.0 --port 8000
