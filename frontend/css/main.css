@@ -3,7 +3,7 @@
     --bg-color: var(--tg-theme-bg-color, #fff);
     --text-color: var(--tg-theme-text-color, #1800ad);
     --hint-color: var(--tg-theme-hint-color, #4258bb);
-    --button-color: var(--tg-theme-button-color, #f4c300);
+    --button-color: #f4c300;
     --button-text-color: var(--tg-theme-button-text-color, #1800ad);
     
     --brand-yellow: #f4c300;

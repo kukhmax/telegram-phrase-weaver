@@ -15,6 +15,9 @@ async function request(endpoint, method = 'GET', body = null) {
     const headers = {
         'Content-Type': 'application/json',
     };
+
+    console.log(`Sending request to ${endpoint}. Current token is:`, authToken);
+    
     if (authToken) {
         headers['Authorization'] = `Bearer ${authToken}`;
     }

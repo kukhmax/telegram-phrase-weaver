@@ -8,6 +8,7 @@
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
@@ -20,22 +21,36 @@ from ..services.auth_service import auth_service
 
 router = APIRouter(prefix="/decks", tags=["decks"])
 
-async def get_current_user(token: str = Depends(auth_service.oauth2_scheme), db: AsyncSession = Depends(get_db)) -> User:
-    """Dependency to get current user from JWT token."""
-    payload = auth_service.verify_access_token(token)
-    telegram_id = payload.get("telegram_id")
+# Создаем схему зависимости прямо здесь. Она будет ожидать токен в заголовке.
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token") # tokenUrl здесь не используется, но обязателен
 
-    if telegram_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials, telegram_id missing from token."
-        )
-    
-    result = await db.execute(select(User).where(User.telegram_id == telegram_id))
-    user = result.scalars().first()
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> User:
+    """
+    Dependency to get current user from JWT token.
+    Provides more detailed error messages.
+    """
+    try:
+        payload = auth_service.verify_access_token(token)
+        # В токене мы сохраняем ID пользователя в поле 'sub' (subject)
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials, user_id missing",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except HTTPException as e:
+        # Пробрасываем ошибки от verify_access_token (например, истекший токен)
+        raise e
+
+    user = await db.get(User, int(user_id))
 
     if user is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="User not found"
+        )
+    
     return user
 
 
