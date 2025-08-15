@@ -49,6 +49,7 @@ body {
 
 /* Main Content */
 .app-main {
+    color: var(--text-color);
     text-align: center;
 }
 .mascot {
