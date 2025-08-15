@@ -1,60 +1,50 @@
+# backend/app/main.py
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .core.config import settings
-from .core.database import engine, Base
-from .api import auth, decks, cards
+from contextlib import asynccontextmanager
+from alembic import command, config as alembic_config
+from app.core.config import settings
+from app.routers import auth, cards, decks
 
-# Создаем таблицы в базе данных
-Base.metadata.create_all(bind=engine)
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from app.services.notifications import send_daily_reminders  # TODO: implement
+import logging
 
-# Создаем приложение FastAPI
-app = FastAPI(
-    title=settings.app_name,
-    version=settings.version,
-    debug=settings.debug
-)
+logging.basicConfig(level=logging.INFO)
 
-# Настройка CORS
+scheduler = AsyncIOScheduler()
+scheduler.add_job(send_daily_reminders, 'interval', days=1)
+scheduler.start()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Run migrations on startup
+    alembic_cfg = alembic_config.Config("alembic.ini")
+    try:
+        command.upgrade(alembic_cfg, "head")
+    except Exception as e: 
+        logging.error(f"Migration failed: {e}")
+    yield  # App runs here
+    # Optional shutdown logic
+
+app = FastAPI(title="PhraseWeaver API")
+
+# CORS для Telegram Mini App (prod + local)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "*"],  # Явно указываем frontend URL
+    allow_origins=["*"],  # В prod restrict to Telegram domains
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Подключаем роутеры
-app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
-app.include_router(decks.router, prefix="/api/decks", tags=["decks"])
-app.include_router(cards.router, prefix="/api/cards", tags=["cards"])
 
-# Базовый endpoint для проверки
-@app.get("/")
-async def root():
-    return {
-        "message": "PhraseWeaver API работает!",
-        "version": settings.version,
-        "status": "ok"
-    }
 
-# Health check endpoint
 @app.get("/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "database": "connected",
-        "version": settings.version
-    }
+def health_check():
+    return {"status": "healthy"}
 
-# Health check endpoint для API
-@app.get("/api/health")
-async def api_health_check():
-    return {
-        "status": "healthy",
-        "database": "connected",
-        "version": settings.version
-    }
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+app.include_router(auth.router)
+app.include_router(cards.router)
+app.include_router(decks.router)

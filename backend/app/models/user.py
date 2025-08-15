@@ -1,30 +1,16 @@
-from sqlalchemy import Column, Integer, String, DateTime, BigInteger
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from ..core.database import Base
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, JSON
+from datetime import datetime
+from app.db import Base
 
 class User(Base):
     __tablename__ = "users"
-    
     id = Column(Integer, primary_key=True, index=True)
-    telegram_id = Column(BigInteger, unique=True, index=True, nullable=False)
-    username = Column(String(255), nullable=True)
-    first_name = Column(String(255), nullable=True)
-    last_name = Column(String(255), nullable=True)
-    language_code = Column(String(10), default='en')
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    last_active = Column(DateTime(timezone=True), server_default=func.now())
-    
-    # Связи с другими моделями
-    # Связь с колодами (один пользователь может иметь много колод)
-    decks = relationship("Deck", back_populates="user", cascade="all, delete-orphan")
-    
-    def __repr__(self):
-        return f"<User(telegram_id={self.telegram_id}, username={self.username})>"
-    
-    @property
-    def deck_count(self):
-        """
-        Возвращает количество колод пользователя
-        """
-        return len(self.decks) if self.decks else 0
+    telegram_id = Column(Integer, unique=True, index=True)
+    username = Column(String)
+    first_name = Column(String)
+    last_name = Column(String)
+    language_code = Column(String, default="en")
+    is_premium = Column(Boolean, default=False)
+    is_bot = Column(Boolean, default=False)
+    last_active = Column(DateTime, default=datetime.utcnow)
+    settings = Column(JSON, default={})

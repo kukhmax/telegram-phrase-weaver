@@ -1,31 +1,19 @@
-# Core Framework
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-
-# Database
-sqlalchemy==2.0.23
-alembic==1.12.1
-
-# Authentication & Security
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
-
-# HTTP Client
-httpx==0.25.2
-
-# AI Services
-google-generativeai==0.3.2
-
-# Environment
-python-dotenv==1.0.0
-
-# Validation
-pydantic==2.5.0
-
-# CORS
-fastapi-cors==0.0.6
-
-# Development
-pytest==7.4.3
-pytest-asyncio==0.21.1
+fastapi  # Latest stable (~0.115+)
+uvicorn[standard]  # Для server
+sqlalchemy==2.0.43
+asyncpg  # Для async Postgres
+redis  # Latest for redis-py
+aiohttp==3.10.5
+gtts==2.5.3
+deep-translator==1.11.4
+google-generativeai==0.8.2
+python-unsplash  # Latest for Unsplash
+apscheduler==3.10.4
+alembic  # Latest
+pydantic
+pydantic-settings
+pyjwt
+cryptography  # Для AES in auth
+httpx  # Для Telegram API calls
+python-dotenv  # For .env file support
+python-unsplash  # For Unsplash API
