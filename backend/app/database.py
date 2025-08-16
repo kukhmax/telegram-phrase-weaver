@@ -12,7 +12,15 @@ def init_db():
     global engine, async_session
     if engine is None:
         settings = get_settings()
-        engine = create_async_engine(settings.DATABASE_URL, echo=True)
+        database_url = settings.DATABASE_URL
+        
+        # Ensure we use the correct asyncpg URL format
+        if database_url.startswith("postgres://"):
+            database_url = database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif database_url.startswith("postgresql://"):
+            database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        
+        engine = create_async_engine(database_url, echo=True)
         async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 async def get_db():
