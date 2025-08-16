@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from alembic import command, config as alembic_config
 from app.core.config import get_settings
@@ -61,3 +62,12 @@ def health_check():
 app.include_router(auth.router)
 app.include_router(cards.router)
 app.include_router(decks.router)
+
+# Статические файлы фронтенда
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+# Главная страница фронтенда
+@app.get("/app")
+async def frontend():
+    from fastapi.responses import FileResponse
+    return FileResponse("frontend/index.html")

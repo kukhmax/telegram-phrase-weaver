@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhraseWeaver</title>
+    <link rel="stylesheet" href="css/main.css">
+    <!-- Скрипт для интеграции с Telegram -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <!-- Главный контейнер всего приложения -->
+    <div class="app-container">
+
+        <!-- ОБЩИЙ HEADER -->
+        <header class="app-header">
+            <button id="stats-btn" class="header-btn">
+                <img src="assets/icons/stats.png" alt="Stats" class="stats-icon" style="height: 1em;">
+            </button>
+            <h1>PHRASE WEAVER</h1>
+            <button id="settings-btn" class="header-btn">
+                <img src="assets/icons/setting.png" alt="Settings" class="settings-icon" style="height: 1em;">
+            </button>
+        </header>
+
+        <!-- ОКНО №1: Главный экран -->
+        <div id="main-window" class="app-window">
+            <main class="app-main">
+                <img src="assets/images/mascot.png" alt="Mascot" class="mascot">
+                <h2>Мои колоды:</h2>
+                <div id="decks-container">
+                    <!-- Сюда JS будет добавлять карточки колод -->
+                </div>
+                <div id="no-decks-message" class="hidden">
+                    <p>Здесь появятся ваши колоды</p>
+                    <button class="create-deck-button" onclick="document.getElementById('add-deck-btn').click()">Создать колоду</button>
+                </div>
+            </main>
+            <button id="add-deck-btn" class="fab">
+                <span class="tooltip">Создать новую колоду</span>+
+            </button>
+        </div>
+
+        <!-- ОКНО №2: Создание новой колоды -->
+        <div id="create-deck-window" class="app-window hidden">
+            <main class="app-main">
+                <img src="assets/images/mascot.png" alt="Mascot" class="mascot">
+                <h2>Создать новую колоду</h2>
+                <form id="create-deck-form" class="form-container">
+                    <!-- ... все поля формы остаются как были ... -->
+                     <div class="form-group">
+                        <label for="deck-name">Название колоды:</label>
+                        <input type="text" id="deck-name" name="name" placeholder="Введите название колоды" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="deck-description">Описание:</label>
+                        <textarea id="deck-description" name="description" placeholder="Введите описание колоды"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="lang-from">Изучаемый язык *</label>
+                        <select id="lang-from" name="lang_from" required>
+                            <option value="" disabled selected>Выберите язык</option>
+                            <option value="en">🇺🇸 English</option>
+                            <option value="ru">🇷🇺 Русский</option>
+                            <option value="fr">🇫🇷 Français</option>
+                            <option value="de">🇩🇪 Deutsch</option>
+                            <option value="es">🇪🇸 Español</option>
+                            <option value="pl">🇵🇱 Polski</option>
+                            <option value="pt">🇵🇹 Portuguese</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="lang-to">Язык перевода *</label>
+                        <select id="lang-to" name="lang_to" required>
+                            <option value="" disabled selected>Выберите язык</option>
+                            <option value="en">🇺🇸 English</option>
+                            <option value="ru">🇷🇺 Русский</option>
+                            <option value="fr">🇫🇷 Français</option>
+                            <option value="de">🇩🇪 Deutsch</option>
+                            <option value="es">🇪🇸 Español</option>
+                            <option value="pl">🇵🇱 Polski</option>
+                            <option value="pt">🇵🇹 Portuguese</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="form-submit-btn">➕ Создать колоду</button>
+                </form>
+                <button id="back-to-main-btn" class="back-btn">← Назад на главную</button>
+            </main>
+            <footer class="app-footer">
+                PhraseWeaver v0.1.0
+            </footer>
+        </div>
+
+    </div> <!-- Конец .app-container -->
+
+
+    <!-- Шаблон для карточки колоды (остается без изменений) -->
+    <template id="deck-card-template">
+        <div class="deck-card">
+            <div class="deck-info">
+                <h3 class="deck-name">Название колоды</h3>
+                <p class="deck-description">Описание</p>
+                <div class="deck-langs"><span class="lang-from"></span> → <span class="lang-to"></span></div>
+                <div class="deck-stats">Total: <span class="cards-total">0</span> | Repeat: <span class="cards-repeat">0</span></div>
+            </div>
+            <div class="deck-actions">
+                <button class="action-btn cards-btn">Карточки</button>
+                <button class="action-btn train-btn">Тренировка</button>
+                <button class="action-btn delete-btn">Удалить</button>
+            </div>
+        </div>
+    </template>
+    
+    <!-- Подключаем скрипты (было config.js, но мы его удалим позже) -->
+    <script src="js/app.js" type="module" defer></script>
+</body>
+</html>
+
+
+
