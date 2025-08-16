@@ -9,8 +9,8 @@ primary_region = 'ams'
 [build]
   dockerfile = "backend/Dockerfile"
 
-# [deploy]
-# release_command = "alembic upgrade head"
+[deploy]
+release_command = "alembic upgrade head"
 
 [processes]
   app = "gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8080"
