@@ -3,8 +3,10 @@ import { api, setAuthToken } from '/static/js/api.js';
 import { DOMElements, showWindow, renderDecks, showLoading, showError } from '/static/js/ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const tg = window.Telegram.WebApp;
-    tg.ready();
+    const tg = window.Telegram?.WebApp || {};
+    if (tg.ready) {
+        tg.ready();
+    }
 
     // ============================================
     //               ЛОГИКА ПРИЛОЖЕНИЯ
