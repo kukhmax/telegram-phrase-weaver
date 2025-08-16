@@ -1,0 +1,21 @@
+# fly.toml app configuration file generated for backend-icy-breeze-1459 on 2025-08-16T18:56:27+02:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'phraseweaver'
+primary_region = 'ams'
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[deploy]
+release_command = "alembic upgrade head"
+
+[processes]
+  app = "gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8080"
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1

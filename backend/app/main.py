@@ -4,12 +4,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from alembic import command, config as alembic_config
-from app.core.config import settings
+from app.core.config import get_settings
 from app.routers import auth, cards, decks
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.services.notifications import send_daily_reminders  # TODO: implement
 import logging
+
+settings = get_settings()
 
 logging.basicConfig(level=logging.INFO)
 

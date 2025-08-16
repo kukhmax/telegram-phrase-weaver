@@ -5,11 +5,13 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from app.db import Base 
-from app.core.config import settings
+from app.core.config import get_settings
 
 from app.models.user import User
 from app.models.deck import Deck
 from app.models.card import Card
+
+settings = get_settings()
 
 config = context.config
 if config.config_file_name is not None:
