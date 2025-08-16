@@ -17,6 +17,10 @@ def create_tables():
     # Convert asyncpg to psycopg2 if needed
     if "postgresql+asyncpg://" in database_url:
         database_url = database_url.replace("postgresql+asyncpg://", "postgresql://")
+    elif "postgres+asyncpg://" in database_url:
+        database_url = database_url.replace("postgres+asyncpg://", "postgresql://")
+    elif "postgres://" in database_url:
+        database_url = database_url.replace("postgres://", "postgresql://")
     
     print(f"Connecting to: {database_url[:50]}...")
     
