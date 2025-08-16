@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from sqlalchemy import select
-from app.db import get_db
+from app.database import get_db
 from app.services.auth_service import auth_service
 from pydantic import BaseModel
 from app.models.user import User
@@ -14,15 +14,15 @@ class InitData(BaseModel):
     init_data: str
 
 @router.post("/telegram")
-async def telegram_auth(data: InitData, db: AsyncSession = Depends(get_db)):
+def telegram_auth(data: InitData, db: Session = Depends(get_db)):
     try:
-        return await auth_service.authenticate_telegram_user(db, data.init_data)
+        return auth_service.authenticate_telegram_user(db, data.init_data)
     except HTTPException as e:
         raise e
     
 # НОВЫЙ ОТЛАДОЧНЫЙ ЭНДПОИНТ
 @router.post("/telegram/debug", tags=["auth", "debug"])
-async def telegram_auth_debug(db: AsyncSession = Depends(get_db)):
+def telegram_auth_debug(db: Session = Depends(get_db)):
     """
     DEBUG ONLY: Authenticates a predefined test user without initData verification.
     """
@@ -30,7 +30,7 @@ async def telegram_auth_debug(db: AsyncSession = Depends(get_db)):
     DEBUG_TELEGRAM_ID = 12345678
 
     # Логика похожа на get_or_create_user
-    result = await db.execute(select(User).where(User.telegram_id == DEBUG_TELEGRAM_ID))
+    result = db.execute(select(User).where(User.telegram_id == DEBUG_TELEGRAM_ID))
     user = result.scalars().first()
 
     if user:
@@ -46,8 +46,8 @@ async def telegram_auth_debug(db: AsyncSession = Depends(get_db)):
         )
         db.add(user)
     
-    await db.commit()
-    await db.refresh(user)
+    db.commit()
+    db.refresh(user)
 
     # Создаем токен для этого пользователя
     access_token = auth_service.create_access_token(

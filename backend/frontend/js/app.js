@@ -3,8 +3,10 @@ import { api, setAuthToken } from '/static/js/api.js';
 import { DOMElements, showWindow, renderDecks, showLoading, showError } from '/static/js/ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const tg = window.Telegram.WebApp;
-    tg.ready();
+    const tg = window.Telegram?.WebApp || {};
+    if (tg.ready) {
+        tg.ready();
+    }
 
     // ============================================
     //               ЛОГИКА ПРИЛОЖЕНИЯ
@@ -30,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // ПРОВЕРКА НА ОТЛАДОЧНЫЙ РЕЖИМ
         const isDebugMode = (window.location.hostname === 'localhost' || 
                            window.location.hostname === '127.0.0.1' || 
+                           window.location.hostname.includes('fly.dev') ||
                            window.location.protocol === 'file:');
 
         if (tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0 && !isDebugMode) {

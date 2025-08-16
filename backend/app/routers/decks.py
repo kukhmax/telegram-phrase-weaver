@@ -9,11 +9,11 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from sqlalchemy import select
 from typing import List
 
-from ..db import get_db
+from ..database import get_db
 from ..models.user import User
 from ..models.deck import Deck
 from ..schemas import DeckCreate, Deck as DeckSchema
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/decks", tags=["decks"])
 # Создаем схему зависимости прямо здесь. Она будет ожидать токен в заголовке.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token") # tokenUrl здесь не используется, но обязателен
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> User:
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     """
     Dependency to get current user from JWT token.
     Provides more detailed error messages.
@@ -43,7 +43,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
         # Пробрасываем ошибки от verify_access_token (например, истекший токен)
         raise e
 
-    user = await db.get(User, int(user_id))
+    user = db.get(User, int(user_id))
 
     if user is None:
         raise HTTPException(
@@ -55,9 +55,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
 
 
 @router.post("/", response_model=DeckSchema, status_code=status.HTTP_201_CREATED)
-async def create_deck(
+def create_deck(
     deck_data: DeckCreate,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -68,19 +68,19 @@ async def create_deck(
         user_id=current_user.id
     )
     db.add(new_deck)
-    await db.commit()
-    await db.refresh(new_deck)
+    db.commit()
+    db.refresh(new_deck)
     return new_deck
 
 
 @router.get("/", response_model=List[DeckSchema])
-async def get_decks(
-    db: AsyncSession = Depends(get_db),
+def get_decks(
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
     Gets all decks for the current user.
     """
-    result = await db.execute(select(Deck).where(Deck.user_id == current_user.id))
+    result = db.execute(select(Deck).where(Deck.user_id == current_user.id))
     decks = result.scalars().all()
     return decks

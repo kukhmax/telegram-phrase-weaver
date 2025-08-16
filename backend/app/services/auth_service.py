@@ -13,7 +13,6 @@ import jwt
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession # Убедитесь, что используете AsyncSession
 from fastapi.security import OAuth2PasswordBearer
 
 from ..core.config import get_settings
@@ -164,7 +163,7 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
     
-    async def get_or_create_user(self, db: AsyncSession, telegram_data: Dict[str, Any]) -> User:
+    def get_or_create_user(self, db: Session, telegram_data: Dict[str, Any]) -> User:
         """Get existing user or create new one from Telegram data"""
         user_info = telegram_data['user']
         telegram_id = user_info.get('id')
@@ -175,8 +174,8 @@ class AuthService:
                 detail="Missing Telegram user ID"
             )
         
-        # Асинхронный запрос к БД
-        result = await db.execute(select(User).where(User.telegram_id == telegram_id))
+        # Синхронный запрос к БД
+        result = db.execute(select(User).where(User.telegram_id == telegram_id))
         user = result.scalars().first()
         
         if user:
@@ -200,12 +199,12 @@ class AuthService:
             )
             db.add(user)
 
-        await db.commit()
-        await db.refresh(user)
+        db.commit()
+        db.refresh(user)
         
         return user
     
-    async def authenticate_telegram_user(self, db: AsyncSession, init_data: str) -> Dict[str, Any]:
+    def authenticate_telegram_user(self, db: Session, init_data: str) -> Dict[str, Any]:
         """Complete Telegram authentication flow"""
         if not settings.TELEGRAM_BOT_TOKEN:
             raise HTTPException(
@@ -219,8 +218,8 @@ class AuthService:
             settings.TELEGRAM_BOT_TOKEN
         )
         
-        # Get or create user (теперь с await)
-        user = await self.get_or_create_user(db, telegram_data)
+        # Get or create user (теперь синхронно)
+        user = self.get_or_create_user(db, telegram_data)
         
         # Create access token
         access_token = self.create_access_token(
