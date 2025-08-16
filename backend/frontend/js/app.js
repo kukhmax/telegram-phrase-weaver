@@ -133,6 +133,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const deckCard = event.target.closest('.deck-card');
         if (deckCard && !event.target.closest('.deck-actions')) {
             // Клик по колоде, но не по кнопкам действий
+            
+            // Извлекаем данные о языках из колоды
+            const langFromElement = deckCard.querySelector('.lang-from');
+            const langToElement = deckCard.querySelector('.lang-to');
+            
+            if (langFromElement && langToElement) {
+                const langFrom = langFromElement.textContent;
+                const langTo = langToElement.textContent;
+                
+                // Отображаем языки в окне генерации карточек
+                document.getElementById('lang-from-display').textContent = langFrom;
+                document.getElementById('lang-to-display').textContent = langTo;
+            }
+            
             showWindow('generate-cards-window');
         }
     });

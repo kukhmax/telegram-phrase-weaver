@@ -301,3 +301,12 @@ body {
 .app-container:not(.main-active) .clickable-header:hover {
     background-color: #e6b000;
 }
+
+/* Отображение языков в окне генерации карточек */
+.deck-languages {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #1800ad;
+}
