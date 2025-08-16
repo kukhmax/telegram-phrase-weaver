@@ -2,7 +2,7 @@ fastapi  # Latest stable (~0.115+)
 uvicorn[standard]  # Для server
 gunicorn  # For production deployment
 sqlalchemy>=2.0.23
-asyncpg>=0.28.0  # Для async Postgres
+psycopg[binary,pool]>=3.1.0  # Для async Postgres
 greenlet  # Required for async SQLAlchemy
 redis  # Latest for redis-py
 aiohttp==3.10.5

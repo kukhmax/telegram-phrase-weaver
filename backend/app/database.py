@@ -14,11 +14,14 @@ def init_db():
         settings = get_settings()
         database_url = settings.DATABASE_URL
         
-        # Ensure we use the correct asyncpg URL format
+        # Ensure we use the correct psycopg URL format for async
         if database_url.startswith("postgres://"):
-            database_url = database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+            database_url = database_url.replace("postgres://", "postgresql+psycopg://", 1)
         elif database_url.startswith("postgresql://"):
-            database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+        elif not database_url.startswith("postgresql+psycopg://"):
+            # If it's already postgresql+asyncpg, change to psycopg
+            database_url = database_url.replace("postgresql+asyncpg://", "postgresql+psycopg://")
         
         engine = create_async_engine(database_url, echo=True)
         async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
