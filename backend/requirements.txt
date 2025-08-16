@@ -1,7 +1,9 @@
 fastapi  # Latest stable (~0.115+)
 uvicorn[standard]  # Для server
-sqlalchemy==2.0.43
-asyncpg  # Для async Postgres
+gunicorn  # For production deployment
+sqlalchemy>=2.0.23
+asyncpg>=0.28.0  # Для async Postgres
+greenlet  # Required for async SQLAlchemy
 redis  # Latest for redis-py
 aiohttp==3.10.5
 gtts==2.5.3
@@ -17,3 +19,4 @@ cryptography  # Для AES in auth
 httpx  # Для Telegram API calls
 python-dotenv  # For .env file support
 python-unsplash  # For Unsplash API
+psycopg2-binary

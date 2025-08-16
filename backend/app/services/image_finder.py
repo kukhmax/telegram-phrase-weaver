@@ -3,7 +3,9 @@ import logging
 import asyncio
 from unsplash.api import Api
 from unsplash.auth import Auth
-from app.core.config import settings
+from app.core.config import get_settings
+
+settings = get_settings()
 
 # Setup auth глобально (client_id из env; Unsplash требует только access_key для public)
 auth = Auth(client_id=settings.UNSPLASH_ACCESS_KEY, client_secret="", redirect_uri="", code="")

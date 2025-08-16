@@ -1,6 +1,6 @@
 // Главный файл, который управляет всем приложением
-import { api, setAuthToken } from './api.js';
-import { DOMElements, showWindow, renderDecks } from './ui.js';
+import { api, setAuthToken } from '/static/js/api.js';
+import { DOMElements, showWindow, renderDecks, showLoading, showError } from '/static/js/ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const tg = window.Telegram.WebApp;
@@ -13,11 +13,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Функция для обновления и перерисовки списка колод
     async function refreshDecks() {
         try {
+            showLoading('Загружаем ваши колоды...');
             const decks = await api.getDecks();
             renderDecks(decks);
         } catch (error) {
             console.error("Failed to refresh decks:", error);
-            // Можно показать ошибку пользователю
+            showError(error.message || 'Не удалось загрузить колоды');
         }
     }
 
@@ -79,9 +80,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(event.target);
         const deckData = Object.fromEntries(formData.entries());
         
+        // Валидация формы
+        if (!deckData.name || deckData.name.trim().length < 2) {
+            alert('Название колоды должно содержать минимум 2 символа');
+            return;
+        }
+        
+        if (!deckData.lang_from || !deckData.lang_to) {
+            alert('Пожалуйста, выберите оба языка');
+            return;
+        }
+        
+        if (deckData.lang_from === deckData.lang_to) {
+            alert('Изучаемый язык и язык перевода должны отличаться');
+            return;
+        }
+        
         const submitBtn = DOMElements.createDeckForm.querySelector('button[type="submit"]');
         submitBtn.disabled = true; // Блокируем кнопку на время запроса
-        submitBtn.textContent = 'Создание...';
+        submitBtn.textContent = '⏳ Создание...';
 
         try {
             await api.createDeck(deckData);

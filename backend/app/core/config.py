@@ -1,3 +1,5 @@
+# backend/app/core/config.py
+from functools import lru_cache
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -11,5 +13,16 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        # Эта опция позволяет Pydantic не падать, если .env файл не найден
+        # (что актуально для production, где мы используем переменные окружения)
+        env_file_encoding = 'utf-8'
+        extra = 'ignore'  # Игнорировать дополнительные поля
 
-settings = Settings()
+# Оборачиваем создание объекта Settings в функцию с кэшированием.
+# Это значит, что Settings() будет создан только ОДИН раз при первом вызове,
+# а все последующие вызовы будут возвращать уже созданный объект.
+# Это "ленивая" загрузка.
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
+

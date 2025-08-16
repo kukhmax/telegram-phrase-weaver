@@ -1,13 +1,5 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, declarative_base
-from app.core.config import settings
-from app.models import *  # Импорт всех моделей для Base
+# This file is kept for backward compatibility
+# All database functionality moved to app.database
+from app.database import get_db, Base, engine, async_session
 
-engine = create_async_engine(settings.DATABASE_URL, echo=True)
-async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-Base = declarative_base()
-
-async def get_db():
-    async with async_session() as session:
-        yield session
+__all__ = ["get_db", "Base", "engine", "async_session"]

@@ -16,9 +16,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession # Убедитесь, что используете AsyncSession
 from fastapi.security import OAuth2PasswordBearer
 
-from ..core.config import settings
+from ..core.config import get_settings
 from ..models.user import User
 import app.schemas as schemas
+
+settings = get_settings()
 
 class TelegramAuthService:
     """Service for Telegram WebApp authentication"""

@@ -2,14 +2,17 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from alembic import command, config as alembic_config
-from app.core.config import settings
+from app.core.config import get_settings
 from app.routers import auth, cards, decks
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.services.notifications import send_daily_reminders  # TODO: implement
 import logging
+
+settings = get_settings()
 
 logging.basicConfig(level=logging.INFO)
 
@@ -30,6 +33,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="PhraseWeaver API")
 
+origins = [
+    "https://frontend-q7zq.onrender.com", # URL вашего фронтенда на Render
+    # "http://localhost",
+    # "http://localhost:8080", # Если вы вдруг запускаете фронтенд локально на другом порту
+]
+
+
 # CORS для Telegram Mini App (prod + local)
 app.add_middleware(
     CORSMiddleware,
@@ -41,6 +51,10 @@ app.add_middleware(
 
 
 
+@app.get("/")
+def root():
+    return {"message": "PhraseWeaver API is running", "version": "1.0.0", "docs": "/docs"}
+
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
@@ -48,3 +62,12 @@ def health_check():
 app.include_router(auth.router)
 app.include_router(cards.router)
 app.include_router(decks.router)
+
+# Статические файлы фронтенда
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+# Главная страница фронтенда
+@app.get("/app")
+async def frontend():
+    from fastapi.responses import FileResponse
+    return FileResponse("frontend/index.html")
