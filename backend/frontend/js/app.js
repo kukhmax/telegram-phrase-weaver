@@ -120,7 +120,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Обработчик клика по header для возврата на главное окно
     document.addEventListener('click', (event) => {
         if (event.target.closest('.clickable-header')) {
-            showWindow('main-window');
+            // Возвращаемся на главное окно только если мы не на нем
+            const mainWindow = document.getElementById('main-window');
+            if (mainWindow.classList.contains('hidden')) {
+                showWindow('main-window');
+            }
         }
     });
 

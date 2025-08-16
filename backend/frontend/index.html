@@ -13,7 +13,7 @@
     <div class="app-container">
 
         <!-- ОБЩИЙ HEADER -->
-        <header class="app-header">
+        <header class="app-header clickable-header">
             <button id="stats-btn" class="header-btn">
                 <img src="/static/assets/icons/stats.png" alt="Stats" class="stats-icon" style="height: 1em;">
             </button>
@@ -86,22 +86,10 @@
                 </form>
                 <button id="back-to-main-btn" class="back-btn">← Назад на главную</button>
             </main>
-            <footer class="app-footer">
-                PhraseWeaver v0.1.0
-            </footer>
         </div>
 
         <!-- ОКНО №3: Генерация карточек -->
         <div id="generate-cards-window" class="app-window hidden">
-            <header class="app-header clickable-header">
-                <div class="header-left">
-                    <img src="/static/assets/icons/stats.png" alt="Stats" class="header-icon">
-                </div>
-                <h1 class="app-title">PHRASE WEAVER</h1>
-                <div class="header-right">
-                    <img src="/static/assets/icons/setting.png" alt="Settings" class="header-icon">
-                </div>
-            </header>
             <main class="app-main">
                 <img src="/static/assets/images/mascot.png" alt="Mascot" class="mascot">
                 <h2>Генерация карточек</h2>
@@ -117,10 +105,12 @@
                     <button type="submit" class="form-submit-btn">Обогатить</button>
                 </form>
             </main>
-            <footer class="app-footer">
-                PhraseWeaver v0.1.0
-            </footer>
         </div>
+
+        <!-- ОБЩИЙ FOOTER -->
+        <footer class="app-footer">
+            PhraseWeaver v0.1.0
+        </footer>
 
     </div> <!-- Конец .app-container -->
 

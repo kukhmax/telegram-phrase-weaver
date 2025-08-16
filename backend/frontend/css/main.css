@@ -290,10 +290,14 @@ body {
 
 /* Clickable header */
 .clickable-header {
-    cursor: pointer;
     transition: background-color 0.2s ease;
 }
 
-.clickable-header:hover {
+/* Header кликабельный только когда не на главном окне */
+.app-container:not(.main-active) .clickable-header {
+    cursor: pointer;
+}
+
+.app-container:not(.main-active) .clickable-header:hover {
     background-color: #e6b000;
 }

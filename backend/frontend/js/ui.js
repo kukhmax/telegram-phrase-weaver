@@ -20,6 +20,14 @@ export function showWindow(windowId) {
         win.classList.add('hidden');
     });
     document.getElementById(windowId).classList.remove('hidden');
+    
+    // Управляем классом main-active для контейнера
+    const appContainer = document.querySelector('.app-container');
+    if (windowId === 'main-window') {
+        appContainer.classList.add('main-active');
+    } else {
+        appContainer.classList.remove('main-active');
+    }
 }
 
 /**
