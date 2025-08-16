@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, JSON
 from datetime import datetime
-from app.db import Base
+from app.database import Base
 
 class Card(Base):
     __tablename__ = "cards"
