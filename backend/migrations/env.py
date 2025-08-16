@@ -19,8 +19,10 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:
-    # Convert asyncpg URL to psycopg2 URL for migrations
-    url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+    # Ensure we use psycopg2 URL for migrations
+    url = settings.DATABASE_URL
+    if "postgresql+asyncpg://" in url:
+        url = url.replace("postgresql+asyncpg://", "postgresql://")
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -31,8 +33,10 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 def run_migrations_online() -> None:
-    # Convert asyncpg URL to psycopg2 URL for migrations
-    database_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+    # Ensure we use psycopg2 URL for migrations
+    database_url = settings.DATABASE_URL
+    if "postgresql+asyncpg://" in database_url:
+        database_url = database_url.replace("postgresql+asyncpg://", "postgresql://")
     
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = database_url
