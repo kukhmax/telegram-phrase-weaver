@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhraseWeaver</title>
-    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="/static/css/main.css">
     <!-- Скрипт для интеграции с Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -15,18 +15,18 @@
         <!-- ОБЩИЙ HEADER -->
         <header class="app-header">
             <button id="stats-btn" class="header-btn">
-                <img src="assets/icons/stats.png" alt="Stats" class="stats-icon" style="height: 1em;">
+                <img src="/static/assets/icons/stats.png" alt="Stats" class="stats-icon" style="height: 1em;">
             </button>
             <h1>PHRASE WEAVER</h1>
             <button id="settings-btn" class="header-btn">
-                <img src="assets/icons/setting.png" alt="Settings" class="settings-icon" style="height: 1em;">
+                <img src="/static/assets/icons/setting.png" alt="Settings" class="settings-icon" style="height: 1em;">
             </button>
         </header>
 
         <!-- ОКНО №1: Главный экран -->
         <div id="main-window" class="app-window">
             <main class="app-main">
-                <img src="assets/images/mascot.png" alt="Mascot" class="mascot">
+                <img src="/static/assets/images/mascot.png" alt="Mascot" class="mascot">
                 <h2>Мои колоды:</h2>
                 <div id="decks-container">
                     <!-- Сюда JS будет добавлять карточки колод -->
@@ -44,7 +44,7 @@
         <!-- ОКНО №2: Создание новой колоды -->
         <div id="create-deck-window" class="app-window hidden">
             <main class="app-main">
-                <img src="assets/images/mascot.png" alt="Mascot" class="mascot">
+                <img src="/static/assets/images/mascot.png" alt="Mascot" class="mascot">
                 <h2>Создать новую колоду</h2>
                 <form id="create-deck-form" class="form-container">
                     <!-- ... все поля формы остаются как были ... -->
@@ -112,7 +112,7 @@
     </template>
     
     <!-- Подключаем скрипты (было config.js, но мы его удалим позже) -->
-    <script src="js/app.js" type="module" defer></script>
+    <script src="/static/js/app.js" type="module" defer></script>
 </body>
 </html>
 

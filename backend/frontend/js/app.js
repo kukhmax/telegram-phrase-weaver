@@ -1,6 +1,6 @@
 // Главный файл, который управляет всем приложением
-import { api, setAuthToken } from './api.js';
-import { DOMElements, showWindow, renderDecks, showLoading, showError } from './ui.js';
+import { api, setAuthToken } from '/static/js/api.js';
+import { DOMElements, showWindow, renderDecks, showLoading, showError } from '/static/js/ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const tg = window.Telegram.WebApp;
