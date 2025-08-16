@@ -117,6 +117,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Обработчик клика по header для возврата на главное окно
+    document.addEventListener('click', (event) => {
+        if (event.target.closest('.clickable-header')) {
+            showWindow('main-window');
+        }
+    });
+
+    // Обработчик клика по колоде для перехода к генерации карточек
+    document.addEventListener('click', (event) => {
+        const deckCard = event.target.closest('.deck-card');
+        if (deckCard && !event.target.closest('.deck-actions')) {
+            // Клик по колоде, но не по кнопкам действий
+            showWindow('generate-cards-window');
+        }
+    });
+
     // Запускаем приложение
     main();
 });
