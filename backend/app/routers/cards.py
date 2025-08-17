@@ -126,6 +126,14 @@ async def save_card(
         # Маппим front_text и back_text на поля модели Card
         from datetime import datetime, timedelta
         
+        # Парсим next_review если он передан
+        due_date = datetime.utcnow() + timedelta(days=1)  # По умолчанию
+        if card_data.next_review:
+            try:
+                due_date = datetime.fromisoformat(card_data.next_review.replace('Z', '+00:00'))
+            except:
+                pass  # Используем значение по умолчанию
+        
         new_card = Card(
             deck_id=card_data.deck_id,
             phrase=card_data.front_text,
@@ -134,7 +142,7 @@ async def save_card(
             audio_path=None,
             image_path=None,
             examples=None,
-            due_date=datetime.utcnow() + timedelta(days=1),  # Следующий повтор через день
+            due_date=due_date,
             interval=1.0,  # Интервал в днях
             ease_factor=2.5  # Коэффициент легкости
         )
