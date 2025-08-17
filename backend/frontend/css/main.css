@@ -319,6 +319,105 @@ body {
     font-size: 16px;
 }
 
+/* Контейнер карточек */
+.cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* Карточка в окне просмотра */
+.saved-card {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.saved-card:hover {
+    border-color: #f4c300;
+    background: #fffbf0;
+}
+
+.card-content {
+    margin-bottom: 15px;
+}
+
+.card-side {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 16px;
+    padding: 10px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+}
+
+.card-side:last-child {
+    margin-bottom: 0;
+}
+
+.card-side.front {
+    border-left: 4px solid #1800ad;
+}
+
+.card-side.back {
+    border-left: 4px solid #28a745;
+}
+
+.card-flag {
+    margin-right: 12px;
+    font-size: 20px;
+}
+
+.card-text {
+    flex: 1;
+    font-weight: 500;
+}
+
+.card-text b {
+    color: #1800ad;
+    font-weight: bold;
+}
+
+/* Кнопки карточки */
+.card-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.card-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.practice-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.practice-btn:hover {
+    background-color: #218838;
+}
+
+.delete-card-btn {
+    background-color: #ff4757;
+    color: white;
+}
+
+.delete-card-btn:hover {
+    background-color: #e63946;
+}
+
 /* Окно сгенерированных фраз */
 .phrases-counter {
     text-align: center;

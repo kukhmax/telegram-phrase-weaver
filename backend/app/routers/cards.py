@@ -59,6 +59,47 @@ async def generate_audio_endpoint(request: AudioRequest = Body(...)):
     else:
         raise HTTPException(status_code=500, detail="Failed to generate audio")
 
+@router.get("/deck/{deck_id}")
+async def get_deck_cards(
+    deck_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Получает все карточки для указанной колоды.
+    """
+    # Проверяем, что колода принадлежит пользователю
+    deck = await db.get(Deck, deck_id)
+    if not deck:
+        raise HTTPException(status_code=404, detail="Deck not found")
+    
+    if deck.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this deck")
+    
+    # Получаем карточки колоды
+    from sqlalchemy import select
+    result = await db.execute(
+        select(Card).where(Card.deck_id == deck_id).order_by(Card.id)
+    )
+    cards = result.scalars().all()
+    
+    return {
+        "deck": {
+            "id": deck.id,
+            "name": deck.name,
+            "lang_from": deck.lang_from,
+            "lang_to": deck.lang_to,
+            "cards_count": deck.cards_count
+        },
+        "cards": [{
+            "id": card.id,
+            "front_text": card.front_text,
+            "back_text": card.back_text,
+            "difficulty": card.difficulty,
+            "next_review": card.next_review.isoformat() if card.next_review else None
+        } for card in cards]
+    }
+
 @router.post("/save", response_model=CardSchema, status_code=status.HTTP_201_CREATED)
 async def save_card(
     card_data: CardCreate,

@@ -66,5 +66,6 @@ export const api = {
     enrichPhrase: (enrichData) => request('/cards/enrich', 'POST', enrichData),
     generateAudio: (audioData) => request('/cards/generate-audio', 'POST', audioData),
     saveCard: (cardData) => request('/cards/save', 'POST', cardData),
+    getDeckCards: (deckId) => request(`/cards/deck/${deckId}`, 'GET'),
     // ... здесь будут другие методы API: getCards, etc.
 };

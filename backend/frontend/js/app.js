@@ -152,6 +152,96 @@ function updatePhrasesCounter(totalCount = null, selectedCount = null) {
     saveBtn.disabled = selectedCount === 0;
 }
 
+// Функция для отображения карточек колоды
+async function displayDeckCards(deckId) {
+    try {
+        showLoading('Загружаем карточки...');
+        
+        const response = await api.getDeckCards(deckId);
+        
+        if (response && response.deck && response.cards) {
+            // Обновляем информацию о колоде
+            document.getElementById('cards-deck-name').textContent = response.deck.name;
+            document.getElementById('cards-lang-from-display').textContent = response.deck.lang_from;
+            document.getElementById('cards-lang-to-display').textContent = response.deck.lang_to;
+            
+            const container = document.getElementById('cards-container');
+            const noCardsMessage = document.getElementById('no-cards-message');
+            
+            container.innerHTML = '';
+            
+            if (response.cards.length === 0) {
+                noCardsMessage.style.display = 'block';
+                container.style.display = 'none';
+            } else {
+                noCardsMessage.style.display = 'none';
+                container.style.display = 'flex';
+                
+                // Создаем карточки
+                response.cards.forEach(card => {
+                    const cardElement = createSavedCard(card, response.deck);
+                    container.appendChild(cardElement);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error loading deck cards:', error);
+        showError(`Ошибка загрузки карточек: ${error.message}`);
+    }
+}
+
+// Функция для создания карточки в окне просмотра
+function createSavedCard(card, deck) {
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'saved-card';
+    cardDiv.dataset.cardId = card.id;
+    
+    // Получаем флаги языков
+    const langFromFlag = deck.lang_from.split(' ')[0];
+    const langToFlag = deck.lang_to.split(' ')[0];
+    
+    cardDiv.innerHTML = `
+        <div class="card-content">
+            <div class="card-side front">
+                <span class="card-flag">${langFromFlag}</span>
+                <span class="card-text">${card.front_text}</span>
+                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${extractLanguageCode(deck.lang_from)}')" title="Прослушать">
+                    🔊
+                </button>
+            </div>
+            <div class="card-side back">
+                <span class="card-flag">${langToFlag}</span>
+                <span class="card-text">${card.back_text}</span>
+                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${extractLanguageCode(deck.lang_to)}')" title="Прослушать">
+                    🔊
+                </button>
+            </div>
+        </div>
+        <div class="card-actions">
+            <button class="card-btn practice-btn" onclick="practiceCard(${card.id})">
+                Тренировать
+            </button>
+            <button class="card-btn delete-card-btn" onclick="deleteCard(${card.id})">
+                Удалить
+            </button>
+        </div>
+    `;
+    
+    return cardDiv;
+}
+
+// Функция для тренировки карточки (заглушка)
+window.practiceCard = function(cardId) {
+    alert(`Тренировка карточки ${cardId} будет реализована позже`);
+};
+
+// Функция для удаления карточки (заглушка)
+window.deleteCard = function(cardId) {
+    if (confirm('Вы уверены, что хотите удалить эту карточку?')) {
+        alert(`Удаление карточки ${cardId} будет реализовано позже`);
+    }
+};
+
 // Функция для воспроизведения аудио
 window.playAudio = async function(text, langCode) {
     try {
@@ -401,25 +491,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Обработчик кнопки "Карточки"
-    document.addEventListener('click', (event) => {
+    document.addEventListener('click', async (event) => {
         if (event.target.classList.contains('cards-btn')) {
             event.preventDefault();
             
             const deckCard = event.target.closest('.deck-card');
-            const deckName = deckCard.querySelector('.deck-name').textContent;
-            const langFromElement = deckCard.querySelector('.lang-from');
-            const langToElement = deckCard.querySelector('.lang-to');
+            const deckId = parseInt(deckCard.dataset.deckId);
             
-            // Заполняем данные в окне карточек
-            document.getElementById('cards-deck-name').textContent = deckName;
-            
-            if (langFromElement && langToElement) {
-                const langFrom = langFromElement.textContent;
-                const langTo = langToElement.textContent;
-                
-                document.getElementById('cards-lang-from-display').textContent = langFrom;
-                document.getElementById('cards-lang-to-display').textContent = langTo;
-            }
+            // Загружаем и отображаем карточки колоды
+            await displayDeckCards(deckId);
             
             showWindow('cards-window');
         }
