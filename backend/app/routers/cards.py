@@ -147,10 +147,13 @@ async def save_card(
             ease_factor=2.5  # Коэффициент легкости
         )
         
-        # 3. Обновляем счетчик в колоде
+        # 3. Добавляем карточку в сессию
+        db.add(new_card)
+        
+        # 4. Обновляем счетчик в колоде
         deck.cards_count += 1
         
-        db.add(new_card)
+        # 5. Коммитим все изменения
         await db.commit()
         await db.refresh(new_card)
         

@@ -558,19 +558,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const phrasesToSave = [];
             const allCards = document.querySelectorAll('.phrase-card');
             
+            // Проверяем, что currentDeckId установлен
+            if (!currentDeckId) {
+                showError('Ошибка: не выбрана колода для сохранения карточек');
+                return;
+            }
+            
+            console.log('Saving cards to deck ID:', currentDeckId);
+            
             selectedPhrases.forEach(index => {
                 const card = allCards[index];
                 if (card) {
                     const originalText = card.querySelector('.phrase-line:first-child .phrase-text').textContent;
                     const translationText = card.querySelector('.phrase-line:last-child .phrase-text').textContent;
                     
-                    phrasesToSave.push({
+                    const cardData = {
                         deck_id: currentDeckId,
                         front_text: originalText,
                         back_text: translationText,
                         difficulty: 1,
                         next_review: new Date().toISOString()
-                    });
+                    };
+                    
+                    console.log('Card data to save:', cardData);
+                    phrasesToSave.push(cardData);
                 }
             });
             
