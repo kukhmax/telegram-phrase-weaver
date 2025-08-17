@@ -93,10 +93,10 @@ async def get_deck_cards(
         },
         "cards": [{
             "id": card.id,
-            "front_text": card.front_text,
-            "back_text": card.back_text,
-            "difficulty": card.difficulty,
-            "next_review": card.next_review.isoformat() if card.next_review else None
+            "front_text": card.phrase,
+            "back_text": card.translation,
+            "difficulty": 1,  # Пока используем значение по умолчанию
+            "next_review": card.due_date.isoformat() if card.due_date else None
         } for card in cards]
     }
 
@@ -119,7 +119,17 @@ async def save_card(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to add card to this deck")
 
     # 2. Создаем карточку
-    new_card = Card(**card_data.model_dump())
+    # Маппим front_text и back_text на поля модели Card
+    card_dict = {
+        "deck_id": card_data.deck_id,
+        "phrase": card_data.front_text,
+        "translation": card_data.back_text,
+        "keyword": "",  # Пока оставляем пустым
+        "audio_path": None,
+        "image_path": None,
+        "examples": None
+    }
+    new_card = Card(**card_dict)
     
     # 3. Обновляем счетчик в колоде
     deck.cards_count += 1   # Обновляем счетчик карточек в связанной колоде. SQLAlchemy отследит это изменение и сохранит его во время await db.commit().
