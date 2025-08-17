@@ -10,7 +10,7 @@ import traceback
 from app.schemas import CardCreate, Card as CardSchema
 from app.db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy.sql import select
 from app.models.deck import Deck
 from app.models.card import Card
 from app.models.user import User
