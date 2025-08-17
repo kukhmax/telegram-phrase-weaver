@@ -156,7 +156,8 @@ async def save_card(
         # Логируем и возвращаем общую ошибку для всех остальных исключений
         import logging
         logging.error(f"Error saving card: {str(e)}")
-        await db.rollback()
+        if db:
+            await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to save card: {str(e)}"
