@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, Body
 from pydantic import BaseModel
 from typing import Optional
 from app.services.enrichment import enrich_phrase, generate_audio
+import logging
+import traceback
 
 from app.schemas import CardCreate, Card as CardSchema
 from app.db import get_db
@@ -168,11 +170,18 @@ async def save_card(
         # Перебрасываем HTTP исключения как есть
         raise
     except Exception as e:
-        # Логируем и возвращаем общую ошибку для всех остальных исключений
-        import logging
-        logging.error(f"Error saving card: {str(e)}")
+        # Логируем детальную информацию об ошибке
+        error_msg = f"Error saving card: {str(e)}"
+        logging.error(error_msg)
+        logging.error(f"Traceback: {traceback.format_exc()}")
+        logging.error(f"Card data: {card_data.dict()}")
+        
         if db:
-            await db.rollback()
+            try:
+                await db.rollback()
+            except Exception as rollback_error:
+                logging.error(f"Rollback failed: {str(rollback_error)}")
+        
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to save card: {str(e)}"
