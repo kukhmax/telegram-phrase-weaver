@@ -1,8 +1,6 @@
 // Этот файл будет отвечать за все запросы к нашему бэкенду.
 
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:8000' // URL для локальной разработки
-        : 'https://phraseweaver.fly.dev'; // Наш деплой на fly.io
+const API_BASE_URL = 'https://phraseweaver.fly.dev'; // Наш деплой на fly.io
 
 // Глобальная переменная для токена. В более крупных приложениях это лучше хранить в классе или State Manager.
 let authToken = null;
