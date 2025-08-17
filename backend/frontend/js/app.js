@@ -151,6 +151,57 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Обработчик кнопки "Удалить"
+    document.addEventListener('click', async (event) => {
+        if (event.target.classList.contains('delete-btn')) {
+            event.preventDefault();
+            
+            const deckCard = event.target.closest('.deck-card');
+            const deckName = deckCard.querySelector('.deck-name').textContent;
+            
+            if (confirm(`Вы уверены, что хотите удалить колоду "${deckName}"?`)) {
+                try {
+                    // Получаем ID колоды из data-атрибута
+                    const deckId = deckCard.dataset.deckId;
+                    
+                    // Удаляем колоду через API
+                    await api.deleteDeck(deckId);
+                    
+                    // Обновляем список колод
+                    await refreshDecks();
+                } catch (error) {
+                    console.error('Failed to delete deck:', error);
+                    alert(`Ошибка удаления колоды: ${error.message}`);
+                }
+            }
+        }
+    });
+
+    // Обработчик кнопки "Карточки"
+    document.addEventListener('click', (event) => {
+        if (event.target.classList.contains('cards-btn')) {
+            event.preventDefault();
+            
+            const deckCard = event.target.closest('.deck-card');
+            const deckName = deckCard.querySelector('.deck-name').textContent;
+            const langFromElement = deckCard.querySelector('.lang-from');
+            const langToElement = deckCard.querySelector('.lang-to');
+            
+            // Заполняем данные в окне карточек
+            document.getElementById('cards-deck-name').textContent = deckName;
+            
+            if (langFromElement && langToElement) {
+                const langFrom = langFromElement.textContent;
+                const langTo = langToElement.textContent;
+                
+                document.getElementById('cards-lang-from-display').textContent = langFrom;
+                document.getElementById('cards-lang-to-display').textContent = langTo;
+            }
+            
+            showWindow('cards-window');
+        }
+    });
+
     // Запускаем приложение
     main();
 });

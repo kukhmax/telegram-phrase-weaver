@@ -310,3 +310,11 @@ body {
     text-align: center;
     color: #1800ad;
 }
+
+/* Сообщение о пустых карточках */
+.no-cards-message {
+    text-align: center;
+    margin-top: 40px;
+    color: #6c757d;
+    font-size: 16px;
+}

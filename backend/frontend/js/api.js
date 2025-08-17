@@ -50,5 +50,6 @@ export const api = {
     authenticateDebug: () => request('/auth/telegram/debug', 'POST'), 
     getDecks: () => request('/decks/'),
     createDeck: (deckData) => request('/decks/', 'POST', deckData),
-    // ... здесь будут другие методы API: deleteDeck, getCards, etc.
+    deleteDeck: (deckId) => request(`/decks/${deckId}`, 'DELETE'),
+    // ... здесь будут другие методы API: getCards, etc.
 };

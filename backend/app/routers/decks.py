@@ -84,3 +84,28 @@ def get_decks(
     result = db.execute(select(Deck).where(Deck.user_id == current_user.id))
     decks = result.scalars().all()
     return decks
+
+@router.delete("/{deck_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_deck(
+    deck_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Deletes a deck by ID. Only the owner can delete their deck.
+    """
+    # Находим колоду
+    result = db.execute(select(Deck).where(Deck.id == deck_id, Deck.user_id == current_user.id))
+    deck = result.scalars().first()
+    
+    if not deck:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Deck not found or you don't have permission to delete it"
+        )
+    
+    # Удаляем колоду
+    db.delete(deck)
+    db.commit()
+    
+    return None  # 204 No Content
