@@ -33,15 +33,27 @@ async function request(endpoint, method = 'GET', body = null) {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
 
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'API request failed');
+        // Для ошибок тоже проверяем наличие контента
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'API request failed');
+        } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
     }
-    // Если у ответа нет тела (например, для статуса 204), json() вызовет ошибку
+    
+    // Для успешных ответов проверяем наличие контента
+    // Статус 204 No Content не имеет тела
+    if (response.status === 204) {
+        return null;
+    }
+    
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.indexOf("application/json") !== -1) {
         return response.json();
     } 
-    return null; // или response.text() если нужно
+    return null;
 }
 
 // Функции для каждого эндпоинта
