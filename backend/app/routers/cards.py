@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Body
 from pydantic import BaseModel
 from typing import Optional
-from app.services.enrichment import enrich_phrase
+from app.services.enrichment import enrich_phrase, generate_audio
 
 from app.schemas import CardCreate, Card as CardSchema
 from app.db import get_db
@@ -22,6 +22,10 @@ class EnrichRequest(BaseModel):
     lang_code: str
     target_lang: str
 
+class AudioRequest(BaseModel):
+    text: str
+    lang_code: str
+
 @router.post("/enrich")
 async def enrich(request: EnrichRequest = Body(...)):
     """
@@ -33,6 +37,23 @@ async def enrich(request: EnrichRequest = Body(...)):
         request.lang_code, 
         request.target_lang
     )
+
+@router.post("/generate-audio")
+async def generate_audio_endpoint(request: AudioRequest = Body(...)):
+    """
+    Генерирует аудио файл для текста и возвращает путь к файлу.
+    """
+    # Очищаем текст от HTML тегов
+    clean_text = request.text.replace('<b>', '').replace('</b>', '')
+    
+    audio_path = await generate_audio(clean_text, request.lang_code, "phrase")
+    
+    if audio_path:
+        # Возвращаем относительный путь для frontend
+        relative_path = audio_path.replace('assets/', '/static/assets/')
+        return {"audio_url": relative_path}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to generate audio")
 
 @router.post("/save", response_model=CardSchema, status_code=status.HTTP_201_CREATED)
 async def save_card(

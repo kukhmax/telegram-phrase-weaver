@@ -1,10 +1,10 @@
 /* Используем переменные Telegram для плавности интеграции */
 :root {
-    --bg-color: var(--tg-theme-bg-color, #fff);
-    --text-color: var(--tg-theme-text-color, #1800ad);
-    --hint-color: var(--tg-theme-hint-color, #4258bb);
+    --bg-color: #fff;
+    --text-color: #1800ad;
+    --hint-color: #4258bb;
     --button-color: #f4c300;
-    --button-text-color: var(--tg-theme-button-text-color, #1800ad);
+    --button-text-color: #1800ad;
     
     --brand-yellow: #f4c300;
     --brand-blue: #1800ad;

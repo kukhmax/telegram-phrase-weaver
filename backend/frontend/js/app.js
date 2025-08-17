@@ -153,13 +153,13 @@ function updatePhrasesCounter(totalCount = null, selectedCount = null) {
 }
 
 // Функция для воспроизведения аудио
-window.playAudio = function(text, langCode) {
+window.playAudio = async function(text, langCode) {
     try {
         // Очищаем текст от HTML тегов
         const cleanText = text.replace(/<[^>]*>/g, '');
         
-        // Используем Web Speech API для синтеза речи
-        if ('speechSynthesis' in window) {
+        // Сначала пробуем Web Speech API (для десктопа)
+        if ('speechSynthesis' in window && !window.Telegram?.WebApp) {
             // Останавливаем предыдущее воспроизведение
             window.speechSynthesis.cancel();
             
@@ -175,17 +175,36 @@ window.playAudio = function(text, langCode) {
             };
             
             utterance.lang = langMap[langCode] || 'en-US';
-            utterance.rate = 0.8; // Немного медленнее для лучшего понимания
+            utterance.rate = 0.8;
             utterance.pitch = 1;
             utterance.volume = 1;
             
             window.speechSynthesis.speak(utterance);
         } else {
-            console.warn('Speech synthesis not supported');
-            alert('Воспроизведение аудио не поддерживается в вашем браузере');
+            // Для Telegram WebApp используем серверную генерацию аудио
+            try {
+                const response = await api.generateAudio({
+                    text: cleanText,
+                    lang_code: langCode
+                });
+                
+                if (response && response.audio_url) {
+                    const audio = new Audio(response.audio_url);
+                    audio.play().catch(error => {
+                        console.error('Error playing audio file:', error);
+                        alert('Ошибка воспроизведения аудио');
+                    });
+                } else {
+                    throw new Error('No audio URL received');
+                }
+            } catch (error) {
+                console.error('Error generating audio:', error);
+                alert('Ошибка генерации аудио');
+            }
         }
     } catch (error) {
         console.error('Error playing audio:', error);
+        alert('Ошибка воспроизведения аудио');
     }
 };
 

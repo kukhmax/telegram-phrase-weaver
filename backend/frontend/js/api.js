@@ -64,6 +64,7 @@ export const api = {
     createDeck: (deckData) => request('/decks/', 'POST', deckData),
     deleteDeck: (deckId) => request(`/decks/${deckId}`, 'DELETE'),
     enrichPhrase: (enrichData) => request('/cards/enrich', 'POST', enrichData),
+    generateAudio: (audioData) => request('/cards/generate-audio', 'POST', audioData),
     saveCard: (cardData) => request('/cards/save', 'POST', cardData),
     // ... здесь будут другие методы API: getCards, etc.
 };
