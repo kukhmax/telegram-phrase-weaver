@@ -109,39 +109,52 @@ async def save_card(
     """
     Saves a new card to a specified deck.
     """
-    # 1. Проверяем, существует ли колода и принадлежит ли она пользователю
-    deck = await db.get(Deck, card_data.deck_id)  # Эффективный способ получить объект по его первичному ключу.
+    try:
+        # 1. Проверяем, существует ли колода и принадлежит ли она пользователю
+        deck = await db.get(Deck, card_data.deck_id)
 
-    if not deck:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deck not found")
-    
-    if deck.user_id != current_user.id:  # Мы никогда не должны позволять пользователю записывать данные в чужие колоды.
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to add card to this deck")
+        if not deck:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deck not found")
+        
+        if deck.user_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to add card to this deck")
 
-    # 2. Создаем карточку
-    # Маппим front_text и back_text на поля модели Card
-    card_dict = {
-        "deck_id": card_data.deck_id,
-        "phrase": card_data.front_text,
-        "translation": card_data.back_text,
-        "keyword": "",  # Пока оставляем пустым
-        "audio_path": None,
-        "image_path": None,
-        "examples": None
-    }
-    new_card = Card(**card_dict)
-    
-    # 3. Обновляем счетчик в колоде
-    deck.cards_count += 1   # Обновляем счетчик карточек в связанной колоде. SQLAlchemy отследит это изменение и сохранит его во время await db.commit().
-    
-    db.add(new_card)
-    await db.commit()
-    await db.refresh(new_card)
-    
-    return {
-        "id": new_card.id,
-        "deck_id": new_card.deck_id,
-        "front_text": new_card.phrase,
-        "back_text": new_card.translation,
-        "message": "Card saved successfully"
-    }
+        # 2. Создаем карточку
+        # Маппим front_text и back_text на поля модели Card
+        card_dict = {
+            "deck_id": card_data.deck_id,
+            "phrase": card_data.front_text,
+            "translation": card_data.back_text,
+            "keyword": "",  # Пока оставляем пустым
+            "audio_path": None,
+            "image_path": None,
+            "examples": None
+        }
+        new_card = Card(**card_dict)
+        
+        # 3. Обновляем счетчик в колоде
+        deck.cards_count += 1
+        
+        db.add(new_card)
+        await db.commit()
+        await db.refresh(new_card)
+        
+        return {
+            "id": new_card.id,
+            "deck_id": new_card.deck_id,
+            "front_text": new_card.phrase,
+            "back_text": new_card.translation,
+            "message": "Card saved successfully"
+        }
+    except HTTPException:
+        # Перебрасываем HTTP исключения как есть
+        raise
+    except Exception as e:
+        # Логируем и возвращаем общую ошибку для всех остальных исключений
+        import logging
+        logging.error(f"Error saving card: {str(e)}")
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save card: {str(e)}"
+        )
