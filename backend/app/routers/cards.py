@@ -115,7 +115,8 @@ async def save_card(
     """
     try:
         # 1. Проверяем, существует ли колода и принадлежит ли она пользователю
-        result = await db.execute(select(Deck).where(Deck.id == card_data.deck_id))
+        stmt = select(Deck).where(Deck.id == card_data.deck_id)
+        result = await db.execute(stmt)
         deck = result.scalar_one_or_none()
 
         if not deck:
