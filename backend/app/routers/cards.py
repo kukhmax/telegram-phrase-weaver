@@ -8,13 +8,46 @@ import logging
 import traceback
 
 from app.schemas import CardCreate, Card as CardSchema
-from app.db import get_db
+from app.database import get_async_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import select
 from app.models.deck import Deck
 from app.models.card import Card
 from app.models.user import User
-from .decks import get_current_user # Импортируем нашу зависимость
+# Создаем асинхронную версию get_current_user
+from fastapi.security import OAuth2PasswordBearer
+from ..services.auth_service import auth_service
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+
+async def get_current_user_async(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_async_db)) -> User:
+    """
+    Async dependency to get current user from JWT token.
+    """
+    try:
+        payload = auth_service.verify_access_token(token)
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials, user_id missing",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except HTTPException as e:
+        raise e
+
+    # Используем асинхронный запрос
+    stmt = select(User).where(User.id == int(user_id))
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
+    
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="User not found"
+        )
+    
+    return user
 from fastapi import HTTPException, status
 
 router = APIRouter(prefix="/cards", tags=["cards"])
@@ -65,8 +98,8 @@ async def generate_audio_endpoint(request: AudioRequest = Body(...)):
 @router.get("/deck/{deck_id}")
 async def get_deck_cards(
     deck_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_async)
 ):
     """
     Получает все карточки для указанной колоды.
@@ -81,7 +114,6 @@ async def get_deck_cards(
         raise HTTPException(status_code=403, detail="Not authorized to access this deck")
     
     # Получаем карточки колоды
-    from sqlalchemy import select
     result = await db.execute(
         select(Card).where(Card.deck_id == deck_id).order_by(Card.id)
     )
@@ -107,8 +139,8 @@ async def get_deck_cards(
 @router.post("/save", status_code=status.HTTP_201_CREATED)
 async def save_card(
     card_data: CardCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_async)
 ):
     """
     Saves a new card to a specified deck.
@@ -127,15 +159,19 @@ async def save_card(
 
         # 2. Создаем карточку
         # Маппим front_text и back_text на поля модели Card
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
         
         # Парсим next_review если он передан
-        due_date = datetime.utcnow() + timedelta(days=1)  # По умолчанию
+        due_date = datetime.utcnow() + timedelta(days=1)  # По умолчанию без timezone
         if card_data.next_review:
             try:
-                due_date = datetime.fromisoformat(card_data.next_review.replace('Z', '+00:00'))
+                # Парсим ISO строку и конвертируем в UTC
+                parsed_date = datetime.fromisoformat(card_data.next_review.replace('Z', '+00:00'))
+                # Убираем timezone info для совместимости с базой
+                due_date = parsed_date.replace(tzinfo=None)
             except:
-                pass  # Используем значение по умолчанию
+                # Используем значение по умолчанию без timezone
+                due_date = datetime.utcnow() + timedelta(days=1)
         
         new_card = Card(
             deck_id=card_data.deck_id,

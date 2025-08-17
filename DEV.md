@@ -92,3 +92,111 @@ chmod +x backend/start.sh
 # Шаг 2: Добавляем файл в Git. Git заметит права и сохранит их.
 git add backend/start.sh
 ```
+--------------------
+--------------------
+
+## Детальный анализ проекта PhraseWeaver
+### Общая архитектура
+PhraseWeaver - это Telegram Mini App для изучения языков с использованием карточек и интервального повторения (SRS). Проект успешно развернут на fly.io по адресу https://phraseweaver.fly.dev .
+
+### Технологический стек
+Backend:
+
+- FastAPI + Python 3.12 (асинхронный веб-фреймворк)
+- PostgreSQL с SQLAlchemy ORM для хранения данных
+- Redis для кэширования (сессии, результаты AI, метаданные)
+- Gunicorn + Uvicorn для production развертывания
+Frontend:
+
+- Vanilla JavaScript (модульная архитектура с ES6 modules)
+- HTML/CSS с адаптацией под Telegram WebApp API
+- Интеграция с Telegram через window.Telegram.WebApp
+Интеграции:
+
+- Google Gemini AI для генерации примеров фраз
+- Unsplash API для поиска изображений
+- Google Text-to-Speech (gTTS) для генерации аудио
+- Google Translator для переводов
+### Структура проекта
+```
+phraseweaver/
+├── backend/
+│   ├── app/
+│   │   ├── core/          # Конфигурация 
+(config.py)
+│   │   ├── models/        # SQLAlchemy 
+модели (User, Deck, Card)
+│   │   ├── routers/       # FastAPI 
+роуты (auth, decks, cards)
+│   │   ├── services/      # 
+Бизнес-логика (AI, auth, enrichment)
+│   │   └── main.py        # Точка входа 
+FastAPI
+│   ├── frontend/          # Статические 
+файлы
+│   │   ├── js/           # JavaScript 
+модули (app.js, api.js, ui.js)
+│   │   ├── css/          # Стили с 
+Telegram темами
+│   │   └── index.html    # SPA интерфейс
+│   └── requirements.txt   # Python 
+зависимости
+├── docker-compose.yml     # Локальная 
+разработка
+├── fly.toml              # Конфигурация 
+Fly.io
+└── nginx.conf            # Nginx для 
+статики
+```
+### Модели данных
+User: telegram_id, username, settings, language_code Deck: name, description, lang_from, lang_to, cards_count Card: phrase, translation, keyword, audio_path, image_path, due_date, interval, ease_factor
+
+### Функциональность
+1. 1.
+   Аутентификация через Telegram WebApp initData
+2. 2.
+   Создание колод с выбором языковых пар
+3. 3.
+   Генерация карточек с AI-обогащением (фразы, переводы, изображения, аудио)
+4. 4.
+   Интервальное повторение с алгоритмом SRS
+5. 5.
+   Статистика и настройки пользователя
+### Статус развертывания
+✅ Приложение успешно развернуто на Fly.io:
+
+- URL: https://phraseweaver.fly.dev
+- Регион: Amsterdam (ams)
+- 2 машины в состоянии "started"
+- API доступен: /health , /docs , /app
+- Frontend загружается корректно
+### Выявленные проблемы
+❌ Критическая ошибка в коде:
+
+```
+TypeError: object ChunkedIteratorResult 
+can't be used in 'await' expression
+```
+В `cards.py` на строке 119 есть проблема с асинхронным выполнением SQLAlchemy запросов.
+
+### Архитектурные решения
+1. 1.
+   SPA подход: Один HTML файл с навигацией через показ/скрытие div-контейнеров
+2. 2.
+   Модульный JavaScript: Разделение на api.js (сетевые запросы), ui.js (DOM манипуляции), app.js (логика)
+3. 3.
+   Асинхронная обработка: Все сервисы (AI, TTS, переводы) работают асинхронно
+4. 4.
+   Кэширование: Redis для оптимизации повторных запросов к внешним API
+5. 5.
+   Контейнеризация: Docker для консистентного развертывания
+### Инфраструктура Fly.io
+- Приложение: phraseweaver.fly.dev
+- База данных: PostgreSQL (отдельный сервис)
+- Кэш: Redis кластер
+- Память: 512MB, 1 shared CPU
+- Балансировка: 2 машины для высокой доступности
+Проект демонстрирует современную архитектуру с микросервисным подходом, правильным разделением ответственности и готовностью к масштабированию.
+
+----------------------
+----------------------

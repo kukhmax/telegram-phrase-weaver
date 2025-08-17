@@ -16,6 +16,7 @@ from typing import List
 from ..database import get_db
 from ..models.user import User
 from ..models.deck import Deck
+from ..models.card import Card
 from ..schemas import DeckCreate, Deck as DeckSchema
 from ..services.auth_service import auth_service
 
@@ -104,7 +105,14 @@ def delete_deck(
             detail="Deck not found or you don't have permission to delete it"
         )
     
-    # Удаляем колоду
+    # Сначала удаляем все карточки этой колоды
+    cards_result = db.execute(select(Card).where(Card.deck_id == deck_id))
+    cards = cards_result.scalars().all()
+    
+    for card in cards:
+        db.delete(card)
+    
+    # Теперь удаляем колоду
     db.delete(deck)
     db.commit()
     

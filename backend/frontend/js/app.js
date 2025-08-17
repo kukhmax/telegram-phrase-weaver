@@ -382,7 +382,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Нажатие на "Назад" в окне создания
-    document.getElementById('back-to-main-btn').addEventListener('click', () => {
+    document.getElementById('back-to-main-btn').addEventListener('click', async () => {
+        await refreshDecks(); // Обновляем список колод
         showWindow('main-window');
     });
 
@@ -591,6 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             alert(`Сохранено ${phrasesToSave.length} карточек!`);
+            await refreshDecks(); // Обновляем список колод
             showWindow('main-window');
             
         } catch (error) {
