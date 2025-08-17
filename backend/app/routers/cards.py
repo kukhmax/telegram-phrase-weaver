@@ -100,7 +100,7 @@ async def get_deck_cards(
         } for card in cards]
     }
 
-@router.post("/save", response_model=CardSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/save", status_code=status.HTTP_201_CREATED)
 async def save_card(
     card_data: CardCreate,
     db: AsyncSession = Depends(get_db),
@@ -138,4 +138,10 @@ async def save_card(
     await db.commit()
     await db.refresh(new_card)
     
-    return new_card
+    return {
+        "id": new_card.id,
+        "deck_id": new_card.deck_id,
+        "front_text": new_card.phrase,
+        "back_text": new_card.translation,
+        "message": "Card saved successfully"
+    }
