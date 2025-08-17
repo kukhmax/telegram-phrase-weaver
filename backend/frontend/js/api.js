@@ -30,6 +30,8 @@ async function request(endpoint, method = 'GET', body = null) {
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
 
+    console.log(`Received response from ${endpoint}. Status:`, response.status);
+
     if (!response.ok) {
         // Для ошибок тоже проверяем наличие контента
         const contentType = response.headers.get("content-type");
