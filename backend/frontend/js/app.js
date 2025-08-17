@@ -78,10 +78,16 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
             <div class="phrase-line">
                 <span class="flag-emoji">${langFrom.split(' ')[0]}</span>
                 <span class="phrase-text">${phrase.original}</span>
+                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${extractLanguageCode(langFrom)}')" title="Прослушать">
+                    🔊
+                </button>
             </div>
             <div class="phrase-line">
                 <span class="flag-emoji">${langTo.split(' ')[0]}</span>
                 <span class="phrase-text">${phrase.translation}</span>
+                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${extractLanguageCode(langTo)}')" title="Прослушать">
+                    🔊
+                </button>
             </div>
         </div>
         <div class="phrase-actions">
@@ -145,6 +151,43 @@ function updatePhrasesCounter(totalCount = null, selectedCount = null) {
     const saveBtn = document.getElementById('save-selected-btn');
     saveBtn.disabled = selectedCount === 0;
 }
+
+// Функция для воспроизведения аудио
+window.playAudio = function(text, langCode) {
+    try {
+        // Очищаем текст от HTML тегов
+        const cleanText = text.replace(/<[^>]*>/g, '');
+        
+        // Используем Web Speech API для синтеза речи
+        if ('speechSynthesis' in window) {
+            // Останавливаем предыдущее воспроизведение
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            
+            // Настройка языка
+            const langMap = {
+                'en': 'en-US',
+                'ru': 'ru-RU',
+                'es': 'es-ES', 
+                'pt': 'pt-PT',
+                'pl': 'pl-PL'
+            };
+            
+            utterance.lang = langMap[langCode] || 'en-US';
+            utterance.rate = 0.8; // Немного медленнее для лучшего понимания
+            utterance.pitch = 1;
+            utterance.volume = 1;
+            
+            window.speechSynthesis.speak(utterance);
+        } else {
+            console.warn('Speech synthesis not supported');
+            alert('Воспроизведение аудио не поддерживается в вашем браузере');
+        }
+    } catch (error) {
+        console.error('Error playing audio:', error);
+    }
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     const tg = window.Telegram?.WebApp || {};
@@ -405,8 +448,8 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedPhrases.forEach(index => {
                 const card = allCards[index];
                 if (card) {
-                    const originalText = card.querySelector('.phrase-line:first-child .phrase-text').innerHTML;
-                    const translationText = card.querySelector('.phrase-line:last-child .phrase-text').innerHTML;
+                    const originalText = card.querySelector('.phrase-line:first-child .phrase-text').textContent;
+                    const translationText = card.querySelector('.phrase-line:last-child .phrase-text').textContent;
                     
                     phrasesToSave.push({
                         deck_id: currentDeckId,
