@@ -69,7 +69,8 @@ async def get_deck_cards(
     Получает все карточки для указанной колоды.
     """
     # Проверяем, что колода принадлежит пользователю
-    deck = await db.get(Deck, deck_id)
+    result = await db.execute(select(Deck).where(Deck.id == deck_id))
+    deck = result.scalar_one_or_none()
     if not deck:
         raise HTTPException(status_code=404, detail="Deck not found")
     
@@ -111,7 +112,9 @@ async def save_card(
     """
     try:
         # 1. Проверяем, существует ли колода и принадлежит ли она пользователю
-        deck = await db.get(Deck, card_data.deck_id)
+        from sqlalchemy import select
+        result = await db.execute(select(Deck).where(Deck.id == card_data.deck_id))
+        deck = result.scalar_one_or_none()
 
         if not deck:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deck not found")
