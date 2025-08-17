@@ -124,6 +124,33 @@
             </main>
         </div>
 
+        <!-- ОКНО №5: Сгенерированные фразы -->
+        <div id="generated-phrases-window" class="app-window hidden">
+            <main class="app-main">
+                <img src="/static/assets/images/mascot.png" alt="Mascot" class="mascot">
+                <h2>Фразы для тренировки</h2>
+                <div class="phrases-counter">
+                    <span id="total-phrases-count">6</span> фраз | <span id="selected-phrases-count">0</span> выбрано
+                </div>
+                
+                <div id="phrases-container" class="phrases-container">
+                    <!-- Карточки фраз будут добавлены динамически -->
+                </div>
+                
+                <div class="phrases-actions">
+                    <button id="save-selected-btn" class="action-btn save-btn" disabled>
+                        Сохранить выбранные (<span id="save-count">0</span>)
+                    </button>
+                    <button id="regenerate-btn" class="action-btn regenerate-btn">
+                        Обогатить заново
+                    </button>
+                    <button id="back-to-main-btn" class="action-btn back-btn">
+                        ← Назад на главную
+                    </button>
+                </div>
+            </main>
+        </div>
+
         <!-- ОБЩИЙ FOOTER -->
         <footer class="app-footer">
             PhraseWeaver v0.1.0

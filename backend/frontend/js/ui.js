@@ -6,6 +6,7 @@ export const DOMElements = {
     createDeckWindow: document.getElementById('create-deck-window'),
     generateCardsWindow: document.getElementById('generate-cards-window'),
     cardsWindow: document.getElementById('cards-window'),
+    generatedPhrasesWindow: document.getElementById('generated-phrases-window'),
     decksContainer: document.getElementById('decks-container'),
     noDecksMessage: document.getElementById('no-decks-message'),
     deckCardTemplate: document.getElementById('deck-card-template'),

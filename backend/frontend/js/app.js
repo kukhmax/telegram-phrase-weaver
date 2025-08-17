@@ -2,6 +2,150 @@
 import { api, setAuthToken } from '/static/js/api.js';
 import { DOMElements, showWindow, renderDecks, showLoading, showError } from '/static/js/ui.js';
 
+// Глобальные переменные для хранения данных
+let currentGeneratedData = null;
+let selectedPhrases = new Set();
+let currentDeckId = null;
+
+// Функция для извлечения кода языка из строки
+function extractLanguageCode(langText) {
+    // Извлекаем код языка из строки типа "🇵🇹 PT" -> "pt"
+    const match = langText.match(/([A-Z]{2})/);
+    return match ? match[1].toLowerCase() : 'en';
+}
+
+// Функция для получения флага по коду языка
+function getFlagByCode(langCode) {
+    const flags = {
+        'en': '🇺🇸',
+        'ru': '🇷🇺', 
+        'es': '🇪🇸',
+        'pt': '🇵🇹',
+        'pl': '🇵🇱'
+    };
+    return flags[langCode] || '🌐';
+}
+
+// Функция для отображения сгенерированных фраз
+function displayGeneratedPhrases(data, langFrom, langTo) {
+    currentGeneratedData = data;
+    selectedPhrases.clear();
+    
+    const container = document.getElementById('phrases-container');
+    container.innerHTML = '';
+    
+    // Создаем карточки фраз
+    const allPhrases = [];
+    
+    // Добавляем оригинальную фразу
+    if (data.original_phrase) {
+        allPhrases.push({
+            original: data.original_phrase.original,
+            translation: data.original_phrase.translation,
+            isOriginal: true
+        });
+    }
+    
+    // Добавляем дополнительные примеры
+    if (data.additional_examples) {
+        data.additional_examples.forEach(example => {
+            allPhrases.push({
+                original: example.original,
+                translation: example.translation,
+                isOriginal: false
+            });
+        });
+    }
+    
+    // Создаем HTML для каждой фразы
+    allPhrases.forEach((phrase, index) => {
+        const phraseCard = createPhraseCard(phrase, index, langFrom, langTo);
+        container.appendChild(phraseCard);
+    });
+    
+    // Обновляем счетчики
+    updatePhrasesCounter(allPhrases.length, 0);
+}
+
+// Функция для создания карточки фразы
+function createPhraseCard(phrase, index, langFrom, langTo) {
+    const card = document.createElement('div');
+    card.className = 'phrase-card';
+    card.dataset.index = index;
+    
+    card.innerHTML = `
+        <div class="phrase-content">
+            <div class="phrase-line">
+                <span class="flag-emoji">${langFrom.split(' ')[0]}</span>
+                <span class="phrase-text">${phrase.original}</span>
+            </div>
+            <div class="phrase-line">
+                <span class="flag-emoji">${langTo.split(' ')[0]}</span>
+                <span class="phrase-text">${phrase.translation}</span>
+            </div>
+        </div>
+        <div class="phrase-actions">
+            <button class="phrase-btn select-btn" onclick="togglePhraseSelection(${index})">
+                Выбрать
+            </button>
+            <button class="phrase-btn delete-phrase-btn" onclick="deletePhraseCard(${index})">
+                Удалить
+            </button>
+        </div>
+    `;
+    
+    return card;
+}
+
+// Функция для переключения выбора фразы
+window.togglePhraseSelection = function(index) {
+    const card = document.querySelector(`[data-index="${index}"]`);
+    const button = card.querySelector('.select-btn');
+    
+    if (selectedPhrases.has(index)) {
+        selectedPhrases.delete(index);
+        card.classList.remove('selected');
+        button.textContent = 'Выбрать';
+        button.classList.remove('selected');
+    } else {
+        selectedPhrases.add(index);
+        card.classList.add('selected');
+        button.textContent = 'Выбрано';
+        button.classList.add('selected');
+    }
+    
+    updatePhrasesCounter();
+};
+
+// Функция для удаления карточки фразы
+window.deletePhraseCard = function(index) {
+    const card = document.querySelector(`[data-index="${index}"]`);
+    if (card) {
+        // Удаляем из выбранных, если была выбрана
+        selectedPhrases.delete(index);
+        card.remove();
+        updatePhrasesCounter();
+    }
+};
+
+// Функция для обновления счетчиков
+function updatePhrasesCounter(totalCount = null, selectedCount = null) {
+    if (totalCount === null) {
+        totalCount = document.querySelectorAll('.phrase-card').length;
+    }
+    if (selectedCount === null) {
+        selectedCount = selectedPhrases.size;
+    }
+    
+    document.getElementById('total-phrases-count').textContent = totalCount;
+    document.getElementById('selected-phrases-count').textContent = selectedCount;
+    document.getElementById('save-count').textContent = selectedCount;
+    
+    // Управляем состоянием кнопки сохранения
+    const saveBtn = document.getElementById('save-selected-btn');
+    saveBtn.disabled = selectedCount === 0;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const tg = window.Telegram?.WebApp || {};
     if (tg.ready) {
@@ -134,6 +278,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (deckCard && !event.target.closest('.deck-actions')) {
             // Клик по колоде, но не по кнопкам действий
             
+            // Сохраняем ID колоды для последующего сохранения карточек
+            currentDeckId = parseInt(deckCard.dataset.deckId);
+            
             // Извлекаем данные о языках из колоды
             const langFromElement = deckCard.querySelector('.lang-from');
             const langToElement = deckCard.querySelector('.lang-to');
@@ -200,6 +347,97 @@ document.addEventListener('DOMContentLoaded', () => {
             
             showWindow('cards-window');
         }
+    });
+
+    // Обработчик формы генерации фраз
+    document.getElementById('generate-cards-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        
+        const phrase = document.getElementById('phrase-input').value.trim();
+        const keyword = document.getElementById('keyword-input').value.trim();
+        
+        if (!phrase || !keyword) {
+            alert('Пожалуйста, заполните все поля');
+            return;
+        }
+        
+        // Получаем языки из текущей колоды
+        const langFrom = document.getElementById('lang-from-display').textContent;
+        const langTo = document.getElementById('lang-to-display').textContent;
+        
+        // Извлекаем коды языков из текста (например, "🇵🇹 PT" -> "pt")
+        const langFromCode = extractLanguageCode(langFrom);
+        const langToCode = extractLanguageCode(langTo);
+        
+        try {
+            showLoading('Генерируем фразы...');
+            
+            const response = await api.enrichPhrase({
+                phrase: phrase,
+                keyword: keyword,
+                lang_code: langFromCode,
+                target_lang: langToCode
+            });
+            
+            if (response) {
+                displayGeneratedPhrases(response, langFrom, langTo);
+                showWindow('generated-phrases-window');
+            } else {
+                showError('Не удалось сгенерировать фразы');
+            }
+        } catch (error) {
+            console.error('Error generating phrases:', error);
+            showError(`Ошибка генерации: ${error.message}`);
+        }
+     });
+
+    // Обработчики для окна сгенерированных фраз
+    document.getElementById('save-selected-btn').addEventListener('click', async () => {
+        if (selectedPhrases.size === 0) return;
+        
+        try {
+            showLoading('Сохраняем карточки...');
+            
+            // Получаем выбранные фразы
+            const phrasesToSave = [];
+            const allCards = document.querySelectorAll('.phrase-card');
+            
+            selectedPhrases.forEach(index => {
+                const card = allCards[index];
+                if (card) {
+                    const originalText = card.querySelector('.phrase-line:first-child .phrase-text').innerHTML;
+                    const translationText = card.querySelector('.phrase-line:last-child .phrase-text').innerHTML;
+                    
+                    phrasesToSave.push({
+                        deck_id: currentDeckId,
+                        front_text: originalText,
+                        back_text: translationText,
+                        difficulty: 1,
+                        next_review: new Date().toISOString()
+                    });
+                }
+            });
+            
+            // Сохраняем каждую карточку
+            for (const cardData of phrasesToSave) {
+                await api.saveCard(cardData);
+            }
+            
+            alert(`Сохранено ${phrasesToSave.length} карточек!`);
+            showWindow('main-window');
+            
+        } catch (error) {
+            console.error('Error saving cards:', error);
+            showError(`Ошибка сохранения: ${error.message}`);
+        }
+    });
+    
+    document.getElementById('regenerate-btn').addEventListener('click', () => {
+        showWindow('generate-cards-window');
+    });
+    
+    document.getElementById('back-to-main-btn').addEventListener('click', () => {
+        showWindow('main-window');
     });
 
     // Запускаем приложение

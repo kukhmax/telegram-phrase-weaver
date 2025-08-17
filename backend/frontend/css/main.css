@@ -318,3 +318,152 @@ body {
     color: #6c757d;
     font-size: 16px;
 }
+
+/* Окно сгенерированных фраз */
+.phrases-counter {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #1800ad;
+    font-weight: 500;
+}
+
+.phrases-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+/* Карточка фразы */
+.phrase-card {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.phrase-card.selected {
+    border-color: #f4c300;
+    background: #fffbf0;
+}
+
+.phrase-content {
+    margin-bottom: 15px;
+}
+
+.phrase-line {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.phrase-line:last-child {
+    margin-bottom: 0;
+}
+
+.flag-emoji {
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+.phrase-text {
+    flex: 1;
+}
+
+.phrase-text b {
+    color: #1800ad;
+    font-weight: bold;
+}
+
+/* Кнопки карточки фразы */
+.phrase-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.phrase-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.select-btn {
+    background-color: #f4c300;
+    color: #1800ad;
+}
+
+.select-btn:hover {
+    background-color: #e6b000;
+}
+
+.select-btn.selected {
+    background-color: #1800ad;
+    color: white;
+}
+
+.delete-phrase-btn {
+    background-color: #ff4757;
+    color: white;
+}
+
+.delete-phrase-btn:hover {
+    background-color: #e63946;
+}
+
+/* Действия с фразами */
+.phrases-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.action-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.save-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.save-btn:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.save-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.regenerate-btn {
+    background-color: #f4c300;
+    color: #1800ad;
+}
+
+.regenerate-btn:hover {
+    background-color: #e6b000;
+}
+
+.back-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.back-btn:hover {
+    background-color: #5a6268;
+}

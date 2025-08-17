@@ -13,23 +13,23 @@ primary_region = 'ams'
 release_command = "python create_tables.py"
 
 [processes]
-  app = "gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8080"
+  app = "gunicorn -w 1 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8080"
 
 [[services]]
   protocol = "tcp"
   internal_port = 8080
   processes = ["app"]
 
-  [[services.ports]]
-    port = 80
-    handlers = ["http"]
-    force_https = true
+[[services.ports]]
+  port = 80
+  handlers = ["http"]
+  force_https = true
 
-  [[services.ports]]
-    port = 443
-    handlers = ["tls", "http"]
+[[services.ports]]
+  port = 443
+  handlers = ["tls", "http"]
 
 [[vm]]
-  memory = '1gb'
+  memory = '512mb'
   cpu_kind = 'shared'
   cpus = 1
