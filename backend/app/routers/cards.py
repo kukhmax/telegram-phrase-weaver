@@ -10,6 +10,7 @@ import traceback
 from app.schemas import CardCreate, Card as CardSchema
 from app.db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.models.deck import Deck
 from app.models.card import Card
 from app.models.user import User
@@ -114,7 +115,6 @@ async def save_card(
     """
     try:
         # 1. Проверяем, существует ли колода и принадлежит ли она пользователю
-        from sqlalchemy import select
         result = await db.execute(select(Deck).where(Deck.id == card_data.deck_id))
         deck = result.scalar_one_or_none()
 
