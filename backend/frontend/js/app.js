@@ -189,14 +189,28 @@ window.playAudio = async function(text, langCode) {
                 });
                 
                 if (response && response.audio_url) {
-                    const audio = new Audio(response.audio_url);
-                    audio.play().catch(error => {
-                        console.error('Error playing audio file:', error);
-                        alert('Ошибка воспроизведения аудио');
-                    });
-                } else {
-                    throw new Error('No audio URL received');
-                }
+                     const audio = new Audio(response.audio_url);
+                     
+                     // Добавляем обработчик ошибки загрузки
+                     audio.addEventListener('error', async (e) => {
+                         console.log('Audio file not found, waiting for generation...');
+                         // Ждем немного и пробуем еще раз
+                         setTimeout(() => {
+                             const retryAudio = new Audio(response.audio_url);
+                             retryAudio.play().catch(retryError => {
+                                 console.error('Retry audio play failed:', retryError);
+                                 alert('Ошибка воспроизведения аудио');
+                             });
+                         }, 1000);
+                     });
+                     
+                     audio.play().catch(error => {
+                         console.error('Error playing audio file:', error);
+                         // Не показываем alert при первой ошибке, так как файл может еще генерироваться
+                     });
+                 } else {
+                     throw new Error('No audio URL received');
+                 }
             } catch (error) {
                 console.error('Error generating audio:', error);
                 alert('Ошибка генерации аудио');
