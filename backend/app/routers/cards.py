@@ -124,16 +124,20 @@ async def save_card(
 
         # 2. Создаем карточку
         # Маппим front_text и back_text на поля модели Card
-        card_dict = {
-            "deck_id": card_data.deck_id,
-            "phrase": card_data.front_text,
-            "translation": card_data.back_text,
-            "keyword": "",  # Пока оставляем пустым
-            "audio_path": None,
-            "image_path": None,
-            "examples": None
-        }
-        new_card = Card(**card_dict)
+        from datetime import datetime, timedelta
+        
+        new_card = Card(
+            deck_id=card_data.deck_id,
+            phrase=card_data.front_text,
+            translation=card_data.back_text,
+            keyword="",  # Пока оставляем пустым
+            audio_path=None,
+            image_path=None,
+            examples=None,
+            due_date=datetime.utcnow() + timedelta(days=1),  # Следующий повтор через день
+            interval=1.0,  # Интервал в днях
+            ease_factor=2.5  # Коэффициент легкости
+        )
         
         # 3. Обновляем счетчик в колоде
         deck.cards_count += 1
