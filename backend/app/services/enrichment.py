@@ -12,7 +12,7 @@ from .ai_service import generate_examples_with_ai  # Импорт AI
 from .image_finder import find_image_via_api  # Импорт image
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - ENRICH - %(levelname)s - %(message)s')
-AUDIO_DIR, IMAGE_DIR = Path("assets/audio"), Path("assets/images")
+AUDIO_DIR, IMAGE_DIR = Path("frontend/assets/audio"), Path("frontend/assets/images")
 
 def ensure_dir_exists(*dirs): [d.mkdir(parents=True, exist_ok=True) for d in dirs if not d.exists()]
 ensure_dir_exists(AUDIO_DIR, IMAGE_DIR)

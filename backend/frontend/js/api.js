@@ -1,8 +1,6 @@
 // Этот файл будет отвечать за все запросы к нашему бэкенду.
 
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:8000' // URL для локальной разработки
-        : 'https://phraseweaver.fly.dev'; // Наш деплой на fly.io
+const API_BASE_URL = 'https://phraseweaver.fly.dev'; // Наш деплой на fly.io
 
 // Глобальная переменная для токена. В более крупных приложениях это лучше хранить в классе или State Manager.
 let authToken = null;
@@ -32,16 +30,30 @@ async function request(endpoint, method = 'GET', body = null) {
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
 
+    console.log(`Received response from ${endpoint}. Status:`, response.status);
+
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'API request failed');
+        // Для ошибок тоже проверяем наличие контента
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'API request failed');
+        } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
     }
-    // Если у ответа нет тела (например, для статуса 204), json() вызовет ошибку
+    
+    // Для успешных ответов проверяем наличие контента
+    // Статус 204 No Content не имеет тела
+    if (response.status === 204) {
+        return null;
+    }
+    
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.indexOf("application/json") !== -1) {
         return response.json();
     } 
-    return null; // или response.text() если нужно
+    return null;
 }
 
 // Функции для каждого эндпоинта
@@ -50,5 +62,10 @@ export const api = {
     authenticateDebug: () => request('/auth/telegram/debug', 'POST'), 
     getDecks: () => request('/decks/'),
     createDeck: (deckData) => request('/decks/', 'POST', deckData),
-    // ... здесь будут другие методы API: deleteDeck, getCards, etc.
+    deleteDeck: (deckId) => request(`/decks/${deckId}`, 'DELETE'),
+    enrichPhrase: (enrichData) => request('/cards/enrich', 'POST', enrichData),
+    generateAudio: (audioData) => request('/cards/generate-audio', 'POST', audioData),
+    saveCard: (cardData) => request('/cards/save', 'POST', cardData),
+    getDeckCards: (deckId) => request(`/cards/deck/${deckId}`, 'GET'),
+    // ... здесь будут другие методы API: getCards, etc.
 };

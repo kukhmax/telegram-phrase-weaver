@@ -16,6 +16,7 @@ from typing import List
 from ..database import get_db
 from ..models.user import User
 from ..models.deck import Deck
+from ..models.card import Card
 from ..schemas import DeckCreate, Deck as DeckSchema
 from ..services.auth_service import auth_service
 
@@ -84,3 +85,35 @@ def get_decks(
     result = db.execute(select(Deck).where(Deck.user_id == current_user.id))
     decks = result.scalars().all()
     return decks
+
+@router.delete("/{deck_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_deck(
+    deck_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Deletes a deck by ID. Only the owner can delete their deck.
+    """
+    # Находим колоду
+    result = db.execute(select(Deck).where(Deck.id == deck_id, Deck.user_id == current_user.id))
+    deck = result.scalars().first()
+    
+    if not deck:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Deck not found or you don't have permission to delete it"
+        )
+    
+    # Сначала удаляем все карточки этой колоды
+    cards_result = db.execute(select(Card).where(Card.deck_id == deck_id))
+    cards = cards_result.scalars().all()
+    
+    for card in cards:
+        db.delete(card)
+    
+    # Теперь удаляем колоду
+    db.delete(deck)
+    db.commit()
+    
+    return None  # 204 No Content

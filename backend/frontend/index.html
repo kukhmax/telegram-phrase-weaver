@@ -13,7 +13,7 @@
     <div class="app-container">
 
         <!-- ОБЩИЙ HEADER -->
-        <header class="app-header">
+        <header class="app-header clickable-header">
             <button id="stats-btn" class="header-btn">
                 <img src="/static/assets/icons/stats.png" alt="Stats" class="stats-icon" style="height: 1em;">
             </button>
@@ -36,9 +36,6 @@
                     <button class="create-deck-button" onclick="document.getElementById('add-deck-btn').click()">Создать колоду</button>
                 </div>
             </main>
-            <button id="add-deck-btn" class="fab">
-                <span class="tooltip">Создать новую колоду</span>+
-            </button>
         </div>
 
         <!-- ОКНО №2: Создание новой колоды -->
@@ -86,10 +83,96 @@
                 </form>
                 <button id="back-to-main-btn" class="back-btn">← Назад на главную</button>
             </main>
-            <footer class="app-footer">
-                PhraseWeaver v0.1.0
-            </footer>
         </div>
+
+        <!-- ОКНО №3: Генерация карточек -->
+        <div id="generate-cards-window" class="app-window hidden">
+            <main class="app-main">
+                <img src="/static/assets/images/mascot.png" alt="Mascot" class="mascot">
+                <h2>Генерация карточек</h2>
+                <div id="deck-languages" class="deck-languages">
+                    <span id="lang-from-display"></span> → <span id="lang-to-display"></span>
+                </div>
+                <form id="generate-cards-form" class="form-container">
+                    <div class="form-group">
+                        <label for="phrase-input">Фраза:</label>
+                        <textarea id="phrase-input" name="phrase" placeholder="Введите фразу для изучения" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="keyword-input">Ключевое слово:</label>
+                        <input type="text" id="keyword-input" name="keyword" placeholder="Введите ключевое слово">
+                    </div>
+                    <button type="submit" class="form-submit-btn" id="enrich-btn">
+                        <span class="loading-spinner hidden"></span>
+                        <span class="btn-text">Обогатить</span>
+                    </button>
+                </form>
+            </main>
+        </div>
+
+        <!-- ОКНО №4: Просмотр карточек колоды -->
+        <div id="cards-window" class="app-window hidden">
+            <main class="app-main">
+                <img src="/static/assets/images/mascot.png" alt="Mascot" class="mascot">
+                <h2 id="cards-deck-name">Название колоды</h2>
+                <div id="cards-deck-languages" class="deck-languages">
+                    <span id="cards-lang-from-display"></span> → <span id="cards-lang-to-display"></span>
+                </div>
+                <div id="cards-container" class="cards-container">
+                    <!-- Карточки будут добавлены динамически -->
+                </div>
+                <div id="no-cards-message" class="no-cards-message">
+                    <p>Здесь появятся ваши карточки</p>
+                </div>
+                <div class="cards-actions">
+                    <button id="back-from-cards-btn" class="action-btn back-btn">
+                        ← Назад на главную
+                    </button>
+                </div>
+            </main>
+        </div>
+
+        <!-- ОКНО №5: Сгенерированные фразы -->
+        <div id="generated-phrases-window" class="app-window hidden">
+            <main class="app-main">
+                <img src="/static/assets/images/mascot.png" alt="Mascot" class="mascot">
+                <h2>Фразы для тренировки</h2>
+                <div class="phrases-counter">
+                    <span id="total-phrases-count">6</span> фраз | <span id="selected-phrases-count">0</span> выбрано
+                </div>
+                
+                <button id="select-all-btn" class="action-btn select-all-btn">
+                    Выделить все
+                </button>
+                
+                <div id="phrases-container" class="phrases-container">
+                    <!-- Карточки фраз будут добавлены динамически -->
+                </div>
+                
+                <div class="phrases-actions">
+                    <button id="save-selected-btn" class="action-btn save-btn" disabled>
+                        Сохранить выбранные (<span id="save-count">0</span>)
+                    </button>
+                    <button id="regenerate-btn" class="action-btn regenerate-btn">
+                        Обогатить заново
+                    </button>
+                    <button id="back-to-main-btn" class="action-btn back-btn">
+                        ← Назад на главную
+                    </button>
+                </div>
+            </main>
+        </div>
+
+        <!-- ОБЩИЙ FOOTER -->
+        <footer class="app-footer">
+            PhraseWeaver v0.1.0
+        </footer>
+
+        <!-- FAB кнопка + -->
+        <button id="add-deck-btn" class="fab">
+            +
+            <div class="tooltip">Создать колоду</div>
+        </button>
 
     </div> <!-- Конец .app-container -->
 

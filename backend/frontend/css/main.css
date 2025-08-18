@@ -1,10 +1,10 @@
 /* Используем переменные Telegram для плавности интеграции */
 :root {
-    --bg-color: var(--tg-theme-bg-color, #fff);
-    --text-color: var(--tg-theme-text-color, #1800ad);
-    --hint-color: var(--tg-theme-hint-color, #4258bb);
+    --bg-color: #fff;
+    --text-color: #1800ad;
+    --hint-color: #4258bb;
     --button-color: #f4c300;
-    --button-text-color: var(--tg-theme-button-text-color, #1800ad);
+    --button-text-color: #1800ad;
     
     --brand-yellow: #f4c300;
     --brand-blue: #1800ad;
@@ -92,17 +92,6 @@ body {
     font-style: italic;
 }
 
-.create-deck-button {
-    background-color: #e8e8e8;
-    color: #666;
-    border: none;
-    border-radius: 25px;
-    padding: 12px 24px;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 20px;
-}
-
 /* Deck Cards */
 #decks-container {
     display: flex;
@@ -187,12 +176,18 @@ body {
     color: var(--brand-blue);
     border: none;
     font-size: 36px;
-    display: flex;
+    display: none; /* Скрыта по умолчанию */
     justify-content: center;
     align-items: center;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     cursor: pointer;
     line-height: 1;
+    z-index: 1000;
+}
+
+/* Показываем FAB только в главном окне */
+.app-container.main-active .fab {
+    display: flex;
 }
 
 .fab:hover {
@@ -286,4 +281,339 @@ body {
     color: var(--hint-color);
     font-size: 12px;
     text-align: center;
+}
+
+/* Clickable header */
+.clickable-header {
+    transition: background-color 0.2s ease;
+}
+
+/* Header кликабельный только когда не на главном окне */
+.app-container:not(.main-active) .clickable-header {
+    cursor: pointer;
+}
+
+.app-container:not(.main-active) .clickable-header:hover {
+    background-color: #e6b000;
+}
+
+/* Отображение языков в окне генерации карточек */
+.deck-languages {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #1800ad;
+}
+
+/* Сообщение о пустых карточках */
+.no-cards-message {
+    text-align: center;
+    margin-top: 40px;
+    color: #6c757d;
+    font-size: 16px;
+}
+
+/* Контейнер карточек */
+.cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* Карточка в окне просмотра */
+.saved-card {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.saved-card:hover {
+    border-color: #f4c300;
+    background: #fffbf0;
+}
+
+.card-content {
+    margin-bottom: 15px;
+}
+
+.card-side {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 16px;
+    padding: 10px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+}
+
+.card-side:last-child {
+    margin-bottom: 0;
+}
+
+.card-side.front {
+    border-left: 4px solid #1800ad;
+}
+
+.card-side.back {
+    border-left: 4px solid #28a745;
+}
+
+.card-flag {
+    margin-right: 12px;
+    font-size: 20px;
+}
+
+.card-text {
+    flex: 1;
+    font-weight: 500;
+}
+
+.card-text b {
+    color: #1800ad;
+    font-weight: bold;
+}
+
+/* Кнопки карточки */
+.card-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.card-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.practice-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.practice-btn:hover {
+    background-color: #218838;
+}
+
+.delete-card-btn {
+    background-color: #ff4757;
+    color: white;
+}
+
+.delete-card-btn:hover {
+    background-color: #e63946;
+}
+
+/* Окно сгенерированных фраз */
+.phrases-counter {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #1800ad;
+    font-weight: 500;
+}
+
+.phrases-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+/* Карточка фразы */
+.phrase-card {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.phrase-card.selected {
+    border-color: #f4c300;
+    background: #fffbf0;
+}
+
+.phrase-content {
+    margin-bottom: 15px;
+}
+
+.phrase-line {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.phrase-line:last-child {
+    margin-bottom: 0;
+}
+
+.flag-emoji {
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+.phrase-text {
+    flex: 1;
+}
+
+.phrase-text b {
+    color: #1800ad;
+    font-weight: bold;
+}
+
+/* Кнопка аудио */
+.audio-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+    margin-left: 8px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+}
+
+.audio-btn:hover {
+    opacity: 1;
+    background-color: #f0f0f0;
+    transform: scale(1.1);
+}
+
+.audio-btn:active {
+    transform: scale(0.95);
+}
+
+/* Кнопки карточки фразы */
+.phrase-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.phrase-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.select-btn {
+    background-color: #f4c300;
+    color: #1800ad;
+}
+
+.select-btn:hover {
+    background-color: #e6b000;
+}
+
+.select-btn.selected {
+    background-color: #1800ad;
+    color: white;
+}
+
+.delete-phrase-btn {
+    background-color: #ff4757;
+    color: white;
+}
+
+.delete-phrase-btn:hover {
+    background-color: #e63946;
+}
+
+/* Действия с фразами */
+.phrases-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.action-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.save-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.save-btn:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.save-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.regenerate-btn {
+    background-color: #f4c300;
+    color: #1800ad;
+}
+
+.regenerate-btn:hover {
+    background-color: #e6b000;
+}
+
+.back-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.back-btn:hover {
+    background-color: #5a6268;
+}
+
+/* Спиннер загрузки */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #1800ad;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Кнопка "Выделить все" */
+.select-all-btn {
+    background-color: #17a2b8;
+    color: white;
+    margin-bottom: 15px;
+}
+
+.select-all-btn:hover {
+    background-color: #138496;
+}
+
+/* Скрытие спиннера по умолчанию */
+.loading-spinner.hidden {
+    display: none;
 }

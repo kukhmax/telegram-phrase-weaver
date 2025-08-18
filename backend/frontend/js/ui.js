@@ -4,6 +4,9 @@
 export const DOMElements = {
     mainWindow: document.getElementById('main-window'),
     createDeckWindow: document.getElementById('create-deck-window'),
+    generateCardsWindow: document.getElementById('generate-cards-window'),
+    cardsWindow: document.getElementById('cards-window'),
+    generatedPhrasesWindow: document.getElementById('generated-phrases-window'),
     decksContainer: document.getElementById('decks-container'),
     noDecksMessage: document.getElementById('no-decks-message'),
     deckCardTemplate: document.getElementById('deck-card-template'),
@@ -19,6 +22,14 @@ export function showWindow(windowId) {
         win.classList.add('hidden');
     });
     document.getElementById(windowId).classList.remove('hidden');
+    
+    // Управляем классом main-active для контейнера
+    const appContainer = document.querySelector('.app-container');
+    if (windowId === 'main-window') {
+        appContainer.classList.add('main-active');
+    } else {
+        appContainer.classList.remove('main-active');
+    }
 }
 
 /**
@@ -34,6 +45,11 @@ export function renderDecks(decks) {
         DOMElements.noDecksMessage.classList.add('hidden');
         decks.forEach(deck => {
             const cardNode = DOMElements.deckCardTemplate.content.cloneNode(true);
+            const deckCard = cardNode.querySelector('.deck-card');
+            
+            // Добавляем ID колоды как data-атрибут
+            deckCard.dataset.deckId = deck.id;
+            
             cardNode.querySelector('.deck-name').textContent = deck.name;
             cardNode.querySelector('.deck-description').textContent = deck.description || '';
             cardNode.querySelector('.lang-from').textContent = getFlagEmoji(deck.lang_from) + ` ${deck.lang_from.toUpperCase()}`;
