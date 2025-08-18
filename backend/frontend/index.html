@@ -26,7 +26,7 @@
         <!-- ОКНО №1: Главный экран -->
         <div id="main-window" class="app-window">
             <main class="app-main">
-                <img src="/static/assets/images/mascot.png" alt="Mascot" class="mascot">
+                <img src="/static/assets/icons/mascot.png" alt="Mascot" class="mascot">
                 <h2>Мои колоды:</h2>
                 <div id="decks-container">
                     <!-- Сюда JS будет добавлять карточки колод -->
@@ -41,7 +41,7 @@
         <!-- ОКНО №2: Создание новой колоды -->
         <div id="create-deck-window" class="app-window hidden">
             <main class="app-main">
-                <img src="/static/assets/images/mascot.png" alt="Mascot" class="mascot">
+                <img src="/static/assets/icons/mascot.png" alt="Mascot" class="mascot">
                 <h2>Создать новую колоду</h2>
                 <form id="create-deck-form" class="form-container">
                     <!-- ... все поля формы остаются как были ... -->
@@ -113,7 +113,7 @@
         <!-- ОКНО №4: Просмотр карточек колоды -->
         <div id="cards-window" class="app-window hidden">
             <main class="app-main">
-                <img src="/static/assets/images/mascot.png" alt="Mascot" class="mascot">
+                <img src="/static/assets/icons/mascot.png" alt="Mascot" class="mascot">
                 <h2 id="cards-deck-name">Название колоды</h2>
                 <div id="cards-deck-languages" class="deck-languages">
                     <span id="cards-lang-from-display"></span> → <span id="cards-lang-to-display"></span>
@@ -135,7 +135,9 @@
         <!-- ОКНО №5: Сгенерированные фразы -->
         <div id="generated-phrases-window" class="app-window hidden">
             <main class="app-main">
-                <img src="/static/assets/images/mascot.png" alt="Mascot" class="mascot">
+                <div id="phrase-image-container" class="phrase-image-container">
+                    <img id="phrase-image" src="/static/assets/icons/mascot.png" alt="Mascot" class="mascot">
+                </div>
                 <h2>Фразы для тренировки</h2>
                 <div class="phrases-counter">
                     <span id="total-phrases-count">6</span> фраз | <span id="selected-phrases-count">0</span> выбрано

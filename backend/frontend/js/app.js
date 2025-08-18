@@ -65,6 +65,9 @@ function displayGeneratedPhrases(data, langFrom, langTo) {
     
     // Обновляем счетчики
     updatePhrasesCounter(allPhrases.length, 0);
+    
+    // Обновляем изображение ключевого слова
+    updatePhraseImage(data.image_path);
 }
 
 // Функция для создания карточки фразы
@@ -589,7 +592,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         front_text: originalText,
                         back_text: translationText,
                         difficulty: 1,
-                        next_review: new Date().toISOString()
+                        next_review: new Date().toISOString(),
+                        image_path: currentGeneratedData?.image_path || null
                     };
                     
                     console.log('Card data to save:', cardData);
@@ -672,5 +676,19 @@ function showButtonLoading(show) {
         spinner.classList.add('hidden');
         btnText.textContent = 'Обогатить';
         button.disabled = false;
+    }
+}
+
+// Функция для обновления изображения в окне фраз
+function updatePhraseImage(imagePath) {
+    const imageElement = document.getElementById('phrase-image');
+    if (imagePath && imagePath.trim() !== '') {
+        // Показываем изображение ключевого слова
+        imageElement.src = imagePath;
+        imageElement.alt = 'Keyword Image';
+    } else {
+        // Показываем mascot по умолчанию
+        imageElement.src = '/static/assets/icons/mascot.png';
+        imageElement.alt = 'Mascot';
     }
 }
