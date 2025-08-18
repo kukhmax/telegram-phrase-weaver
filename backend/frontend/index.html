@@ -36,9 +36,6 @@
                     <button class="create-deck-button" onclick="document.getElementById('add-deck-btn').click()">Создать колоду</button>
                 </div>
             </main>
-            <button id="add-deck-btn" class="fab">
-                <span class="tooltip">Создать новую колоду</span>+
-            </button>
         </div>
 
         <!-- ОКНО №2: Создание новой колоды -->
@@ -105,7 +102,10 @@
                         <label for="keyword-input">Ключевое слово:</label>
                         <input type="text" id="keyword-input" name="keyword" placeholder="Введите ключевое слово">
                     </div>
-                    <button type="submit" class="form-submit-btn">Обогатить</button>
+                    <button type="submit" class="form-submit-btn" id="enrich-btn">
+                        <span class="loading-spinner hidden"></span>
+                        <span class="btn-text">Обогатить</span>
+                    </button>
                 </form>
             </main>
         </div>
@@ -124,6 +124,11 @@
                 <div id="no-cards-message" class="no-cards-message">
                     <p>Здесь появятся ваши карточки</p>
                 </div>
+                <div class="cards-actions">
+                    <button id="back-from-cards-btn" class="action-btn back-btn">
+                        ← Назад на главную
+                    </button>
+                </div>
             </main>
         </div>
 
@@ -135,6 +140,10 @@
                 <div class="phrases-counter">
                     <span id="total-phrases-count">6</span> фраз | <span id="selected-phrases-count">0</span> выбрано
                 </div>
+                
+                <button id="select-all-btn" class="action-btn select-all-btn">
+                    Выделить все
+                </button>
                 
                 <div id="phrases-container" class="phrases-container">
                     <!-- Карточки фраз будут добавлены динамически -->
@@ -158,6 +167,12 @@
         <footer class="app-footer">
             PhraseWeaver v0.1.0
         </footer>
+
+        <!-- FAB кнопка + -->
+        <button id="add-deck-btn" class="fab">
+            +
+            <div class="tooltip">Создать колоду</div>
+        </button>
 
     </div> <!-- Конец .app-container -->
 

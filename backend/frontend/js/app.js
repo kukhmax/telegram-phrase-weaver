@@ -387,6 +387,12 @@ document.addEventListener('DOMContentLoaded', () => {
         showWindow('main-window');
     });
 
+    // Обработчик кнопки "Назад" из окна карточек
+    document.getElementById('back-from-cards-btn').addEventListener('click', async () => {
+        await refreshDecks(); // Обновляем список колод
+        showWindow('main-window');
+    });
+
     // Отправка формы создания новой колоды
     DOMElements.createDeckForm.addEventListener('submit', async (event) => {
         event.preventDefault(); // Предотвращаем стандартную отправку формы
@@ -527,6 +533,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const langToCode = extractLanguageCode(langTo);
         
         try {
+            // Показываем спиннер в кнопке
+            showButtonLoading(true);
             showLoading('Генерируем фразы...');
             
             const response = await api.enrichPhrase({
@@ -545,6 +553,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error generating phrases:', error);
             showError(`Ошибка генерации: ${error.message}`);
+        } finally {
+            // Скрываем спиннер в любом случае
+            showButtonLoading(false);
         }
      });
 
@@ -609,6 +620,57 @@ document.addEventListener('DOMContentLoaded', () => {
         showWindow('main-window');
     });
 
+    // Обработчик кнопки "Выделить все"
+    const selectAllBtn = document.getElementById('select-all-btn');
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', () => {
+        const allCards = document.querySelectorAll('.phrase-card');
+        const selectAllBtn = document.getElementById('select-all-btn');
+        
+        if (selectedPhrases.size === allCards.length) {
+            // Если все выделены, снимаем выделение
+            selectedPhrases.clear();
+            allCards.forEach((card, index) => {
+                card.classList.remove('selected');
+                const selectBtn = card.querySelector('.select-btn');
+                selectBtn.textContent = 'Выбрать';
+                selectBtn.classList.remove('selected');
+            });
+            selectAllBtn.textContent = 'Выделить все';
+        } else {
+            // Выделяем все
+            selectedPhrases.clear();
+            allCards.forEach((card, index) => {
+                selectedPhrases.add(index);
+                card.classList.add('selected');
+                const selectBtn = card.querySelector('.select-btn');
+                selectBtn.textContent = 'Выбрано';
+                selectBtn.classList.add('selected');
+            });
+            selectAllBtn.textContent = 'Снять выделение';
+        }
+        
+        updatePhrasesCounter();
+         });
+     }
+
     // Запускаем приложение
     main();
 });
+
+// Функция для управления спиннером в кнопке
+function showButtonLoading(show) {
+    const spinner = document.querySelector('#enrich-btn .loading-spinner');
+    const btnText = document.querySelector('#enrich-btn .btn-text');
+    const button = document.getElementById('enrich-btn');
+    
+    if (show) {
+        spinner.classList.remove('hidden');
+        btnText.textContent = 'Обогащаем...';
+        button.disabled = true;
+    } else {
+        spinner.classList.add('hidden');
+        btnText.textContent = 'Обогатить';
+        button.disabled = false;
+    }
+}
