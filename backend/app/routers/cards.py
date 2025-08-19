@@ -179,7 +179,7 @@ async def save_card(
             translation=card_data.back_text,
             keyword="",  # Пока оставляем пустым
             audio_path=None,
-            image_path=None,
+            image_path=card_data.image_path,
             examples=None,
             due_date=due_date,
             interval=1.0,  # Интервал в днях

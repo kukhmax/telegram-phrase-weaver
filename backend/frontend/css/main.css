@@ -74,8 +74,18 @@ body {
 .mascot {
     width: 100px;
     height: auto;
-    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
 }
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
 .app-main h2 {
     color: var(--brand-blue);
     font-weight: bold;
@@ -616,4 +626,25 @@ body {
 /* Скрытие спиннера по умолчанию */
 .loading-spinner.hidden {
     display: none;
+}
+
+/* Контейнер изображения в окне фраз */
+.phrase-image-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.phrase-image-container .mascot {
+    width: 120px;
+    height: 120px;
+    border-radius: 15px;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.phrase-image-container .mascot:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
