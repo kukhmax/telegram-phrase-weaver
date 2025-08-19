@@ -228,13 +228,39 @@ su - phraseweaver
 
 ---
 
+# 🔄 ВАЖНО: Различия архитектуры
+
+## Fly.io vs Contabo
+
+### 🌐 **На Fly.io (раньше):**
+- **Backend:** Только Dockerfile с приложением
+- **PostgreSQL:** Внешний сервис Fly.io
+- **Redis:** Внешний сервис Fly.io
+- **Frontend:** Статические файлы в backend контейнере
+
+### 🏠 **На Contabo (теперь):**
+- **Backend:** Контейнер с приложением
+- **PostgreSQL:** Собственный контейнер
+- **Redis:** Собственный контейнер
+- **Frontend:** Отдельный Nginx контейнер
+- **Сеть:** Все контейнеры в изолированной сети
+
+### ✅ **Преимущества новой архитектуры:**
+- **Полный контроль** над базой данных
+- **Локальная сеть** между сервисами (быстрее)
+- **Безопасность** - БД не доступна извне
+- **Простота бэкапов** и миграций
+- **Независимость** от внешних сервисов
+
+---
+
 # 📦 ЭТАП 4: Установка приложения
 
 ## Шаг 4.1: Скачивание кода приложения
 
 ```bash
 # Скачиваем код приложения
-git clone https://github.com/ваш-username/telegram-phrase-weaver.git
+git clone https://github.com/kukhmax/telegram-phrase-weaver.git
 
 # Переходим в папку приложения
 cd telegram-phrase-weaver
@@ -327,17 +353,22 @@ nano .env
 ## Шаг 6.1: Сборка и запуск
 
 ```bash
-# Собираем и запускаем все контейнеры
-docker compose up -d
+# Собираем и запускаем все контейнеры для production
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-*Подождите 3-5 минут, пока все скачается и запустится*
+*Подождите 5-10 минут, пока все скачается и запустится*
+
+**Важно:** Мы используем `docker-compose.prod.yml` для production развертывания, который:
+- Не открывает порты базы данных и Redis наружу (безопасность)
+- Использует production режим без hot-reload
+- Настроен для автоматического перезапуска контейнеров
 
 ## Шаг 6.2: Проверка работы
 
 ```bash
 # Проверяем статус контейнеров
-docker compose ps
+docker compose -f docker-compose.prod.yml ps
 ```
 
 **Должно показать:**
@@ -353,7 +384,7 @@ telegram-phrase-weaver-frontend-1   Up
 
 ```bash
 # Смотрим логи приложения
-docker compose logs -f backend
+docker compose -f docker-compose.prod.yml logs -f backend
 ```
 
 **Нажмите Ctrl+C** чтобы выйти из просмотра логов.
@@ -448,8 +479,8 @@ Type=oneshot
 RemainAfterExit=yes
 User=phraseweaver
 WorkingDirectory=/home/phraseweaver/telegram-phrase-weaver
-ExecStart=/usr/bin/docker compose up -d
-ExecStop=/usr/bin/docker compose down
+ExecStart=/usr/bin/docker compose -f docker-compose.prod.yml up -d
+ExecStop=/usr/bin/docker compose -f docker-compose.prod.yml down
 TimeoutStartSec=0
 
 [Install]
@@ -480,21 +511,21 @@ sudo systemctl status phraseweaver
 
 ```bash
 # Просмотр логов
-docker compose logs -f
+docker compose -f docker-compose.prod.yml logs -f
 
 # Перезапуск приложения
-docker compose restart
+docker compose -f docker-compose.prod.yml restart
 
 # Остановка приложения
-docker compose down
+docker compose -f docker-compose.prod.yml down
 
 # Запуск приложения
-docker compose up -d
+docker compose -f docker-compose.prod.yml up -d
 
 # Обновление кода
 git pull
-docker compose down
-docker compose up -d --build
+docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml up -d --build
 
 # Просмотр использования ресурсов
 docker stats
@@ -507,10 +538,10 @@ docker system prune -f
 
 ```bash
 # Создание бэкапа базы данных
-docker compose exec db pg_dump -U phraseweaver phraseweaver > backup_$(date +%Y%m%d).sql
+docker compose -f docker-compose.prod.yml exec db pg_dump -U phraseweaver phraseweaver > backup_$(date +%Y%m%d).sql
 
 # Восстановление из бэкапа
-docker compose exec -T db psql -U phraseweaver phraseweaver < backup_20241219.sql
+docker compose -f docker-compose.prod.yml exec -T db psql -U phraseweaver phraseweaver < backup_20241219.sql
 ```
 
 ## Шаг 10.3: Обновление приложения
@@ -520,11 +551,11 @@ docker compose exec -T db psql -U phraseweaver phraseweaver < backup_20241219.sq
 git pull
 
 # Пересобираем контейнеры
-docker compose down
-docker compose up -d --build
+docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml up -d --build
 
 # Проверяем что все работает
-docker compose ps
+docker compose -f docker-compose.prod.yml ps
 ```
 
 ---
@@ -535,39 +566,40 @@ docker compose ps
 
 ```bash
 # Смотрим подробные логи
-docker compose logs имя_контейнера
+docker compose -f docker-compose.prod.yml logs имя_контейнера
 
 # Проверяем конфигурацию
-docker compose config
+docker compose -f docker-compose.prod.yml config
 
 # Пересобираем контейнер
-docker compose up -d --build имя_контейнера
+docker compose -f docker-compose.prod.yml up -d --build имя_контейнера
 ```
 
 ## Проблема: Сайт не открывается
 
-1. **Проверьте** что все контейнеры запущены: `docker compose ps`
-2. **Проверьте** настройки DNS домена
+1. **Проверьте** что все контейнеры запущены: `docker compose -f docker-compose.prod.yml ps`
+2. **Проверьте** настройки DNS домена (если используете)
 3. **Проверьте** что порты открыты: `sudo ufw status`
-4. **Проверьте** логи Nginx: `sudo tail -f /var/log/nginx/error.log`
+4. **Проверьте** логи frontend: `docker compose -f docker-compose.prod.yml logs frontend`
+5. **Проверьте** логи backend: `docker compose -f docker-compose.prod.yml logs backend`
 
 ## Проблема: Бот не отвечает
 
 1. **Проверьте** токен бота в файле `.env`
 2. **Проверьте** что webhook настроен правильно
-3. **Проверьте** логи backend: `docker compose logs backend`
-4. **Перезапустите** приложение: `docker compose restart`
+3. **Проверьте** логи backend: `docker compose -f docker-compose.prod.yml logs backend`
+4. **Перезапустите** приложение: `docker compose -f docker-compose.prod.yml restart`
 
 ## Проблема: База данных не работает
 
 ```bash
 # Проверяем статус базы данных
-docker compose exec db psql -U phraseweaver -d phraseweaver -c "SELECT 1;"
+docker compose -f docker-compose.prod.yml exec db psql -U phraseweaver -d phraseweaver -c "SELECT 1;"
 
-# Пересоздаем базу данных
-docker compose down
+# Пересоздаем базу данных (ВНИМАНИЕ: удалит все данные!)
+docker compose -f docker-compose.prod.yml down
 docker volume rm telegram-phrase-weaver_postgres_data
-docker compose up -d
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ---
