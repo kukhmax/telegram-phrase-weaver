@@ -346,6 +346,20 @@ body {
     background: #fffbf0;
 }
 
+/* Изображение в карточке */
+.card-image-container {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.card-image {
+    max-width: 100px;
+    max-height: 100px;
+    border-radius: 10px;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 .card-content {
     margin-bottom: 15px;
 }

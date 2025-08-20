@@ -8,8 +8,8 @@ import logging
 import traceback
 
 from app.schemas import CardCreate, Card as CardSchema
-from app.database import get_async_db
-from sqlalchemy.ext.asyncio import AsyncSession
+from app.database import get_db
+from sqlalchemy.orm import Session
 from sqlalchemy.sql import select
 from app.models.deck import Deck
 from app.models.card import Card
@@ -20,7 +20,7 @@ from ..services.auth_service import auth_service
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
-async def get_current_user_async(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_async_db)) -> User:
+def get_current_user_sync(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     """
     Async dependency to get current user from JWT token.
     """
@@ -36,10 +36,8 @@ async def get_current_user_async(token: str = Depends(oauth2_scheme), db: AsyncS
     except HTTPException as e:
         raise e
 
-    # Используем асинхронный запрос
-    stmt = select(User).where(User.id == int(user_id))
-    result = await db.execute(stmt)
-    user = result.scalar_one_or_none()
+    # Используем синхронный запрос
+    user = db.query(User).filter(User.id == int(user_id)).first()
     
     if user is None:
         raise HTTPException(
@@ -96,17 +94,16 @@ async def generate_audio_endpoint(request: AudioRequest = Body(...)):
         raise HTTPException(status_code=500, detail="Failed to generate audio")
 
 @router.get("/deck/{deck_id}")
-async def get_deck_cards(
+def get_deck_cards(
     deck_id: int,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_async)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_sync)
 ):
     """
     Получает все карточки для указанной колоды.
     """
     # Проверяем, что колода принадлежит пользователю
-    result = await db.execute(select(Deck).where(Deck.id == deck_id))
-    deck = result.scalar_one_or_none()
+    deck = db.query(Deck).filter(Deck.id == deck_id).first()
     if not deck:
         raise HTTPException(status_code=404, detail="Deck not found")
     
@@ -114,10 +111,7 @@ async def get_deck_cards(
         raise HTTPException(status_code=403, detail="Not authorized to access this deck")
     
     # Получаем карточки колоды
-    result = await db.execute(
-        select(Card).where(Card.deck_id == deck_id).order_by(Card.id)
-    )
-    cards = result.scalars().all()
+    cards = db.query(Card).filter(Card.deck_id == deck_id).order_by(Card.id).all()
     
     return {
         "deck": {
@@ -132,24 +126,23 @@ async def get_deck_cards(
             "front_text": card.phrase,
             "back_text": card.translation,
             "difficulty": 1,  # Пока используем значение по умолчанию
-            "next_review": card.due_date.isoformat() if card.due_date else None
+            "next_review": card.due_date.isoformat() if card.due_date else None,
+            "image_path": card.image_path
         } for card in cards]
     }
 
 @router.post("/save", status_code=status.HTTP_201_CREATED)
-async def save_card(
+def save_card(
     card_data: CardCreate,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_async)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_sync)
 ):
     """
     Saves a new card to a specified deck.
     """
     try:
         # 1. Проверяем, существует ли колода и принадлежит ли она пользователю
-        stmt = select(Deck).where(Deck.id == card_data.deck_id)
-        result = await db.execute(stmt)
-        deck = result.scalar_one_or_none()
+        deck = db.query(Deck).filter(Deck.id == card_data.deck_id).first()
 
         if not deck:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deck not found")
@@ -193,8 +186,8 @@ async def save_card(
         deck.cards_count += 1
         
         # 5. Коммитим все изменения
-        await db.commit()
-        await db.refresh(new_card)
+        db.commit()
+        db.refresh(new_card)
         
         return {
             "id": new_card.id,
@@ -215,7 +208,7 @@ async def save_card(
         
         if db:
             try:
-                await db.rollback()
+                db.rollback()
             except Exception as rollback_error:
                 logging.error(f"Rollback failed: {str(rollback_error)}")
         

@@ -1,5 +1,5 @@
 // Главный файл, который управляет всем приложением
-import { api, setAuthToken } from '/static/js/api.js';
+import { api, setAuthToken, getUserData } from '/static/js/api.js';
 import { DOMElements, showWindow, renderDecks, showLoading, showError } from '/static/js/ui.js';
 
 // Глобальные переменные для хранения данных
@@ -203,19 +203,31 @@ function createSavedCard(card, deck) {
     const langFromFlag = deck.lang_from.split(' ')[0];
     const langToFlag = deck.lang_to.split(' ')[0];
     
+    // Подготавливаем изображение
+    let imageHtml = '';
+    if (card.image_path && card.image_path.trim() !== '') {
+        const webImagePath = card.image_path.replace('frontend/', '/static/');
+        imageHtml = `
+            <div class="card-image-container">
+                <img src="${webImagePath}" alt="Keyword Image" class="card-image">
+            </div>
+        `;
+    }
+    
     cardDiv.innerHTML = `
+        ${imageHtml}
         <div class="card-content">
             <div class="card-side front">
                 <span class="card-flag">${langFromFlag}</span>
                 <span class="card-text">${card.front_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${extractLanguageCode(deck.lang_from)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', '${extractLanguageCode(deck.lang_from)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="card-side back">
                 <span class="card-flag">${langToFlag}</span>
                 <span class="card-text">${card.back_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${extractLanguageCode(deck.lang_to)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', '${extractLanguageCode(deck.lang_to)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
@@ -315,164 +327,175 @@ window.playAudio = async function(text, langCode) {
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    const tg = window.Telegram?.WebApp || {};
-    if (tg.ready) {
-        tg.ready();
-    }
+document.addEventListener('DOMContentLoaded', async () => {
+    // Инициализация приложения с авторизацией
+    await initializeApp();
+});
 
-    // ============================================
-    //               ЛОГИКА ПРИЛОЖЕНИЯ
-    // ============================================
-
-    // Функция для обновления и перерисовки списка колод
-    async function refreshDecks() {
-        try {
-            showLoading('Загружаем ваши колоды...');
-            const decks = await api.getDecks();
-            renderDecks(decks);
-        } catch (error) {
-            console.error("Failed to refresh decks:", error);
-            showError(error.message || 'Не удалось загрузить колоды');
-        }
-    }
-
-    // Главная функция инициализации
-    async function main() {
+// Функция инициализации приложения
+async function initializeApp() {
     try {
-        let authData;
-
-        // ПРОВЕРКА НА ОТЛАДОЧНЫЙ РЕЖИМ
-        const isDebugMode = (window.location.hostname === 'localhost' || 
-                           window.location.hostname === '127.0.0.1' || 
-                           window.location.hostname.includes('fly.dev') ||
-                           window.location.protocol === 'file:');
-
-        if (tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0 && !isDebugMode) {
-            // Режим продакшена (внутри Telegram)
-            console.log("Running in Production Mode (inside Telegram)");
-            authData = await api.authenticate(tg.initData);
-        } else if (isDebugMode) {
-            // Режим отладки (локально в браузере)
-            console.log("Running in Debug Mode (localhost)");
-            authData = await api.authenticateDebug(); // Вызываем новый метод API
-        } else {
-            // Запуск в браузере, но не локально
-            throw new Error("Telegram.WebApp.initData is empty. Please run the app inside Telegram.");
+        // Инициализируем Telegram WebApp
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
         }
-        
-        // 1. Аутентификация
-        setAuthToken(authData.access_token);
-        console.log("Authentication successful, token set.");
-        
-        // 2. Первоначальная загрузка и отрисовка колод
+
+        // Показываем загрузку
+        showLoading('Инициализация...');
+
+        // Проверяем, есть ли сохраненный токен
+        const existingToken = localStorage.getItem('auth_token');
+        if (existingToken) {
+            console.log('Found existing token, verifying...');
+            try {
+                // Проверяем валидность токена
+                await api.getCurrentUser();
+                console.log('Existing token is valid');
+            } catch (error) {
+                console.log('Existing token is invalid, re-authenticating...');
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+            }
+        }
+
+        // Если токена нет или он невалиден, авторизуемся
+        if (!localStorage.getItem('auth_token')) {
+            console.log('Authenticating user...');
+            await api.authenticateUser();
+        }
+
+        // Отображаем информацию о пользователе
+        displayUserInfo();
+
+        // Загружаем данные пользователя
         await refreshDecks();
 
-        // 3. Показываем главный экран
+        // Показываем главное окно
         showWindow('main-window');
+        
+        console.log('App initialized successfully');
+        
     } catch (error) {
-        console.error("Initialization failed:", error);
-        DOMElements.decksContainer.innerHTML = `<p style='color: red;'>${error.message}</p>`;
+        console.error('App initialization failed:', error);
+        showError(`Ошибка инициализации: ${error.message}`);
     }
 }
-    // ============================================
-    //             ОБРАБОТЧИКИ СОБЫТИЙ
-    // ============================================
 
-    // Нажатие на "+" на главном экране
-    document.getElementById('add-deck-btn').addEventListener('click', () => {
-        showWindow('create-deck-window');
-    });
+// Функция для отображения информации о пользователе
+function displayUserInfo() {
+    const userData = getUserData();
+    const userInfoElement = document.getElementById('user-info');
+    
+    if (userData && userData.first_name && userInfoElement) {
+        userInfoElement.textContent = `👤 ${userData.first_name}`;
+        userInfoElement.style.display = 'block';
+    }
+}
 
-    // Нажатие на "Назад" в окне создания
-    document.getElementById('back-to-main-btn').addEventListener('click', async () => {
-        await refreshDecks(); // Обновляем список колод
-        showWindow('main-window');
-    });
+// Функция для обновления и перерисовки списка колод
+async function refreshDecks() {
+    try {
+        showLoading('Загружаем ваши колоды...');
+        const decks = await api.getDecks();
+        renderDecks(decks);
+    } catch (error) {
+        console.error("Failed to refresh decks:", error);
+        showError(error.message || 'Не удалось загрузить колоды');
+    }
+}
 
-    // Обработчик кнопки "Назад" из окна карточек
-    document.getElementById('back-from-cards-btn').addEventListener('click', async () => {
-        await refreshDecks(); // Обновляем список колод
-        showWindow('main-window');
-    });
+// Главная функция инициализации
+// Функция main() удалена - используется initializeApp() вместо неё
 
-    // Отправка формы создания новой колоды
-    DOMElements.createDeckForm.addEventListener('submit', async (event) => {
-        event.preventDefault(); // Предотвращаем стандартную отправку формы
+// ============================================
+//             ОБРАБОТЧИКИ СОБЫТИЙ
+// ============================================
 
-        const formData = new FormData(event.target);
-        const deckData = Object.fromEntries(formData.entries());
-        
-        // Валидация формы
-        if (!deckData.name || deckData.name.trim().length < 2) {
-            alert('Название колоды должно содержать минимум 2 символа');
-            return;
-        }
-        
-        if (!deckData.lang_from || !deckData.lang_to) {
-            alert('Пожалуйста, выберите оба языка');
-            return;
-        }
-        
-        if (deckData.lang_from === deckData.lang_to) {
-            alert('Изучаемый язык и язык перевода должны отличаться');
-            return;
-        }
-        
-        const submitBtn = DOMElements.createDeckForm.querySelector('button[type="submit"]');
-        submitBtn.disabled = true; // Блокируем кнопку на время запроса
-        submitBtn.textContent = '⏳ Создание...';
+// Нажатие на "+" на главном экране
+document.getElementById('add-deck-btn').addEventListener('click', () => {
+    showWindow('create-deck-window');
+});
 
-        try {
-            await api.createDeck(deckData);
-            event.target.reset(); // Очищаем форму
-            showWindow('main-window'); // Возвращаемся на главный экран
-            await refreshDecks(); // Обновляем список колод, чтобы увидеть новую
-        } catch (error) {
-            console.error("Failed to create deck:", error);
-            alert(`Ошибка создания колоды: ${error.message}`); // Показываем ошибку
-        } finally {
-            submitBtn.disabled = false; // Разблокируем кнопку
-            submitBtn.textContent = '➕ Создать колоду';
-        }
-    });
+// Нажатие на "Назад" в окне создания
+document.getElementById('back-to-main-btn').addEventListener('click', async () => {
+    await refreshDecks(); // Обновляем список колод
+    showWindow('main-window');
+});
 
-    // Обработчик клика по header для возврата на главное окно
-    document.addEventListener('click', (event) => {
-        if (event.target.closest('.clickable-header')) {
-            // Возвращаемся на главное окно только если мы не на нем
-            const mainWindow = document.getElementById('main-window');
-            if (mainWindow.classList.contains('hidden')) {
-                showWindow('main-window');
-            }
-        }
-    });
+// Обработчик кнопки "Назад" из окна карточек
+document.getElementById('back-from-cards-btn').addEventListener('click', async () => {
+    await refreshDecks(); // Обновляем список колод
+    showWindow('main-window');
+});
+
+// Отправка формы создания новой колоды
+DOMElements.createDeckForm.addEventListener('submit', async (event) => {
+    event.preventDefault(); // Предотвращаем стандартную отправку формы
+
+    const formData = new FormData(event.target);
+    const deckData = Object.fromEntries(formData.entries());
+    
+    // Валидация формы
+    if (!deckData.name || deckData.name.trim().length < 2) {
+        alert('Название колоды должно содержать минимум 2 символа');
+        return;
+    }
+    
+    if (!deckData.lang_from || !deckData.lang_to) {
+        alert('Пожалуйста, выберите оба языка');
+        return;
+    }
+    
+    if (deckData.lang_from === deckData.lang_to) {
+        alert('Изучаемый язык и язык перевода должны отличаться');
+        return;
+    }
+    
+    const submitBtn = DOMElements.createDeckForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true; // Блокируем кнопку на время запроса
+    submitBtn.textContent = '⏳ Создание...';
+
+    try {
+        await api.createDeck(deckData);
+        event.target.reset(); // Очищаем форму
+        showWindow('main-window'); // Возвращаемся на главный экран
+        await refreshDecks(); // Обновляем список колод, чтобы увидеть новую
+    } catch (error) {
+        console.error("Failed to create deck:", error);
+        alert(`Ошибка создания колоды: ${error.message}`); // Показываем ошибку
+    } finally {
+        submitBtn.disabled = false; // Разблокируем кнопку
+        submitBtn.textContent = '➕ Создать колоду';
+    }
+});
 
     // Обработчик клика по колоде для перехода к генерации карточек
-    document.addEventListener('click', (event) => {
-        const deckCard = event.target.closest('.deck-card');
-        if (deckCard && !event.target.closest('.deck-actions')) {
-            // Клик по колоде, но не по кнопкам действий
+document.addEventListener('click', (event) => {
+    const deckCard = event.target.closest('.deck-card');
+    if (deckCard && !event.target.closest('.deck-actions')) {
+        // Клик по колоде, но не по кнопкам действий
+        
+        // Сохраняем ID колоды для последующего сохранения карточек
+        currentDeckId = parseInt(deckCard.dataset.deckId);
+        
+        // Извлекаем данные о языках из колоды
+        const langFromElement = deckCard.querySelector('.lang-from');
+        const langToElement = deckCard.querySelector('.lang-to');
+        
+        if (langFromElement && langToElement) {
+            const langFrom = langFromElement.textContent;
+            const langTo = langToElement.textContent;
             
-            // Сохраняем ID колоды для последующего сохранения карточек
-            currentDeckId = parseInt(deckCard.dataset.deckId);
-            
-            // Извлекаем данные о языках из колоды
-            const langFromElement = deckCard.querySelector('.lang-from');
-            const langToElement = deckCard.querySelector('.lang-to');
-            
-            if (langFromElement && langToElement) {
-                const langFrom = langFromElement.textContent;
-                const langTo = langToElement.textContent;
-                
-                // Отображаем языки в окне генерации карточек
-                document.getElementById('lang-from-display').textContent = langFrom;
-                document.getElementById('lang-to-display').textContent = langTo;
-            }
-            
-            showWindow('generate-cards-window');
+            // Отображаем языки в окне генерации карточек
+            document.getElementById('lang-from-display').textContent = langFrom;
+            document.getElementById('lang-to-display').textContent = langTo;
         }
-    });
+        
+        showWindow('generate-cards-window');
+    }
+});
 
     // Обработчик кнопки "Удалить"
     document.addEventListener('click', async (event) => {
@@ -625,42 +648,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Обработчик кнопки "Выделить все"
+const selectAllBtn = document.getElementById('select-all-btn');
+if (selectAllBtn) {
+    selectAllBtn.addEventListener('click', () => {
+    const allCards = document.querySelectorAll('.phrase-card');
     const selectAllBtn = document.getElementById('select-all-btn');
-    if (selectAllBtn) {
-        selectAllBtn.addEventListener('click', () => {
-        const allCards = document.querySelectorAll('.phrase-card');
-        const selectAllBtn = document.getElementById('select-all-btn');
-        
-        if (selectedPhrases.size === allCards.length) {
-            // Если все выделены, снимаем выделение
-            selectedPhrases.clear();
-            allCards.forEach((card, index) => {
-                card.classList.remove('selected');
-                const selectBtn = card.querySelector('.select-btn');
-                selectBtn.textContent = 'Выбрать';
-                selectBtn.classList.remove('selected');
-            });
-            selectAllBtn.textContent = 'Выделить все';
-        } else {
-            // Выделяем все
-            selectedPhrases.clear();
-            allCards.forEach((card, index) => {
-                selectedPhrases.add(index);
-                card.classList.add('selected');
-                const selectBtn = card.querySelector('.select-btn');
-                selectBtn.textContent = 'Выбрано';
-                selectBtn.classList.add('selected');
-            });
-            selectAllBtn.textContent = 'Снять выделение';
-        }
-        
-        updatePhrasesCounter();
-         });
-     }
+    
+    if (selectedPhrases.size === allCards.length) {
+        // Если все выделены, снимаем выделение
+        selectedPhrases.clear();
+        allCards.forEach((card, index) => {
+            card.classList.remove('selected');
+            const selectBtn = card.querySelector('.select-btn');
+            selectBtn.textContent = 'Выбрать';
+            selectBtn.classList.remove('selected');
+        });
+        selectAllBtn.textContent = 'Выделить все';
+    } else {
+        // Выделяем все
+        selectedPhrases.clear();
+        allCards.forEach((card, index) => {
+            selectedPhrases.add(index);
+            card.classList.add('selected');
+            const selectBtn = card.querySelector('.select-btn');
+            selectBtn.textContent = 'Выбрано';
+            selectBtn.classList.add('selected');
+        });
+        selectAllBtn.textContent = 'Снять выделение';
+    }
+    
+    updatePhrasesCounter();
+     });
+ }
 
-    // Запускаем приложение
-    main();
-});
+// Приложение запускается через initializeApp() в DOMContentLoaded
 
 // Функция для управления спиннером в кнопке
 function showButtonLoading(show) {
@@ -683,12 +704,15 @@ function showButtonLoading(show) {
 function updatePhraseImage(imagePath) {
     const imageElement = document.getElementById('phrase-image');
     if (imagePath && imagePath.trim() !== '') {
-        // Показываем изображение ключевого слова
-        imageElement.src = imagePath;
+        // Конвертируем локальный путь в веб-URL
+        const webImagePath = imagePath.replace('frontend/', '/static/');
+        imageElement.src = webImagePath;
         imageElement.alt = 'Keyword Image';
+        console.log('Updated phrase image:', webImagePath);
     } else {
         // Показываем mascot по умолчанию
         imageElement.src = '/static/assets/icons/mascot.png';
         imageElement.alt = 'Mascot';
+        console.log('Using default mascot image');
     }
 }

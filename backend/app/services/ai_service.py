@@ -6,6 +6,9 @@ from typing import Optional
 import google.generativeai as genai
 
 from .utils import redis_client
+from ..core.config import get_settings
+
+settings = get_settings()
 
 # Обновленный промпт с поддержкой исходной фразы
 PROMPT_TEMPLATE = """
@@ -46,24 +49,32 @@ async def generate_examples_with_ai(phrase: str, keyword: str, language: str, ta
    # Ключ кэша: hash от phrase + keyword для uniqueness
     cache_key = f"ai:{hashlib.md5((phrase + keyword).encode()).hexdigest()}"
     
-    # Проверяем кэш (async get)
-    cached = await redis_client.get(cache_key)
-    if cached:
-        logging.info(f"AI data loaded from cache for '{phrase}'")
-        return json.loads(cached)
+    # Проверяем кэш (async get) с обработкой ошибок Redis
+    try:
+        cached = await redis_client.get(cache_key)
+        if cached:
+            logging.info(f"AI data loaded from cache for '{phrase}'")
+            return json.loads(cached)
+    except Exception as e:
+        logging.warning(f"Redis connection failed, proceeding without cache: {e}")
     
     # Если нет кэша — настройка модели (как в оригинале)
 
     try:
-        api_key = os.environ["GOOGLE_API_KEY"]
+        api_key = settings.GOOGLE_API_KEY
+        if not api_key or api_key.strip() == "":
+            logging.error("КРИТИЧЕСКАЯ ОШИБКА: Ключ GOOGLE_API_KEY пустой или не установлен!")
+            return {"error": "AI сервис недоступен: не настроен API ключ"}
+        
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
-    except KeyError:
-        logging.error("КРИТИЧЕСКАЯ ОШИБКА: Ключ GOOGLE_API_KEY не установлен!")
-        return None
+        logging.info(f"Google AI модель успешно настроена для фразы '{phrase}'")
+    except AttributeError:
+        logging.error("КРИТИЧЕСКАЯ ОШИБКА: Ключ GOOGLE_API_KEY не найден в настройках!")
+        return {"error": "AI сервис недоступен: отсутствует API ключ в конфигурации"}
     except Exception as e:
         logging.error(f"Ошибка конфигурации Gemini API: {e}")
-        return None
+        return {"error": f"AI сервис недоступен: ошибка конфигурации - {str(e)}"}
     
     if not model:
         return None
@@ -78,13 +89,28 @@ async def generate_examples_with_ai(phrase: str, keyword: str, language: str, ta
 
     try:
         response = await model.generate_content_async(prompt)
+        
+        if not response or not response.text:
+            logging.error(f"AI вернул пустой ответ для фразы '{phrase}'")
+            return {"error": "AI сервис вернул пустой ответ"}
+        
         raw_text = response.text.strip().replace("```json", "").replace("```", "").strip()
-        data = json.loads(raw_text)
+        
+        try:
+            data = json.loads(raw_text)
+        except json.JSONDecodeError as e:
+            logging.error(f"Ошибка парсинга JSON ответа AI для '{phrase}': {e}")
+            logging.error(f"Сырой ответ AI: {raw_text[:200]}...")
+            return {"error": "AI сервис вернул некорректный формат данных"}
+        
         logging.info(f"AI успешно сгенерировал данные для '{phrase}'.")
         
         # Сохраняем в кэш (async set, TTL 7 дней = 604800 сек)
-        await redis_client.set(cache_key, json.dumps(data), ex=604800)
+        cache_saved = await redis_client.set(cache_key, json.dumps(data), ex=604800)
+        if cache_saved:
+            logging.info(f"Данные для '{phrase}' сохранены в кэш")
+        
         return data
     except Exception as e:
-        logging.error(f"Ошибка при работе с AI: {e}")
-        return None
+        logging.error(f"Ошибка при работе с AI для фразы '{phrase}': {e}")
+        return {"error": f"Ошибка AI сервиса: {str(e)}"}

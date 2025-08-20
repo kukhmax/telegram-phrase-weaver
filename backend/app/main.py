@@ -34,7 +34,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="PhraseWeaver API")
 
 origins = [
-    "https://frontend-q7zq.onrender.com", # URL вашего фронтенда на Render
+    "https://pw-new.club",  # Продакшн домен
+    "https://www.pw-new.club",  # Продакшн домен с www
     # "http://localhost",
     # "http://localhost:8080", # Если вы вдруг запускаете фронтенд локально на другом порту
 ]

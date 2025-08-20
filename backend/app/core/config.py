@@ -7,12 +7,12 @@ class Settings(BaseSettings):
     REDIS_URL: str
     TELEGRAM_BOT_TOKEN: str
     GOOGLE_API_KEY: str
-    UNSPLASH_ACCESS_KEY: str
+    PEXELS_API_KEY: str
     SECRET_KEY: str
     API_BASE_URL: str
 
     class Config:
-        env_file = ".env"
+        env_file = "../.env"  # Путь к .env файлу в корневой директории проекта
         # Эта опция позволяет Pydantic не падать, если .env файл не найден
         # (что актуально для production, где мы используем переменные окружения)
         env_file_encoding = 'utf-8'
