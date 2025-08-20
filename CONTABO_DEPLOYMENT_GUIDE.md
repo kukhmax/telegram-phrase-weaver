@@ -417,6 +417,8 @@ docker compose -f docker-compose.prod.yml logs -f backend
 
 ## Шаг 7.3: Установка SSL сертификата
 
+### Вариант A: Let's Encrypt (бесплатно, рекомендуется)
+
 ```bash
 # Устанавливаем Nginx
 sudo apt install nginx -y
@@ -426,6 +428,154 @@ sudo apt install certbot python3-certbot-nginx -y
 
 # Получаем бесплатный SSL сертификат
 sudo certbot --nginx -d ваш-домен.com -d www.ваш-домен.com
+```
+
+### Вариант B: SSL от Namecheap (платно)
+
+#### Шаг 7.3.1: Активация SSL в Namecheap
+
+1. **Войдите в панель Namecheap:**
+   - Перейдите на [namecheap.com](https://namecheap.com)
+   - Войдите в аккаунт
+   - Перейдите в **SSL Certificates**
+
+2. **Активируйте сертификат:**
+   - Нажмите **Activate** рядом с вашим SSL
+   - Выберите **"Manually"** в методах установки
+   - Нажмите **Next**
+
+#### Шаг 7.3.2: Создание CSR на сервере
+
+```bash
+# Создайте директорию для сертификатов
+sudo mkdir -p /etc/ssl/ваш-домен
+cd /etc/ssl/ваш-домен
+
+# Создайте приватный ключ
+sudo openssl genrsa -out private.key 2048
+
+# Создайте CSR (Certificate Signing Request)
+sudo openssl req -new -key private.key -out certificate.csr
+```
+
+**При создании CSR введите:**
+- **Country Name:** RU (ваша страна)
+- **State:** Moscow (ваш регион)
+- **City:** Moscow (ваш город)
+- **Organization:** PhraseWeaver
+- **Organizational Unit:** IT Department
+- **Common Name:** ваш-домен.com ⚠️ **ВАЖНО!**
+- **Email:** ваш email
+- **Challenge password:** оставьте пустым
+- **Optional company name:** оставьте пустым
+
+#### Шаг 7.3.3: Отправка CSR в Namecheap
+
+```bash
+# Скопируйте содержимое CSR
+sudo cat certificate.csr
+```
+
+**Вставьте в форму Namecheap** весь текст включая:
+```
+-----BEGIN CERTIFICATE REQUEST-----
+...
+-----END CERTIFICATE REQUEST-----
+```
+
+#### Шаг 7.3.4: DNS валидация
+
+1. **Выберите DNS валидацию** в Namecheap
+2. **Добавьте CNAME запись** в DNS:
+   - **Host:** предоставленный Namecheap
+   - **Value:** предоставленный Namecheap
+   - **TTL:** Automatic
+
+3. **Дождитесь валидации** (5-30 минут)
+
+#### Шаг 7.3.5: Получение и установка сертификата
+
+**После валидации получите email с файлами:**
+- `ваш-домен.crt` (основной сертификат)
+- `ваш-домен.ca-bundle` (промежуточные сертификаты)
+
+**Загрузите на сервер:**
+```bash
+# Объедините сертификаты
+sudo cat ваш-домен.crt ваш-домен.ca-bundle > fullchain.pem
+
+# Скопируйте в директорию
+sudo cp fullchain.pem /etc/ssl/ваш-домен/
+sudo cp private.key /etc/ssl/ваш-домен/
+
+# Установите права доступа
+sudo chmod 600 /etc/ssl/ваш-домен/private.key
+sudo chmod 644 /etc/ssl/ваш-домен/fullchain.pem
+```
+
+#### Шаг 7.3.6: Обновление Nginx конфигурации
+
+**Создайте новый nginx.conf:**
+```nginx
+# HTTP -> HTTPS редирект
+server {
+    listen 80;
+    server_name ваш-домен.com www.ваш-домен.com;
+    return 301 https://$server_name$request_uri;
+}
+
+# HTTPS сервер
+server {
+    listen 443 ssl http2;
+    server_name ваш-домен.com www.ваш-домен.com;
+
+    # SSL сертификаты
+    ssl_certificate /etc/ssl/ваш-домен/fullchain.pem;
+    ssl_certificate_key /etc/ssl/ваш-домен/private.key;
+
+    # SSL настройки
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    # Статические файлы фронтенда
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Обработка фронтенда
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # API проксирование на backend
+    location /api/ {
+        proxy_pass http://backend:8080/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+#### Шаг 7.3.7: Обновление docker-compose.prod.yml
+
+**Добавьте монтирование SSL сертификатов:**
+```yaml
+frontend:
+  image: nginx:alpine
+  ports:
+    - "80:80"
+    - "443:443"  # Добавить HTTPS порт
+  volumes:
+    - ./backend/frontend:/usr/share/nginx/html:ro
+    - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    - /etc/ssl:/etc/ssl:ro  # SSL сертификаты
+  depends_on:
+    - backend
+  restart: unless-stopped
+  networks:
+    - app-network
 ```
 
 ---
@@ -661,3 +811,46 @@ docker compose -f docker-compose.prod.yml up -d
 
 *Эта инструкция создана для проекта PhraseWeaver*  
 *Версия: 1.0 | Дата: Декабрь 2024*
+
+
+📊 Обновлены разделы:
+- ✅ Запуск приложения: Production команды
+- ✅ Мониторинг: Правильные команды логов
+- ✅ Бэкапы: Production конфигурация
+- ✅ Решение проблем: Обновленная диагностика
+- ✅ Systemd сервис: Production команды
+### 🏗️ Архитектура Contabo:
+```
+┌─────────────────────────────────────┐
+│            Contabo VPS              │
+├─────────────────────────────────────┤
+│  ┌─────────┐  ┌──────────────────┐  │
+│  │ Nginx   │  │     Backend      │  │
+│  │ :80     │  │     :8080        │  │
+│  └─────────┘  └──────────────────┘  │
+│       │               │             │
+│       └───────────────┼─────────────│
+│                       │             │
+│  ┌─────────┐  ┌──────────────────┐  │
+│  │ Redis   │  │   PostgreSQL     │  │
+│  │ :6379   │  │     :5432        │  │
+│  └─────────┘  └──────────────────┘  │
+│       │               │             │
+│       └───────────────┘             │
+│         app-network                 │
+└─────────────────────────────────────┘
+```
+### 🔒 Безопасность:
+- PostgreSQL: Доступна только внутри сети
+- Redis: Доступен только внутри сети
+- Backend: Доступен только через Nginx
+- Frontend: Публично доступен через порт 80
+### 🎯 Готовность к деплою:
+Все готово для переноса на Contabo!
+
+- ✅ Production Docker конфигурация
+- ✅ Обновленная инструкция
+- ✅ Правильные команды
+- ✅ Безопасная архитектура
+- ✅ Автоматические перезапуски
+Теперь можно следовать инструкции для полного переноса! 🚀🐳
