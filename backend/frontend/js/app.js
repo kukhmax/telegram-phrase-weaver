@@ -536,6 +536,19 @@ document.addEventListener('click', (event) => {
         }
     });
 
+    // Обработчик кнопки "Тренировка"
+    document.addEventListener('click', async (event) => {
+        if (event.target.classList.contains('train-btn')) {
+            event.preventDefault();
+            
+            const deckCard = event.target.closest('.deck-card');
+            const deckId = parseInt(deckCard.dataset.deckId);
+            
+            // Запускаем тренировку
+            await startTraining(deckId);
+        }
+    });
+
     // Обработчик формы генерации фраз
     document.getElementById('generate-cards-form').addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -714,3 +727,196 @@ function updatePhraseImage(imagePath) {
         console.log('Using default mascot image');
     }
 }
+
+// ===== ЛОГИКА ТРЕНИРОВКИ =====
+
+let trainingData = {
+    cards: [],
+    currentIndex: 0,
+    totalCards: 0,
+    deckInfo: null
+};
+
+// Функция запуска тренировки
+window.startTraining = async function(deckId) {
+    try {
+        showLoading('Загружаем карточки для тренировки...');
+        
+        // Получаем карточки колоды
+        const response = await api.getDeckCards(deckId);
+        
+        if (!response || !response.cards || response.cards.length === 0) {
+            showError('В этой колоде нет карточек для тренировки');
+            return;
+        }
+        
+        // Перемешиваем карточки и берем максимум 10
+        const shuffledCards = response.cards.sort(() => Math.random() - 0.5);
+        const selectedCards = shuffledCards.slice(0, Math.min(10, shuffledCards.length));
+        
+        // Инициализируем данные тренировки
+        trainingData = {
+            cards: selectedCards,
+            currentIndex: 0,
+            totalCards: selectedCards.length,
+            deckInfo: response.deck
+        };
+        
+        // Показываем окно тренировки
+        showWindow('training-window');
+        
+        // Загружаем первую карточку
+        loadTrainingCard();
+        
+    } catch (error) {
+        console.error('Error starting training:', error);
+        showError('Ошибка при запуске тренировки');
+    }
+};
+
+// Функция загрузки карточки
+function loadTrainingCard() {
+    const currentCard = trainingData.cards[trainingData.currentIndex];
+    
+    // Обновляем прогресс
+    updateTrainingProgress();
+    
+    // Загружаем изображение
+    const imageElement = document.getElementById('training-image');
+    if (currentCard.image_path && currentCard.image_path.trim() !== '') {
+        const webImagePath = currentCard.image_path.replace('frontend/', '/static/');
+        imageElement.src = webImagePath;
+        imageElement.alt = 'Card Image';
+    } else {
+        imageElement.src = '/static/assets/icons/mascot.png';
+        imageElement.alt = 'Mascot';
+    }
+    
+    // Загружаем фразу (показываем фразу на изучаемом языке)
+    document.getElementById('training-phrase').textContent = currentCard.front_text;
+    
+    // Очищаем поле ввода и сбрасываем состояния
+    const answerInput = document.getElementById('answer-input');
+    answerInput.value = '';
+    answerInput.className = 'answer-input';
+    answerInput.placeholder = 'Введите перевод...';
+    
+    // Скрываем правильный ответ и кнопки оценки
+    document.getElementById('correct-answer').classList.add('hidden');
+    document.getElementById('rating-buttons').classList.add('hidden');
+    
+    // Показываем кнопку проверки
+    document.getElementById('check-btn').style.display = 'block';
+    document.getElementById('check-btn').disabled = false;
+}
+
+// Функция обновления прогресса
+function updateTrainingProgress() {
+    const currentCardNum = trainingData.currentIndex + 1;
+    const totalCards = trainingData.totalCards;
+    const progressPercent = (currentCardNum / totalCards) * 100;
+    
+    document.getElementById('current-card').textContent = currentCardNum;
+    document.getElementById('total-cards').textContent = totalCards;
+    document.getElementById('progress-fill').style.width = `${progressPercent}%`;
+}
+
+// Функция проверки ответа
+function checkAnswer() {
+    const userAnswer = document.getElementById('answer-input').value.trim();
+    const correctAnswer = trainingData.cards[trainingData.currentIndex].back_text;
+    const answerInput = document.getElementById('answer-input');
+    
+    if (!userAnswer) {
+        alert('Пожалуйста, введите ответ');
+        return;
+    }
+    
+    // Простая проверка (можно улучшить)
+    const isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+    
+    // Обновляем стили поля ввода
+    if (isCorrect) {
+        answerInput.classList.add('correct');
+        answerInput.classList.remove('incorrect');
+    } else {
+        answerInput.classList.add('incorrect');
+        answerInput.classList.remove('correct');
+        
+        // Показываем правильный ответ
+        const correctAnswerDiv = document.getElementById('correct-answer');
+        correctAnswerDiv.textContent = `Правильный ответ: ${correctAnswer}`;
+        correctAnswerDiv.classList.remove('hidden');
+    }
+    
+    // Скрываем кнопку проверки и показываем кнопки оценки
+    document.getElementById('check-btn').style.display = 'none';
+    document.getElementById('rating-buttons').classList.remove('hidden');
+}
+
+// Функция перехода к следующей карточке
+function nextCard() {
+    trainingData.currentIndex++;
+    
+    if (trainingData.currentIndex >= trainingData.totalCards) {
+        // Тренировка завершена
+        finishTraining();
+    } else {
+        // Загружаем следующую карточку
+        loadTrainingCard();
+    }
+}
+
+// Функция завершения тренировки
+function finishTraining() {
+    alert(`Тренировка завершена! Вы изучили ${trainingData.totalCards} карточек.`);
+    showWindow('main-window');
+    refreshDecks(); // Обновляем статистику колод
+}
+
+// Обработчики событий для тренировки
+document.getElementById('check-btn').addEventListener('click', checkAnswer);
+
+document.getElementById('again-btn').addEventListener('click', () => {
+    // Логика для "Снова" - карточка будет повторена в ближайшее время
+    console.log('Card marked as "Again"');
+    nextCard();
+});
+
+document.getElementById('good-btn').addEventListener('click', () => {
+    // Логика для "Хорошо" - карточка будет повторена позже
+    console.log('Card marked as "Good"');
+    nextCard();
+});
+
+document.getElementById('easy-btn').addEventListener('click', () => {
+    // Логика для "Легко" - карточка помечается как изученная
+    console.log('Card marked as "Easy"');
+    nextCard();
+});
+
+document.getElementById('back-from-training-btn').addEventListener('click', () => {
+    if (confirm('Вы уверены, что хотите прервать тренировку?')) {
+        showWindow('main-window');
+    }
+});
+
+// Обработчик Enter в поле ввода
+document.getElementById('answer-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        const checkBtn = document.getElementById('check-btn');
+        if (checkBtn.style.display !== 'none') {
+            checkAnswer();
+        }
+    }
+});
+
+// Обработчик кнопки воспроизведения аудио в тренировке
+document.getElementById('play-audio-btn').addEventListener('click', () => {
+    const currentCard = trainingData.cards[trainingData.currentIndex];
+    if (currentCard && currentCard.front_text) {
+        // Определяем язык из информации о колоде
+        const langCode = extractLanguageCode(trainingData.deckInfo.lang_from);
+        playAudio(currentCard.front_text, langCode);
+    }
+});

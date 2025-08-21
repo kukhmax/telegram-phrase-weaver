@@ -25,10 +25,22 @@ export function showWindow(windowId) {
     
     // Управляем классом main-active для контейнера
     const appContainer = document.querySelector('.app-container');
+    const fabButton = document.getElementById('add-deck-btn');
+    
     if (windowId === 'main-window') {
         appContainer.classList.add('main-active');
+        // Прямое управление видимостью FAB кнопки
+        if (fabButton) {
+            fabButton.style.display = 'flex';
+        }
+        console.log('Main window shown, FAB visible');
     } else {
         appContainer.classList.remove('main-active');
+        // Прямое скрытие FAB кнопки
+        if (fabButton) {
+            fabButton.style.display = 'none';
+        }
+        console.log('Other window shown, FAB hidden');
     }
 }
 

@@ -166,7 +166,60 @@
             </main>
         </div>
 
-        <!-- ОБЩИЙ FOOTER -->
+        <!-- ОБЩИЙ FOOTER --></div>
+
+        <!-- ОКНО №7: Тренировка -->
+        <div id="training-window" class="app-window hidden">
+            <main class="app-main">
+                <h2>Тренировка</h2>
+                
+                <!-- Прогресс-бар -->
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="current-card">1</span> / <span id="total-cards">10</span>
+                    </div>
+                </div>
+                
+                <!-- Контент карточки -->
+                <div class="training-card">
+                    <!-- Изображение -->
+                    <div class="card-image-container">
+                        <img id="training-image" src="/static/assets/icons/mascot.png" alt="Card Image" class="training-image">
+                    </div>
+                    
+                    <!-- Фраза -->
+                    <div class="phrase-container">
+                        <div id="training-phrase" class="training-phrase">Loading...</div>
+                        <button id="play-audio-btn" class="audio-btn" title="Прослушать">
+                            🔊
+                        </button>
+                    </div>
+                    
+                    <!-- Поле ввода -->
+                    <div class="input-container">
+                        <input type="text" id="answer-input" class="answer-input" placeholder="Введите перевод...">
+                        <div id="correct-answer" class="correct-answer hidden"></div>
+                    </div>
+                    
+                    <!-- Кнопка проверки -->
+                    <button id="check-btn" class="check-btn">Проверить</button>
+                </div>
+                
+                <!-- Кнопки оценки (скрыты до проверки) -->
+                <div id="rating-buttons" class="rating-buttons hidden">
+                    <button id="again-btn" class="rating-btn again-btn">Снова</button>
+                    <button id="good-btn" class="rating-btn good-btn">Хорошо</button>
+                    <button id="easy-btn" class="rating-btn easy-btn">Легко</button>
+                </div>
+                
+                <!-- Кнопка возврата -->
+                <button id="back-from-training-btn" class="back-btn">← Назад на главную</button>
+            </main>
+        </div>
+
         <footer class="app-footer">
             PhraseWeaver v0.1.0
         </footer>

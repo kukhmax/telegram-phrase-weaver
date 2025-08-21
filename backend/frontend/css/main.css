@@ -37,7 +37,7 @@ body {
 
 .app-container {
     background-color: #ffffff; /* Наша светлая подложка */
-    min-height: 100vh; /* Растягиваем на весь экран */
+    /* min-height: 100vh; Растягиваем на весь экран */
     padding: 15px; /* Переносим padding сюда */
     box-sizing: border-box;
 }
@@ -175,29 +175,24 @@ body {
 }
 
 /* Floating Action Button */
-.fab {
+#add-deck-btn.fab {
     position: fixed;
     bottom: 30px;
     right: 30px;
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background-color: var(--brand-yellow);
-    color: var(--brand-blue);
+    background-color: #f4c300;
+    color: #1800ad;
     border: none;
     font-size: 36px;
-    display: none; /* Скрыта по умолчанию */
+    display: none; /* Управляется JavaScript */
     justify-content: center;
     align-items: center;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     cursor: pointer;
     line-height: 1;
     z-index: 1000;
-}
-
-/* Показываем FAB только в главном окне */
-.app-container.main-active .fab {
-    display: flex;
 }
 
 .fab:hover {
@@ -648,8 +643,223 @@ body {
 .phrase-image-container {
     display: flex;
     justify-content: center;
+}
+
+/* ===== СТИЛИ ДЛЯ ОКНА ТРЕНИРОВКИ ===== */
+
+/* Контейнер прогресса */
+.progress-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    border: 1px solid #dee2e6;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f4c300, #ffd700);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-text {
+    font-size: 14px;
+    color: #1800ad;
+    font-weight: 500;
+}
+
+/* Карточка тренировки */
+.training-card {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 25px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+/* Изображение в тренировке */
+.training-image {
+    max-width: 120px;
+    max-height: 120px;
+    border-radius: 10px;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
 }
+
+/* Контейнер фразы */
+.phrase-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.training-phrase {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1800ad;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* Контейнер ввода */
+.input-container {
+    margin-bottom: 20px;
+}
+
+.answer-input {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    text-align: center;
+    transition: all 0.3s ease;
+    background-color: white;
+}
+
+.answer-input:focus {
+    outline: none;
+    border-color: #f4c300;
+    box-shadow: 0 0 0 3px rgba(244, 195, 0, 0.1);
+}
+
+/* Цветовые состояния поля ввода */
+.answer-input.correct {
+    background-color: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+}
+
+.answer-input.incorrect {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+/* Правильный ответ */
+.correct-answer {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    color: #155724;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Кнопка проверки */
+.check-btn {
+    background: linear-gradient(135deg, #1800ad, #2c1bbd);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 200px;
+}
+
+.check-btn:hover {
+    background: linear-gradient(135deg, #2c1bbd, #1800ad);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(24, 0, 173, 0.3);
+}
+
+.check-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Кнопки оценки */
+.rating-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.rating-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 80px;
+}
+
+.again-btn {
+    background-color: #ff4757;
+    color: white;
+}
+
+.again-btn:hover {
+    background-color: #e63946;
+    transform: translateY(-2px);
+}
+
+.good-btn {
+    background-color: #f4c300;
+    color: #1800ad;
+}
+
+.good-btn:hover {
+    background-color: #e6b000;
+    transform: translateY(-2px);
+}
+
+.easy-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.easy-btn:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 480px) {
+    .rating-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .rating-btn {
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    .phrase-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .training-phrase {
+         font-size: 16px;
+     }
+ }
 
 .phrase-image-container .mascot {
     width: 120px;
