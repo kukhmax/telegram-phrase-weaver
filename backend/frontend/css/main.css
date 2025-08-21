@@ -334,6 +334,8 @@ body {
 
 /* Карточка в окне просмотра */
 .saved-card {
+    display: flex;
+    justify-content: space-between;
     background: #f8f9fa;
     border: 2px solid #e9ecef;
     border-radius: 15px;
@@ -367,7 +369,7 @@ body {
 .card-side {
     display: flex;
     align-items: center;
-    margin-bottom: 12px;
+    /* margin-bottom: 12px; */
     font-size: 16px;
     padding: 10px;
     background: white;

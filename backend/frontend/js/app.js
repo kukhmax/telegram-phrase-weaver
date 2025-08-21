@@ -215,7 +215,6 @@ function createSavedCard(card, deck) {
     }
     
     cardDiv.innerHTML = `
-        ${imageHtml}
         <div class="card-content">
             <div class="card-side front">
                 <span class="card-flag">${langFromFlag}</span>
@@ -227,18 +226,15 @@ function createSavedCard(card, deck) {
             <div class="card-side back">
                 <span class="card-flag">${langToFlag}</span>
                 <span class="card-text">${card.back_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', '${extractLanguageCode(deck.lang_to)}')" title="Прослушать">
-                    🔊
-                </button>
             </div>
         </div>
+        <div class="img-btn-container">
+        ${imageHtml}
         <div class="card-actions">
-            <button class="card-btn practice-btn" onclick="practiceCard(${card.id})">
-                Тренировать
-            </button>
             <button class="card-btn delete-card-btn" onclick="deleteCard(${card.id})">
                 Удалить
             </button>
+        </div>
         </div>
     `;
     
@@ -276,7 +272,9 @@ window.playAudio = async function(text, langCode) {
                 'ru': 'ru-RU',
                 'es': 'es-ES', 
                 'pt': 'pt-PT',
-                'pl': 'pl-PL'
+                'pl': 'pl-PL',
+                'de': 'de-DE',
+                'fr': 'fr-FR',
             };
             
             utterance.lang = langMap[langCode] || 'en-US';
