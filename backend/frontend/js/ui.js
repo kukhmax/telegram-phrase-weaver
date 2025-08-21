@@ -1,5 +1,5 @@
 // Этот файл отвечает за манипуляции с DOM
-import { updateInterface } from '/static/js/i18n.js';
+import { updateInterface, t } from '/static/js/i18n.js';
 
 // Находим элементы один раз и экспортируем их
 export const DOMElements = {
@@ -106,8 +106,8 @@ export function showError(message) {
     DOMElements.decksContainer.innerHTML = `
         <div style="text-align: center; padding: 40px; color: #ff4757;">
             <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
-            <p>Ошибка: ${message}</p>
-            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #f4c300; border: none; border-radius: 10px; cursor: pointer;">Попробовать снова</button>
+            <p>${t('error')}: ${message}</p>
+            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #f4c300; border: none; border-radius: 10px; cursor: pointer;">${t('try_again')}</button>
         </div>
     `;
 }

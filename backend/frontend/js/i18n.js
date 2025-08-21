@@ -75,7 +75,25 @@ const translations = {
         total: 'Всего',
         repeat: 'Повтор',
         
+        // Статистика
+        stats_button: 'Статистика',
+        statistics: 'Статистика',
+        general_stats: 'Общая статистика',
+        total_decks: 'Всего колод',
+        total_cards: 'Всего карточек',
+        learned_cards: 'Изученные карточки',
+        cards_for_repeat: 'Карточки для повтора',
+        repeat_stats: 'Статистика повторений',
+        again_cards: 'Снова',
+        good_cards: 'Хорошо',
+        easy_cards: 'Легко',
+        deck_distribution: 'Распределение по колодам',
+        daily_training: 'Ежедневная тренировка',
+        close: 'Закрыть',
+        
         // Сообщения
+        error: 'Ошибка',
+        try_again: 'Попробовать снова',
         card_deleted: 'Карточка успешно удалена!',
         delete_confirmation: 'Вы уверены, что хотите удалить эту карточку?',
         training_interruption: 'Вы уверены, что хотите прервать тренировку?',
@@ -98,6 +116,9 @@ const translations = {
         loading_decks: 'Загружаем ваши колоды...',
         saving_cards: 'Сохраняем карточки...',
         loading_training_cards: 'Загружаем карточки для тренировки...',
+        loading_stats: 'Загружаем статистику...',
+        stats_load_error: 'Ошибка загрузки статистики',
+        no_data: 'Нет данных',
         
         // Подсказки валидации
         fill_this_field: 'Заполните это поле.',
@@ -181,7 +202,25 @@ const translations = {
         total: 'Total',
         repeat: 'Repeat',
         
+        // Statistics
+        stats_button: 'Statistics',
+        statistics: 'Statistics',
+        general_stats: 'General Statistics',
+        total_decks: 'Total Decks',
+        total_cards: 'Total Cards',
+        learned_cards: 'Learned Cards',
+        cards_for_repeat: 'Cards for Repeat',
+        repeat_stats: 'Repeat Statistics',
+        again_cards: 'Again',
+        good_cards: 'Good',
+        easy_cards: 'Easy',
+        deck_distribution: 'Deck Distribution',
+        daily_training: 'Daily Training',
+        close: 'Close',
+        
         // Messages
+        error: 'Error',
+        try_again: 'Try Again',
         card_deleted: 'Card deleted successfully!',
         delete_confirmation: 'Are you sure you want to delete this card?',
         training_interruption: 'Are you sure you want to interrupt the training?',
@@ -204,6 +243,9 @@ const translations = {
         loading_decks: 'Loading your decks...',
         saving_cards: 'Saving cards...',
         loading_training_cards: 'Loading cards for training...',
+        loading_stats: 'Loading statistics...',
+        stats_load_error: 'Error loading statistics',
+        no_data: 'No data available',
         
         // Validation hints
         fill_this_field: 'Please fill out this field.',
@@ -251,7 +293,7 @@ function updateInterface() {
         const key = element.getAttribute('data-translate');
         const translation = t(key);
         
-        // Проверяем, нужно ли обновлять placeholder или textContent
+        // Проверяем, нужно ли обновлять placeholder, title или textContent
         if ((element.tagName === 'INPUT' && (element.type === 'text' || element.type === 'email' || element.type === 'password')) || 
             element.tagName === 'TEXTAREA') {
             // Для полей ввода обновляем placeholder
@@ -260,6 +302,9 @@ function updateInterface() {
             } else {
                 element.textContent = translation;
             }
+        } else if (element.hasAttribute('title')) {
+            // Для элементов с title обновляем title
+            element.title = translation;
         } else {
             // Для остальных элементов обновляем textContent
             element.textContent = translation;

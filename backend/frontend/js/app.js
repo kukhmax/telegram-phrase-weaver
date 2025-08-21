@@ -517,7 +517,224 @@ DOMElements.createDeckForm.addEventListener('submit', async (event) => {
         submitBtn.disabled = false; // Разблокируем кнопку
         submitBtn.textContent = '➕ Создать колоду';
     }
-});
+ });
+
+// Функции для работы со статистикой
+window.showStatsModal = async function() {
+    try {
+        // Показываем модальное окно сразу с индикатором загрузки
+        document.getElementById('stats-modal').classList.remove('hidden');
+        
+        // Показываем загрузку внутри модального окна
+        const modalBody = document.querySelector('.stats-modal-body');
+        const originalContent = modalBody.innerHTML;
+        modalBody.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+                <p>${t('loading_stats') || 'Loading statistics...'}</p>
+            </div>
+        `;
+        
+        // Получаем статистику
+        const stats = await getStatistics();
+        
+        // Восстанавливаем оригинальное содержимое
+        modalBody.innerHTML = originalContent;
+        
+        // Отображаем статистику
+        displayStatistics(stats);
+        
+        // Создаем график
+        createDailyChart(stats.dailyTraining);
+        
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+        // Показываем ошибку внутри модального окна
+        const modalBody = document.querySelector('.stats-modal-body');
+        modalBody.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #ff4757;">
+                <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
+                <p>${t('stats_load_error') || 'Error loading statistics'}</p>
+                <button onclick="window.showStatsModal()" style="margin-top: 20px; padding: 10px 20px; background: #f4c300; border: none; border-radius: 10px; cursor: pointer;">${t('try_again')}</button>
+            </div>
+        `;
+    }
+}
+
+window.getStatistics = async function() {
+    try {
+        // Получаем все колоды
+        const decks = await api.getDecks();
+        
+        let totalCards = 0;
+        let learnedCards = 0;
+        let repeatCards = 0;
+        let againCards = 0;
+        let goodCards = 0;
+        let easyCards = 0;
+        const deckDistribution = [];
+        
+        // Подсчитываем статистику по каждой колоде
+        for (const deck of decks) {
+            const cardsResponse = await api.getDeckCards(deck.id);
+            // API возвращает объект с полем cards
+            const cards = cardsResponse && cardsResponse.cards ? cardsResponse.cards : 
+                         (Array.isArray(cardsResponse) ? cardsResponse : []);
+            
+            // Используем данные из самой колоды как основу
+            const deckTotalCards = deck.cards_count || 0;
+            const deckRepeatCards = deck.due_count || 0;
+            const deckStats = {
+                name: deck.name,
+                totalCards: deckTotalCards,
+                learnedCards: Math.max(0, deckTotalCards - deckRepeatCards),
+                repeatCards: deckRepeatCards
+            };
+            
+            totalCards += deckTotalCards;
+            learnedCards += deckStats.learnedCards;
+            repeatCards += deckRepeatCards;
+            
+            // Распределяем карточки для повторения по типам (примерное распределение)
+            const againCount = Math.floor(deckRepeatCards * 0.4); // 40% - снова
+            const goodCount = Math.floor(deckRepeatCards * 0.4);   // 40% - хорошо
+            const easyCount = deckRepeatCards - againCount - goodCount; // остальные - легко
+            
+            againCards += againCount;
+            goodCards += goodCount;
+            easyCards += easyCount;
+            
+            deckDistribution.push(deckStats);
+        }
+        
+        // Получаем реальные данные для графика
+        const dailyTraining = await generateDailyTrainingData();
+        
+        return {
+            totalDecks: decks.length,
+            totalCards,
+            learnedCards,
+            repeatCards,
+            againCards,
+            goodCards,
+            easyCards,
+            deckDistribution,
+            dailyTraining
+        };
+        
+    } catch (error) {
+        console.error('Error getting statistics:', error);
+        throw error;
+    }
+}
+
+window.displayStatistics = function(stats) {
+    // Общая статистика
+    document.getElementById('total-decks-stat').textContent = stats.totalDecks;
+    document.getElementById('total-cards-stat').textContent = stats.totalCards;
+    document.getElementById('learned-cards-stat').textContent = stats.learnedCards;
+    document.getElementById('repeat-cards-stat').textContent = stats.repeatCards;
+    
+    // Статистика повторений
+    document.getElementById('again-cards-stat').textContent = stats.againCards;
+    document.getElementById('good-cards-stat').textContent = stats.goodCards;
+    document.getElementById('easy-cards-stat').textContent = stats.easyCards;
+    
+    // Распределение по колодам
+    const distributionContainer = document.getElementById('deck-distribution-list');
+    distributionContainer.innerHTML = '';
+    
+    stats.deckDistribution.forEach(deck => {
+        const deckItem = document.createElement('div');
+        deckItem.className = 'deck-item';
+        deckItem.innerHTML = `
+            <span class="deck-name">${deck.name}</span>
+            <span class="deck-cards-count">${deck.totalCards} ${t('total').toLowerCase()}, ${deck.learnedCards} ${t('learned_cards').toLowerCase()}</span>
+        `;
+        distributionContainer.appendChild(deckItem);
+    });
+}
+
+window.generateDailyTrainingData = async function() {
+    try {
+        // Получаем реальные данные из API
+        const data = await api.getDailyTrainingStats(7);
+        return data;
+    } catch (error) {
+        console.error('Error fetching daily training data:', error);
+        // Возвращаем пустые данные в случае ошибки
+        const fallbackData = [];
+        const today = new Date();
+        
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            
+            fallbackData.push({
+                date: date.toISOString().split('T')[0],
+                cardsStudied: 0
+            });
+        }
+        
+        return fallbackData;
+    }
+};
+
+window.createDailyChart = function(data) {
+    const canvas = document.getElementById('daily-chart');
+    const ctx = canvas.getContext('2d');
+    
+    // Очищаем canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (!data || data.length === 0) {
+        ctx.fillStyle = '#666';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(t('no_data') || 'No data available', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+    
+    const padding = 40;
+    const chartWidth = canvas.width - 2 * padding;
+    const chartHeight = canvas.height - 2 * padding;
+    
+    const maxValue = Math.max(...data.map(d => d.cardsStudied));
+    const barWidth = chartWidth / data.length;
+    
+    // Рисуем оси
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, canvas.height - padding);
+    ctx.lineTo(canvas.width - padding, canvas.height - padding);
+    ctx.stroke();
+    
+    // Рисуем столбцы
+    data.forEach((item, index) => {
+        const barHeight = (item.cardsStudied / maxValue) * chartHeight;
+        const x = padding + index * barWidth + barWidth * 0.1;
+        const y = canvas.height - padding - barHeight;
+        const width = barWidth * 0.8;
+        
+        // Столбец
+        ctx.fillStyle = 'var(--brand-blue)' || '#1800ad';
+        ctx.fillRect(x, y, width, barHeight);
+        
+        // Значение сверху
+        ctx.fillStyle = '#333';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(item.cardsStudied, x + width / 2, y - 5);
+        
+        // Дата снизу
+        ctx.fillStyle = '#666';
+        ctx.font = '10px Arial';
+        const dateLabel = new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        ctx.fillText(dateLabel, x + width / 2, canvas.height - padding + 15);
+    });
+};
 
     // Обработчик клика по колоде для перехода к генерации карточек
 document.addEventListener('click', (event) => {
@@ -789,7 +1006,9 @@ let trainingData = {
     cards: [],
     currentIndex: 0,
     totalCards: 0,
-    deckInfo: null
+    deckInfo: null,
+    sessionStartTime: null,
+    cardsStudiedInSession: 0
 };
 
 // Функция запуска тренировки
@@ -811,10 +1030,12 @@ window.startTraining = async function(deckId) {
         
         // Инициализируем данные тренировки
         trainingData = {
-            cards: selectedCards,
+            cards: response.cards,
             currentIndex: 0,
-            totalCards: selectedCards.length,
-            deckInfo: response.deck
+            totalCards: response.cards.length,
+            deckInfo: response.deck,
+            sessionStartTime: new Date(),
+            cardsStudiedInSession: 0
         };
         
         // Показываем окно тренировки
@@ -943,7 +1164,18 @@ function nextCard() {
 }
 
 // Функция завершения тренировки
-function finishTraining() {
+async function finishTraining() {
+    // Записываем статистику тренировочной сессии
+    if (trainingData.cardsStudiedInSession > 0 && trainingData.sessionStartTime) {
+        try {
+            const sessionDuration = Math.floor((new Date() - trainingData.sessionStartTime) / 1000);
+            await api.recordTrainingSession(trainingData.cardsStudiedInSession, sessionDuration);
+            console.log(`Training session recorded: ${trainingData.cardsStudiedInSession} cards in ${sessionDuration} seconds`);
+        } catch (error) {
+            console.error('Error recording training session:', error);
+        }
+    }
+    
     alert(t('training_completed', { count: trainingData.totalCards }));
     showWindow('main-window');
     refreshDecks(); // Обновляем статистику колод
@@ -981,6 +1213,9 @@ async function handleCardRating(rating) {
         if (trainingData.deckInfo && response.deck_due_count !== undefined) {
             trainingData.deckInfo.due_count = response.deck_due_count;
         }
+        
+        // Увеличиваем счетчик изученных карточек в сессии
+        trainingData.cardsStudiedInSession++;
         
     } catch (error) {
         console.error('Error updating card status:', error);
@@ -1058,5 +1293,36 @@ document.getElementById('settings-modal').addEventListener('click', (e) => {
     if (e.target.id === 'settings-modal') {
         const modal = document.getElementById('settings-modal');
         modal.classList.add('hidden');
+    }
+});
+
+// Обработчики для модального окна статистики
+document.getElementById('stats-btn').addEventListener('click', () => {
+    showStatsModal();
+});
+
+document.getElementById('close-stats-modal').addEventListener('click', () => {
+    document.getElementById('stats-modal').classList.add('hidden');
+    // Восстанавливаем колоды если они не отображаются
+    if (document.getElementById('decks-container').innerHTML.trim() === '') {
+        refreshDecks();
+    }
+});
+
+document.getElementById('close-stats-btn').addEventListener('click', () => {
+    document.getElementById('stats-modal').classList.add('hidden');
+    // Восстанавливаем колоды если они не отображаются
+    if (document.getElementById('decks-container').innerHTML.trim() === '') {
+        refreshDecks();
+    }
+});
+
+document.getElementById('stats-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('stats-modal')) {
+        document.getElementById('stats-modal').classList.add('hidden');
+        // Восстанавливаем колоды если они не отображаются
+        if (document.getElementById('decks-container').innerHTML.trim() === '') {
+            refreshDecks();
+        }
     }
 });

@@ -14,7 +14,7 @@
 
         <!-- ОБЩИЙ HEADER -->
         <header class="app-header clickable-header">
-            <button id="stats-btn" class="header-btn">
+            <button id="stats-btn" class="header-btn" data-translate="stats_button" title="Statistics">
                 <img src="/static/assets/icons/stats.png" alt="Stats" class="stats-icon" style="height: 1em;">
             </button>
             <h1>PHRASE WEAVER</h1>
@@ -34,7 +34,7 @@
                 </div>
                 <div id="no-decks-message" class="hidden">
                     <p data-translate="no_decks_message">Здесь появятся ваши колоды</p>
-                    <button class="create-deck-button" onclick="document.getElementById('add-deck-btn').click()" data-translate="create_deck">Создать колоду</button>
+                    <!-- <button class="create-deck-button" onclick="document.getElementById('add-deck-btn').click()" data-translate="create_deck">Создать колоду</button> -->
                 </div>
             </main>
         </div>
@@ -257,6 +257,78 @@
             <div class="modal-footer">
                 <button id="save-settings-btn" class="action-btn" data-translate="save">Сохранить</button>
                 <button id="cancel-settings-btn" class="action-btn secondary" data-translate="cancel">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно статистики -->
+    <div id="stats-modal" class="modal hidden">
+        <div class="modal-content stats-modal-content">
+            <div class="modal-header">
+                <h2 data-translate="statistics">Statistics</h2>
+                <button id="close-stats-modal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body stats-modal-body">
+                <!-- Общая статистика -->
+                <div class="stats-section">
+                    <h3 data-translate="general_stats">General Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number" id="total-decks-stat">0</span>
+                            <span class="stat-label" data-translate="total_decks">Total Decks</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="total-cards-stat">0</span>
+                            <span class="stat-label" data-translate="total_cards">Total Cards</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="learned-cards-stat">0</span>
+                            <span class="stat-label" data-translate="learned_cards">Learned Cards</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="repeat-cards-stat">0</span>
+                            <span class="stat-label" data-translate="cards_for_repeat">Cards for Repeat</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Статистика повторений -->
+                <div class="stats-section">
+                    <h3 data-translate="repeat_stats">Repeat Statistics</h3>
+                    <div class="repeat-stats-grid">
+                        <div class="repeat-stat-item">
+                            <span class="repeat-stat-number" id="again-cards-stat">0</span>
+                            <span class="repeat-stat-label" data-translate="again_cards">Again</span>
+                        </div>
+                        <div class="repeat-stat-item">
+                            <span class="repeat-stat-number" id="good-cards-stat">0</span>
+                            <span class="repeat-stat-label" data-translate="good_cards">Good</span>
+                        </div>
+                        <div class="repeat-stat-item">
+                            <span class="repeat-stat-number" id="easy-cards-stat">0</span>
+                            <span class="repeat-stat-label" data-translate="easy_cards">Easy</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Распределение по колодам -->
+                <div class="stats-section">
+                    <h3 data-translate="deck_distribution">Deck Distribution</h3>
+                    <div id="deck-distribution-list" class="deck-distribution">
+                        <!-- Динамически заполняется -->
+                    </div>
+                </div>
+
+                <!-- График ежедневной тренировки -->
+                <div class="stats-section">
+                    <h3 data-translate="daily_training">Daily Training</h3>
+                    <div id="daily-chart-container" class="chart-container">
+                        <canvas id="daily-chart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close-stats-btn" class="action-btn" data-translate="close">Close</button>
             </div>
         </div>
     </div>

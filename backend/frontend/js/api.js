@@ -186,5 +186,13 @@ export const api = {
     deleteCard: (cardId) => request(`/cards/delete/${cardId}`, 'DELETE'),
     
     // Отладочные методы
-    authenticateDebug: () => request('/auth/telegram/debug', 'POST')
+    authenticateDebug: () => request('/auth/telegram/debug', 'POST'),
+    
+    // Методы для работы со статистикой тренировок
+    getDailyTrainingStats: (days = 7) => request(`/training-stats/daily?days=${days}`, 'GET'),
+    recordTrainingSession: (cardsStudied, sessionDuration = 0) => 
+        request('/training-stats/record', 'POST', { 
+            cards_studied: cardsStudied, 
+            session_duration: sessionDuration 
+        })
 };
