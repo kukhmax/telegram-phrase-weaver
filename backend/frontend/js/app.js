@@ -7,24 +7,34 @@ let currentGeneratedData = null;
 let selectedPhrases = new Set();
 let currentDeckId = null;
 
+// Функция для получения флага языка
+function getLanguageFlag(langCode) {
+    const flags = {
+        'en': '🇺🇸',
+        'pl': '🇵🇱',
+        'es': '🇪🇸',
+        'fr': '🇫🇷',
+        'de': '🇩🇪',
+        'it': '🇮🇹',
+        'pt': '🇵🇹',
+        'ru': '🇷🇺',
+    };
+    return flags[langCode] || langCode;
+}
+
 // Функция для извлечения кода языка из строки
 function extractLanguageCode(langText) {
-    // Извлекаем код языка из строки типа "🇵🇹 PT" -> "pt"
-    const match = langText.match(/([A-Z]{2})/);
+    // Извлекаем код языка из строки типа "🇵🇹 Portuguese" или "pl" -> "pl"
+    if (langText.length === 2) {
+        return langText.toLowerCase();
+    }
+    
+    // Для строк с флагами и названиями языков
+    const match = langText.match(/([a-z]{2})/i);
     return match ? match[1].toLowerCase() : 'en';
 }
 
-// Функция для получения флага по коду языка
-function getFlagByCode(langCode) {
-    const flags = {
-        'en': '🇺🇸',
-        'ru': '🇷🇺', 
-        'es': '🇪🇸',
-        'pt': '🇵🇹',
-        'pl': '🇵🇱'
-    };
-    return flags[langCode] || '🌐';
-}
+
 
 // Функция для отображения сгенерированных фраз
 function displayGeneratedPhrases(data, langFrom, langTo) {
@@ -76,19 +86,22 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
     card.className = 'phrase-card';
     card.dataset.index = index;
     
+    const langFromFlag = getLanguageFlag(extractLanguageCode(langFrom));
+    const langToFlag = getLanguageFlag(extractLanguageCode(langTo));
+    
     card.innerHTML = `
         <div class="phrase-content">
             <div class="phrase-line">
-                <span class="flag-emoji">${langFrom.split(' ')[0]}</span>
+                <span class="flag-emoji">${langFromFlag}</span>
                 <span class="phrase-text">${phrase.original}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${extractLanguageCode(langFrom)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}', '${extractLanguageCode(langFrom)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="phrase-line">
-                <span class="flag-emoji">${langTo.split(' ')[0]}</span>
+                <span class="flag-emoji">${langToFlag}</span>
                 <span class="phrase-text">${phrase.translation}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${extractLanguageCode(langTo)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', '${extractLanguageCode(langTo)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
@@ -165,8 +178,14 @@ async function displayDeckCards(deckId) {
         if (response && response.deck && response.cards) {
             // Обновляем информацию о колоде
             document.getElementById('cards-deck-name').textContent = response.deck.name;
-            document.getElementById('cards-lang-from-display').textContent = response.deck.lang_from;
-            document.getElementById('cards-lang-to-display').textContent = response.deck.lang_to;
+            // Отображаем языки с флагами в окне карточек
+                const langFromCode = extractLanguageCode(response.deck.lang_from);
+                const langToCode = extractLanguageCode(response.deck.lang_to);
+                const langFromFlag = getLanguageFlag(langFromCode);
+                const langToFlag = getLanguageFlag(langToCode);
+                
+                document.getElementById('cards-lang-from-display').textContent = `${langFromFlag}${langFromCode}`;
+                document.getElementById('cards-lang-to-display').textContent = `${langToFlag}${langToCode}`;
             
             const container = document.getElementById('cards-container');
             const noCardsMessage = document.getElementById('no-cards-message');
@@ -200,8 +219,10 @@ function createSavedCard(card, deck) {
     cardDiv.dataset.cardId = card.id;
     
     // Получаем флаги языков
-    const langFromFlag = deck.lang_from.split(' ')[0];
-    const langToFlag = deck.lang_to.split(' ')[0];
+    const langFromCode = extractLanguageCode(deck.lang_from);
+    const langToCode = extractLanguageCode(deck.lang_to);
+    const langFromFlag = getLanguageFlag(langFromCode);
+    const langToFlag = getLanguageFlag(langToCode);
     
     // Подготавливаем изображение
     let imageHtml = '';
@@ -246,10 +267,36 @@ window.practiceCard = function(cardId) {
     alert(`Тренировка карточки ${cardId} будет реализована позже`);
 };
 
-// Функция для удаления карточки (заглушка)
-window.deleteCard = function(cardId) {
-    if (confirm('Вы уверены, что хотите удалить эту карточку?')) {
-        alert(`Удаление карточки ${cardId} будет реализовано позже`);
+// Функция для удаления карточки
+window.deleteCard = async function(cardId) {
+    if (!confirm('Вы уверены, что хотите удалить эту карточку?')) {
+        return;
+    }
+    
+    try {
+        // Отправляем запрос на удаление
+        const response = await api.deleteCard(cardId);
+        
+        console.log(`Card ${cardId} deleted successfully`);
+        
+        // Удаляем карточку из интерфейса
+        const cardElement = document.querySelector(`[data-card-id="${cardId}"]`);
+        if (cardElement) {
+            cardElement.remove();
+        }
+        
+        // Обновляем счетчик карточек в колоде, если он отображается
+        const cardsCountElement = document.querySelector('.deck-info .cards-count');
+        if (cardsCountElement && response.deck_cards_count !== undefined) {
+            cardsCountElement.textContent = `${response.deck_cards_count} карточек`;
+        }
+        
+        // Показываем сообщение об успехе
+        alert('Карточка успешно удалена!');
+        
+    } catch (error) {
+        console.error('Error deleting card:', error);
+        alert('Ошибка при удалении карточки. Попробуйте еще раз.');
     }
 };
 
@@ -364,8 +411,7 @@ async function initializeApp() {
             await api.authenticateUser();
         }
 
-        // Отображаем информацию о пользователе
-        displayUserInfo();
+        // Информация о пользователе скрыта
 
         // Загружаем данные пользователя
         await refreshDecks();
@@ -486,9 +532,14 @@ document.addEventListener('click', (event) => {
             const langFrom = langFromElement.textContent;
             const langTo = langToElement.textContent;
             
-            // Отображаем языки в окне генерации карточек
-            document.getElementById('lang-from-display').textContent = langFrom;
-            document.getElementById('lang-to-display').textContent = langTo;
+            // Отображаем языки с флагами в окне генерации карточек
+            const langFromCode = extractLanguageCode(langFrom);
+            const langToCode = extractLanguageCode(langTo);
+            const langFromFlag = getLanguageFlag(langFromCode);
+            const langToFlag = getLanguageFlag(langToCode);
+            
+            document.getElementById('lang-from-display').textContent = `${langFromFlag}${langFromCode}`;
+            document.getElementById('lang-to-display').textContent = `${langToFlag}${langToCode}`;
         }
         
         showWindow('generate-cards-window');

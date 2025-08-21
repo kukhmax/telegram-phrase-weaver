@@ -289,3 +289,49 @@ def update_card_status(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update card status: {str(e)}"
         )
+
+@router.delete("/delete/{card_id}")
+def delete_card(
+    card_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_sync)
+):
+    """
+    Удаляет карточку из базы данных.
+    """
+    try:
+        # Получаем карточку
+        card = db.query(Card).filter(Card.id == card_id).first()
+        if not card:
+            raise HTTPException(status_code=404, detail="Card not found")
+        
+        # Проверяем, что карточка принадлежит пользователю
+        deck = db.query(Deck).filter(Deck.id == card.deck_id).first()
+        if not deck or deck.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Удаляем карточку
+        db.delete(card)
+        
+        # Обновляем счетчики колоды
+        deck.cards_count = (deck.cards_count or 1) - 1
+        if deck.cards_count < 0:
+            deck.cards_count = 0
+        
+        db.commit()
+        
+        return {
+            "message": "Card deleted successfully",
+            "card_id": card_id,
+            "deck_cards_count": deck.cards_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error deleting card: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete card: {str(e)}"
+        )

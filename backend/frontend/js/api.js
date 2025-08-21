@@ -183,6 +183,7 @@ export const api = {
     enrichPhrase: (enrichData) => request('/cards/enrich', 'POST', enrichData),
     generateAudio: (audioData) => request('/cards/generate-audio', 'POST', audioData),
     updateCardStatus: (statusData) => request('/cards/update-status', 'POST', statusData),
+    deleteCard: (cardId) => request(`/cards/delete/${cardId}`, 'DELETE'),
     
     // Отладочные методы
     authenticateDebug: () => request('/auth/telegram/debug', 'POST')
