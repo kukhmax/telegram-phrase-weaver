@@ -792,14 +792,28 @@ function loadTrainingCard() {
         imageElement.alt = 'Mascot';
     }
     
-    // Загружаем фразу (показываем фразу на изучаемом языке)
-    document.getElementById('training-phrase').textContent = currentCard.front_text;
+    // Случайно выбираем направление обучения
+    const isForward = Math.random() < 0.5; // 50% вероятность каждого направления
+    currentCard.isForward = isForward;
+    
+    const phraseElement = document.getElementById('training-phrase');
+    const answerInput = document.getElementById('answer-input');
+    
+    if (isForward) {
+        // Показываем фразу на изучаемом языке, ожидаем перевод
+        phraseElement.textContent = currentCard.front_text;
+        answerInput.placeholder = 'Введите перевод...';
+        currentCard.expectedAnswer = currentCard.back_text;
+    } else {
+        // Показываем перевод, ожидаем фразу на изучаемом языке
+        phraseElement.textContent = currentCard.back_text;
+        answerInput.placeholder = 'Введите фразу...';
+        currentCard.expectedAnswer = currentCard.front_text;
+    }
     
     // Очищаем поле ввода и сбрасываем состояния
-    const answerInput = document.getElementById('answer-input');
     answerInput.value = '';
     answerInput.className = 'answer-input';
-    answerInput.placeholder = 'Введите перевод...';
     
     // Скрываем правильный ответ и кнопки оценки
     document.getElementById('correct-answer').classList.add('hidden');
@@ -824,7 +838,8 @@ function updateTrainingProgress() {
 // Функция проверки ответа
 function checkAnswer() {
     const userAnswer = document.getElementById('answer-input').value.trim();
-    const correctAnswer = trainingData.cards[trainingData.currentIndex].back_text;
+    const currentCard = trainingData.cards[trainingData.currentIndex];
+    const correctAnswer = currentCard.expectedAnswer;
     const answerInput = document.getElementById('answer-input');
     
     if (!userAnswer) {
@@ -834,6 +849,9 @@ function checkAnswer() {
     
     // Простая проверка (можно улучшить)
     const isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+    
+    // Сохраняем результат для использования в кнопках оценки
+    currentCard.lastAnswerCorrect = isCorrect;
     
     // Обновляем стили поля ввода
     if (isCorrect) {
@@ -877,23 +895,44 @@ function finishTraining() {
 // Обработчики событий для тренировки
 document.getElementById('check-btn').addEventListener('click', checkAnswer);
 
-document.getElementById('again-btn').addEventListener('click', () => {
-    // Логика для "Снова" - карточка будет повторена в ближайшее время
-    console.log('Card marked as "Again"');
-    nextCard();
+document.getElementById('again-btn').addEventListener('click', async () => {
+    await handleCardRating('again');
 });
 
-document.getElementById('good-btn').addEventListener('click', () => {
-    // Логика для "Хорошо" - карточка будет повторена позже
-    console.log('Card marked as "Good"');
-    nextCard();
+document.getElementById('good-btn').addEventListener('click', async () => {
+    await handleCardRating('good');
 });
 
-document.getElementById('easy-btn').addEventListener('click', () => {
-    // Логика для "Легко" - карточка помечается как изученная
-    console.log('Card marked as "Easy"');
-    nextCard();
+document.getElementById('easy-btn').addEventListener('click', async () => {
+    await handleCardRating('easy');
 });
+
+// Функция обработки оценки карточки
+async function handleCardRating(rating) {
+    const currentCard = trainingData.cards[trainingData.currentIndex];
+    
+    try {
+        // Отправляем обновление статуса на сервер
+        const response = await api.updateCardStatus({
+            card_id: currentCard.id,
+            rating: rating
+        });
+        
+        console.log(`Card ${currentCard.id} marked as "${rating}", deck due count: ${response.deck_due_count}`);
+        
+        // Обновляем локальные данные колоды
+        if (trainingData.deckInfo && response.deck_due_count !== undefined) {
+            trainingData.deckInfo.due_count = response.deck_due_count;
+        }
+        
+    } catch (error) {
+        console.error('Error updating card status:', error);
+        // Продолжаем тренировку даже при ошибке
+    }
+    
+    // Переходим к следующей карточке
+    nextCard();
+}
 
 document.getElementById('back-from-training-btn').addEventListener('click', () => {
     if (confirm('Вы уверены, что хотите прервать тренировку?')) {

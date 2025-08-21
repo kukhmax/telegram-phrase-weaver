@@ -216,3 +216,76 @@ def save_card(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to save card: {str(e)}"
         )
+
+class CardStatusUpdate(BaseModel):
+    card_id: int
+    rating: str  # "again", "good", "easy"
+
+@router.post("/update-status")
+def update_card_status(
+    status_data: CardStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_sync)
+):
+    """
+    Обновляет статус карточки после тренировки.
+    """
+    try:
+        # Получаем карточку
+        card = db.query(Card).filter(Card.id == status_data.card_id).first()
+        if not card:
+            raise HTTPException(status_code=404, detail="Card not found")
+        
+        # Проверяем, что карточка принадлежит пользователю
+        deck = db.query(Deck).filter(Deck.id == card.deck_id).first()
+        if not deck or deck.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Обновляем статус карточки в зависимости от рейтинга
+        from datetime import datetime, timedelta
+        
+        if status_data.rating == "again":
+            # Карточка для повторения в ближайшее время
+            card.due_date = datetime.utcnow() + timedelta(minutes=10)
+            card.interval = 1
+            card.ease_factor = max(1.3, card.ease_factor - 0.2)
+        elif status_data.rating == "good":
+            # Карточка для повторения позже
+            card.due_date = datetime.utcnow() + timedelta(days=card.interval)
+            card.interval = max(1, int(card.interval * card.ease_factor))
+        elif status_data.rating == "easy":
+            # Карточка изучена
+            card.due_date = datetime.utcnow() + timedelta(days=card.interval * 2)
+            card.interval = max(1, int(card.interval * card.ease_factor * 1.3))
+            card.ease_factor = min(2.5, card.ease_factor + 0.15)
+        
+        # Обновляем счетчик повторений колоды
+        if status_data.rating in ["again", "good"]:
+            # Проверяем, нужно ли увеличить счетчик
+            current_time = datetime.utcnow()
+            if card.due_date and card.due_date <= current_time:
+                # Карточка была просрочена, не увеличиваем счетчик
+                pass
+            else:
+                # Карточка добавляется в повторения
+                deck.due_count = (deck.due_count or 0) + 1
+        
+        db.commit()
+        
+        return {
+            "message": "Card status updated successfully",
+            "card_id": card.id,
+            "rating": status_data.rating,
+            "due_date": card.due_date.isoformat() if card.due_date else None,
+            "deck_due_count": deck.due_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating card status: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update card status: {str(e)}"
+        )
