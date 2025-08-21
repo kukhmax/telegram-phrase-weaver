@@ -1,4 +1,5 @@
 // Этот файл отвечает за манипуляции с DOM
+import { updateInterface } from '/static/js/i18n.js';
 
 // Находим элементы один раз и экспортируем их
 export const DOMElements = {
@@ -22,6 +23,11 @@ export function showWindow(windowId) {
         win.classList.add('hidden');
     });
     document.getElementById(windowId).classList.remove('hidden');
+    
+    // Обновляем переводы при переключении окон
+    if (typeof updateInterface === 'function') {
+        updateInterface();
+    }
     
     // Управляем классом main-active для контейнера
     const appContainer = document.querySelector('.app-container');

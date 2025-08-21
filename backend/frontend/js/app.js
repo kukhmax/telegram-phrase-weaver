@@ -1,6 +1,7 @@
 // Главный файл, который управляет всем приложением
 import { api, setAuthToken, getUserData } from '/static/js/api.js';
 import { DOMElements, showWindow, renderDecks, showLoading, showError } from '/static/js/ui.js';
+import { t, setLanguage, getCurrentLanguage, updateInterface, initializeI18n } from '/static/js/i18n.js';
 
 // Глобальные переменные для хранения данных
 let currentGeneratedData = null;
@@ -108,10 +109,10 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
         </div>
         <div class="phrase-actions">
             <button class="phrase-btn select-btn" onclick="togglePhraseSelection(${index})">
-                Выбрать
+                ${t('select') || 'Выбрать'}
             </button>
             <button class="phrase-btn delete-phrase-btn" onclick="deletePhraseCard(${index})">
-                Удалить
+                ${t('delete')}
             </button>
         </div>
     `;
@@ -171,7 +172,7 @@ function updatePhrasesCounter(totalCount = null, selectedCount = null) {
 // Функция для отображения карточек колоды
 async function displayDeckCards(deckId) {
     try {
-        showLoading('Загружаем карточки...');
+        showLoading(t('loading_cards'));
         
         const response = await api.getDeckCards(deckId);
         
@@ -253,7 +254,7 @@ function createSavedCard(card, deck) {
         ${imageHtml}
         <div class="card-actions">
             <button class="card-btn delete-card-btn" onclick="deleteCard(${card.id})">
-                Удалить
+                ${t('delete')}
             </button>
         </div>
         </div>
@@ -269,7 +270,7 @@ window.practiceCard = function(cardId) {
 
 // Функция для удаления карточки
 window.deleteCard = async function(cardId) {
-    if (!confirm('Вы уверены, что хотите удалить эту карточку?')) {
+    if (!confirm(t('delete_confirmation'))) {
         return;
     }
     
@@ -292,11 +293,11 @@ window.deleteCard = async function(cardId) {
         }
         
         // Показываем сообщение об успехе
-        alert('Карточка успешно удалена!');
+        alert(t('card_deleted'));
         
     } catch (error) {
         console.error('Error deleting card:', error);
-        alert('Ошибка при удалении карточки. Попробуйте еще раз.');
+        alert(t('card_delete_error'));
     }
 };
 
@@ -349,7 +350,7 @@ window.playAudio = async function(text, langCode) {
                              const retryAudio = new Audio(response.audio_url);
                              retryAudio.play().catch(retryError => {
                                  console.error('Retry audio play failed:', retryError);
-                                 alert('Ошибка воспроизведения аудио');
+                                 alert(t('audio_playback_error'));
                              });
                          }, 1000);
                      });
@@ -363,12 +364,12 @@ window.playAudio = async function(text, langCode) {
                  }
             } catch (error) {
                 console.error('Error generating audio:', error);
-                alert('Ошибка генерации аудио');
+                alert(t('audio_generation_error'));
             }
         }
     } catch (error) {
         console.error('Error playing audio:', error);
-        alert('Ошибка воспроизведения аудио');
+        alert(t('audio_playback_error'));
     }
 };
 
@@ -380,6 +381,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Функция инициализации приложения
 async function initializeApp() {
     try {
+        // Инициализируем систему переводов
+        initializeI18n();
+        
         // Инициализируем Telegram WebApp
         const tg = window.Telegram?.WebApp;
         if (tg) {
@@ -441,7 +445,7 @@ function displayUserInfo() {
 // Функция для обновления и перерисовки списка колод
 async function refreshDecks() {
     try {
-        showLoading('Загружаем ваши колоды...');
+        showLoading(t('loading_decks'));
         const decks = await api.getDecks();
         renderDecks(decks);
     } catch (error) {
@@ -483,17 +487,17 @@ DOMElements.createDeckForm.addEventListener('submit', async (event) => {
     
     // Валидация формы
     if (!deckData.name || deckData.name.trim().length < 2) {
-        alert('Название колоды должно содержать минимум 2 символа');
+        alert(t('deck_name_min_length'));
         return;
     }
     
     if (!deckData.lang_from || !deckData.lang_to) {
-        alert('Пожалуйста, выберите оба языка');
+        alert(t('select_both_languages'));
         return;
     }
     
     if (deckData.lang_from === deckData.lang_to) {
-        alert('Изучаемый язык и язык перевода должны отличаться');
+        alert(t('languages_must_differ'));
         return;
     }
     
@@ -508,7 +512,7 @@ DOMElements.createDeckForm.addEventListener('submit', async (event) => {
         await refreshDecks(); // Обновляем список колод, чтобы увидеть новую
     } catch (error) {
         console.error("Failed to create deck:", error);
-        alert(`Ошибка создания колоды: ${error.message}`); // Показываем ошибку
+        alert(`${t('deck_creation_error')} ${error.message}`); // Показываем ошибку
     } finally {
         submitBtn.disabled = false; // Разблокируем кнопку
         submitBtn.textContent = '➕ Создать колоду';
@@ -554,7 +558,7 @@ document.addEventListener('click', (event) => {
             const deckCard = event.target.closest('.deck-card');
             const deckName = deckCard.querySelector('.deck-name').textContent;
             
-            if (confirm(`Вы уверены, что хотите удалить колоду "${deckName}"?`)) {
+            if (confirm(`${t('deck_deletion_confirm')} "${deckName}"?`)) {
                 try {
                     // Получаем ID колоды из data-атрибута
                     const deckId = deckCard.dataset.deckId;
@@ -566,7 +570,7 @@ document.addEventListener('click', (event) => {
                     await refreshDecks();
                 } catch (error) {
                     console.error('Failed to delete deck:', error);
-                    alert(`Ошибка удаления колоды: ${error.message}`);
+                    alert(`${t('deck_deletion_error')} ${error.message}`);
                 }
             }
         }
@@ -608,7 +612,7 @@ document.addEventListener('click', (event) => {
         const keyword = document.getElementById('keyword-input').value.trim();
         
         if (!phrase || !keyword) {
-            alert('Пожалуйста, заполните все поля');
+            alert(t('fill_all_fields'));
             return;
         }
         
@@ -652,7 +656,7 @@ document.addEventListener('click', (event) => {
         if (selectedPhrases.size === 0) return;
         
         try {
-            showLoading('Сохраняем карточки...');
+            showLoading(t('saving_cards'));
             
             // Получаем выбранные фразы
             const phrasesToSave = [];
@@ -691,7 +695,7 @@ document.addEventListener('click', (event) => {
                 await api.saveCard(cardData);
             }
             
-            alert(`Сохранено ${phrasesToSave.length} карточек!`);
+            alert(t('cards_saved', { count: phrasesToSave.length }));
             await refreshDecks(); // Обновляем список колод
             showWindow('main-window');
             
@@ -753,11 +757,11 @@ function showButtonLoading(show) {
     
     if (show) {
         spinner.classList.remove('hidden');
-        btnText.textContent = 'Обогащаем...';
+        btnText.textContent = t('enriching');
         button.disabled = true;
     } else {
         spinner.classList.add('hidden');
-        btnText.textContent = 'Обогатить';
+        btnText.textContent = t('enrich_button');
         button.disabled = false;
     }
 }
@@ -791,7 +795,7 @@ let trainingData = {
 // Функция запуска тренировки
 window.startTraining = async function(deckId) {
     try {
-        showLoading('Загружаем карточки для тренировки...');
+        showLoading(t('loading_training_cards'));
         
         // Получаем карточки колоды
         const response = await api.getDeckCards(deckId);
@@ -853,12 +857,14 @@ function loadTrainingCard() {
     if (isForward) {
         // Показываем фразу на изучаемом языке, ожидаем перевод
         phraseElement.textContent = currentCard.front_text;
-        answerInput.placeholder = 'Введите перевод...';
+        answerInput.placeholder = t('enter_translation');
+        answerInput.setAttribute('data-reverse', 'false');
         currentCard.expectedAnswer = currentCard.back_text;
     } else {
         // Показываем перевод, ожидаем фразу на изучаемом языке
         phraseElement.textContent = currentCard.back_text;
-        answerInput.placeholder = 'Введите фразу...';
+        answerInput.placeholder = t('enter_phrase');
+        answerInput.setAttribute('data-reverse', 'true');
         currentCard.expectedAnswer = currentCard.front_text;
     }
     
@@ -894,7 +900,7 @@ function checkAnswer() {
     const answerInput = document.getElementById('answer-input');
     
     if (!userAnswer) {
-        alert('Пожалуйста, введите ответ');
+        alert(t('enter_answer'));
         return;
     }
     
@@ -913,8 +919,8 @@ function checkAnswer() {
         answerInput.classList.remove('correct');
         
         // Показываем правильный ответ
-        const correctAnswerDiv = document.getElementById('correct-answer');
-        correctAnswerDiv.textContent = `Правильный ответ: ${correctAnswer}`;
+    const correctAnswerDiv = document.getElementById('correct-answer');
+    correctAnswerDiv.textContent = `${t('correct_answer')} ${correctAnswer}`;
         correctAnswerDiv.classList.remove('hidden');
     }
     
@@ -938,7 +944,7 @@ function nextCard() {
 
 // Функция завершения тренировки
 function finishTraining() {
-    alert(`Тренировка завершена! Вы изучили ${trainingData.totalCards} карточек.`);
+    alert(t('training_completed', { count: trainingData.totalCards }));
     showWindow('main-window');
     refreshDecks(); // Обновляем статистику колод
 }
@@ -986,7 +992,7 @@ async function handleCardRating(rating) {
 }
 
 document.getElementById('back-from-training-btn').addEventListener('click', () => {
-    if (confirm('Вы уверены, что хотите прервать тренировку?')) {
+    if (confirm(t('training_interruption'))) {
         showWindow('main-window');
     }
 });
@@ -1004,9 +1010,53 @@ document.getElementById('answer-input').addEventListener('keypress', (e) => {
 // Обработчик кнопки воспроизведения аудио в тренировке
 document.getElementById('play-audio-btn').addEventListener('click', () => {
     const currentCard = trainingData.cards[trainingData.currentIndex];
-    if (currentCard && currentCard.front_text) {
-        // Определяем язык из информации о колоде
-        const langCode = extractLanguageCode(trainingData.deckInfo.lang_from);
-        playAudio(currentCard.front_text, langCode);
+    if (currentCard) {
+        const text = currentCard.isForward ? currentCard.front_text : currentCard.back_text;
+        const langCode = currentCard.isForward ? 
+            extractLanguageCode(trainingData.deckInfo.lang_from) : 
+            extractLanguageCode(trainingData.deckInfo.lang_to);
+        playAudio(text, langCode);
+    }
+});
+
+// Обработчики для модального окна настроек
+document.getElementById('settings-btn').addEventListener('click', () => {
+    const modal = document.getElementById('settings-modal');
+    modal.classList.remove('hidden');
+    
+    // Устанавливаем текущий язык в radio buttons
+    const currentLang = getCurrentLanguage();
+    const languageRadio = document.querySelector(`input[name="language"][value="${currentLang}"]`);
+    if (languageRadio) {
+        languageRadio.checked = true;
+    }
+});
+
+document.getElementById('close-settings-modal').addEventListener('click', () => {
+    const modal = document.getElementById('settings-modal');
+    modal.classList.add('hidden');
+});
+
+document.getElementById('cancel-settings-btn').addEventListener('click', () => {
+    const modal = document.getElementById('settings-modal');
+    modal.classList.add('hidden');
+});
+
+document.getElementById('save-settings-btn').addEventListener('click', () => {
+    const selectedLanguage = document.querySelector('input[name="language"]:checked')?.value;
+    
+    if (selectedLanguage && selectedLanguage !== getCurrentLanguage()) {
+        setLanguage(selectedLanguage);
+    }
+    
+    const modal = document.getElementById('settings-modal');
+    modal.classList.add('hidden');
+});
+
+// Закрытие модального окна при клике вне его
+document.getElementById('settings-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'settings-modal') {
+        const modal = document.getElementById('settings-modal');
+        modal.classList.add('hidden');
     }
 });

@@ -28,13 +28,13 @@
         <div id="main-window" class="app-window">
             <main class="app-main">
                 <img src="/static/assets/icons/mascot.png" alt="Mascot" class="mascot">
-                <h2>Мои колоды:</h2>
+                <h2 data-translate="my_decks">Мои колоды:</h2>
                 <div id="decks-container">
                     <!-- Сюда JS будет добавлять карточки колод -->
                 </div>
                 <div id="no-decks-message" class="hidden">
-                    <p>Здесь появятся ваши колоды</p>
-                    <button class="create-deck-button" onclick="document.getElementById('add-deck-btn').click()">Создать колоду</button>
+                    <p data-translate="no_decks_message">Здесь появятся ваши колоды</p>
+                    <button class="create-deck-button" onclick="document.getElementById('add-deck-btn').click()" data-translate="create_deck">Создать колоду</button>
                 </div>
             </main>
         </div>
@@ -43,21 +43,21 @@
         <div id="create-deck-window" class="app-window hidden">
             <main class="app-main">
                 <img src="/static/assets/icons/mascot.png" alt="Mascot" class="mascot">
-                <h2>Создать новую колоду</h2>
+                <h2 data-translate="deck_creation">Создать новую колоду</h2>
                 <form id="create-deck-form" class="form-container">
                     <!-- ... все поля формы остаются как были ... -->
                      <div class="form-group">
-                        <label for="deck-name">Название колоды:</label>
-                        <input type="text" id="deck-name" name="name" placeholder="Введите название колоды" required>
+                        <label for="deck-name" data-translate="deck_name">Название колоды:</label>
+                        <input type="text" id="deck-name" name="name" data-translate="deck_name_placeholder" placeholder="Введите название колоды" required>
                     </div>
                     <div class="form-group">
-                        <label for="deck-description">Описание:</label>
-                        <textarea id="deck-description" name="description" placeholder="Введите описание колоды"></textarea>
+                        <label for="deck-description" data-translate="deck_description">Описание:</label>
+                        <textarea id="deck-description" name="description" data-translate="deck_description_placeholder" placeholder="Введите описание колоды"></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="lang-from">Изучаемый язык *</label>
+                        <label for="lang-from" data-translate="learning_language">Изучаемый язык *</label>
                         <select id="lang-from" name="lang_from" required>
-                            <option value="" disabled selected>Выберите язык</option>
+                            <option value="" disabled selected data-translate="select_language">Выберите язык</option>
                             <option value="en">🇺🇸 English</option>
                             <option value="ru">🇷🇺 Русский</option>
                             <option value="fr">🇫🇷 Français</option>
@@ -68,9 +68,9 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="lang-to">Язык перевода *</label>
+                        <label for="lang-to" data-translate="translation_language">Язык перевода *</label>
                         <select id="lang-to" name="lang_to" required>
-                            <option value="" disabled selected>Выберите язык</option>
+                            <option value="" disabled selected data-translate="select_language">Выберите язык</option>
                             <option value="en">🇺🇸 English</option>
                             <option value="ru">🇷🇺 Русский</option>
                             <option value="fr">🇫🇷 Français</option>
@@ -80,9 +80,9 @@
                             <option value="pt">🇵🇹 Portuguese</option>
                         </select>
                     </div>
-                    <button type="submit" class="form-submit-btn">➕ Создать колоду</button>
+                    <button type="submit" class="form-submit-btn" data-translate="create_deck_btn">➕ Создать колоду</button>
                 </form>
-                <button id="back-to-main-btn" class="back-btn">← Назад на главную</button>
+                <button id="back-to-main-btn" class="back-btn" data-translate="back_to_main">← Назад на главную</button>
             </main>
         </div>
 
@@ -90,22 +90,22 @@
         <div id="generate-cards-window" class="app-window hidden">
             <main class="app-main">
                 <img src="/static/assets/images/mascot.png" alt="Mascot" class="mascot">
-                <h2>Генерация карточек</h2>
+                <h2 data-translate="phrase_generation">Генерация карточек</h2>
                 <div id="deck-languages" class="deck-languages">
                     <span id="lang-from-display"></span> → <span id="lang-to-display"></span>
                 </div>
                 <form id="generate-cards-form" class="form-container">
                     <div class="form-group">
-                        <label for="phrase-input">Фраза:</label>
-                        <textarea id="phrase-input" name="phrase" placeholder="Введите фразу для изучения" required></textarea>
+                        <label for="phrase-input" data-translate="phrase_label">Фраза:</label>
+                        <textarea id="phrase-input" name="phrase" data-translate="phrase_placeholder" placeholder="Введите фразу для изучения" required></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="keyword-input">Ключевое слово:</label>
-                        <input type="text" id="keyword-input" name="keyword" placeholder="Введите ключевое слово">
+                        <label for="keyword-input" data-translate="keyword_label">Ключевое слово:</label>
+                        <input type="text" id="keyword-input" name="keyword" data-translate="keyword_placeholder" placeholder="Введите ключевое слово">
                     </div>
                     <button type="submit" class="form-submit-btn" id="enrich-btn">
                         <span class="loading-spinner hidden"></span>
-                        <span class="btn-text">Обогатить</span>
+                        <span class="btn-text" data-translate="enrich_button">Обогатить</span>
                     </button>
                 </form>
             </main>
@@ -126,7 +126,7 @@
                     <p>Здесь появятся ваши карточки</p>
                 </div>
                 <div class="cards-actions">
-                    <button id="back-from-cards-btn" class="action-btn back-btn">
+                    <button id="back-from-cards-btn" class="action-btn back-btn" data-translate="back_to_main">
                         ← Назад на главную
                     </button>
                 </div>
@@ -139,12 +139,12 @@
                 <div id="phrase-image-container" class="phrase-image-container">
                     <img id="phrase-image" src="/static/assets/icons/mascot.png" alt="Mascot" class="mascot">
                 </div>
-                <h2>Фразы для тренировки</h2>
+                <h2 data-translate="phrases_for_training">Фразы для тренировки</h2>
                 <div class="phrases-counter">
-                    <span id="total-phrases-count">6</span> фраз | <span id="selected-phrases-count">0</span> выбрано
+                    <span id="total-phrases-count">6</span> <span data-translate="phrases_count">фраз</span> | <span id="selected-phrases-count">0</span> <span data-translate="selected">выбрано</span>
                 </div>
                 
-                <button id="select-all-btn" class="action-btn select-all-btn">
+                <button id="select-all-btn" class="action-btn select-all-btn" data-translate="select_all">
                     Выделить все
                 </button>
                 
@@ -154,24 +154,22 @@
                 
                 <div class="phrases-actions">
                     <button id="save-selected-btn" class="action-btn save-btn" disabled>
-                        Сохранить выбранные (<span id="save-count">0</span>)
+                        <span data-translate="save_selected">Сохранить выбранные</span> (<span id="save-count">0</span>)
                     </button>
-                    <button id="regenerate-btn" class="action-btn regenerate-btn">
+                    <button id="regenerate-btn" class="action-btn regenerate-btn" data-translate="regenerate">
                         Обогатить заново
                     </button>
-                    <button id="back-to-main-btn" class="action-btn back-btn">
+                    <button id="back-to-main-btn" class="action-btn back-btn" data-translate="back_to_main">
                         ← Назад на главную
                     </button>
                 </div>
             </main>
         </div>
 
-        <!-- ОБЩИЙ FOOTER --></div>
-
         <!-- ОКНО №7: Тренировка -->
         <div id="training-window" class="app-window hidden">
             <main class="app-main">
-                <h2>Тренировка</h2>
+                <h2 data-translate="training">Тренировка</h2>
                 
                 <!-- Прогресс-бар -->
                 <div class="progress-container">
@@ -200,23 +198,23 @@
                     
                     <!-- Поле ввода -->
                     <div class="input-container">
-                        <input type="text" id="answer-input" class="answer-input" placeholder="Введите перевод...">
+                        <input type="text" id="answer-input" class="answer-input" data-translate="enter_translation" placeholder="Введите перевод...">
                         <div id="correct-answer" class="correct-answer hidden"></div>
                     </div>
                     
                     <!-- Кнопка проверки -->
-                    <button id="check-btn" class="check-btn">Проверить</button>
+                    <button id="check-btn" class="check-btn" data-translate="check">Проверить</button>
                 </div>
                 
                 <!-- Кнопки оценки (скрыты до проверки) -->
                 <div id="rating-buttons" class="rating-buttons hidden">
-                    <button id="again-btn" class="rating-btn again-btn">Снова</button>
-                    <button id="good-btn" class="rating-btn good-btn">Хорошо</button>
-                    <button id="easy-btn" class="rating-btn easy-btn">Легко</button>
+                    <button id="again-btn" class="rating-btn again-btn" data-translate="again">Снова</button>
+                    <button id="good-btn" class="rating-btn good-btn" data-translate="good">Хорошо</button>
+                    <button id="easy-btn" class="rating-btn easy-btn" data-translate="easy">Легко</button>
                 </div>
                 
                 <!-- Кнопка возврата -->
-                <button id="back-from-training-btn" class="back-btn">← Назад на главную</button>
+                <button id="back-from-training-btn" class="back-btn" data-translate="back_to_main">← Назад на главную</button>
             </main>
         </div>
 
@@ -232,6 +230,36 @@
 
     </div> <!-- Конец .app-container -->
 
+    <!-- Модальное окно настроек -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-translate="settings">Настройки</h2>
+                <button id="close-settings-modal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3 data-translate="interface_language">Язык интерфейса</h3>
+                    <div class="language-switcher">
+                        <label class="radio-option">
+                            <input type="radio" name="language" value="ru" checked>
+                            <span class="radio-custom"></span>
+                            <span data-translate="russian">🇷🇺 Русский</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="language" value="en">
+                            <span class="radio-custom"></span>
+                            <span data-translate="english">🇺🇸 English</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings-btn" class="action-btn" data-translate="save">Сохранить</button>
+                <button id="cancel-settings-btn" class="action-btn secondary" data-translate="cancel">Отмена</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Шаблон для карточки колоды (остается без изменений) -->
     <template id="deck-card-template">
@@ -240,12 +268,12 @@
                 <h3 class="deck-name">Название колоды</h3>
                 <p class="deck-description">Описание</p>
                 <div class="deck-langs"><span class="lang-from"></span> → <span class="lang-to"></span></div>
-                <div class="deck-stats">Total: <span class="cards-total">0</span> | Repeat: <span class="cards-repeat">0</span></div>
+                <div class="deck-stats"><span data-translate="total">Total</span>: <span class="cards-total">0</span> | <span data-translate="repeat">Repeat</span>: <span class="cards-repeat">0</span></div>
             </div>
             <div class="deck-actions">
-                <button class="action-btn cards-btn">Карточки</button>
-                <button class="action-btn train-btn">Тренировка</button>
-                <button class="action-btn delete-btn">Удалить</button>
+                <button class="action-btn cards-btn" data-translate="cards">Карточки</button>
+                <button class="action-btn train-btn" data-translate="training">Тренировка</button>
+                <button class="action-btn delete-btn" data-translate="delete">Удалить</button>
             </div>
         </div>
     </template>
