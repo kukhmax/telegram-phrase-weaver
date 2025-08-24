@@ -119,7 +119,7 @@ async function authenticateUser() {
             console.log('Authenticating with Telegram WebApp...');
             
             const initData = window.Telegram.WebApp.initData;
-            const response = await request('/auth/telegram', 'POST', { init_data: initData });
+            const response = await request('/api/auth/telegram', 'POST', { init_data: initData });
             
             // Сохраняем токен и данные пользователя
             setAuthToken(response.access_token);
@@ -131,7 +131,7 @@ async function authenticateUser() {
             // Debug режим для браузера и разработки
             console.log('Using debug authentication...');
             
-            const response = await request('/auth/telegram/debug', 'POST');
+            const response = await request('/api/auth/telegram/debug', 'POST');
             
             // Сохраняем токен и данные пользователя
             setAuthToken(response.access_token);
