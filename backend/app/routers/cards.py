@@ -52,12 +52,15 @@ async def generate_audio_endpoint(request: AudioRequest = Body(...)):
     audio_path = await generate_audio(clean_text, request.lang_code, "phrase")
     
     if audio_path:
-        # Преобразуем абсолютный путь в URL для статических файлов
-        # audio_path выглядит как "assets/audio/phrase_abc123.mp3"
-        # Нужно преобразовать в "/static/assets/audio/phrase_abc123.mp3"
-        import os
-        filename = os.path.basename(audio_path)
-        relative_path = f"/static/assets/audio/{filename}"
+        # audio_path уже в формате "assets/audio/filename.mp3"
+        # Преобразуем в полный URL для статических файлов
+        if audio_path.startswith('assets/'):
+            relative_path = f"/static/{audio_path}"
+        else:
+            # Fallback для старого формата
+            import os
+            filename = os.path.basename(audio_path)
+            relative_path = f"/static/assets/audio/{filename}"
         return {"audio_url": relative_path}
     else:
         raise HTTPException(status_code=500, detail="Failed to generate audio")

@@ -228,7 +228,14 @@ function createSavedCard(card, deck) {
     // Подготавливаем изображение
     let imageHtml = '';
     if (card.image_path && card.image_path.trim() !== '') {
-        const webImagePath = card.image_path.replace('frontend/', '/static/');
+        let webImagePath;
+        if (card.image_path.startsWith('assets/')) {
+            webImagePath = `/static/${card.image_path}`;
+        } else if (card.image_path.startsWith('/static/')) {
+            webImagePath = card.image_path;
+        } else {
+            webImagePath = card.image_path.replace('frontend/', '/static/');
+        }
         imageHtml = `
             <div class="card-image-container">
                 <img src="${webImagePath}" alt="Keyword Image" class="card-image">
@@ -989,8 +996,15 @@ function showButtonLoading(show) {
 function updatePhraseImage(imagePath) {
     const imageElement = document.getElementById('phrase-image');
     if (imagePath && imagePath.trim() !== '') {
-        // Конвертируем локальный путь в веб-URL
-        const webImagePath = imagePath.replace('frontend/', '/static/');
+        // Формируем правильный путь для статических файлов
+        let webImagePath;
+        if (imagePath.startsWith('assets/')) {
+            webImagePath = `/static/${imagePath}`;
+        } else if (imagePath.startsWith('/static/')) {
+            webImagePath = imagePath;
+        } else {
+            webImagePath = imagePath.replace('frontend/', '/static/');
+        }
         imageElement.src = webImagePath;
         imageElement.alt = 'Keyword Image';
         console.log('Updated phrase image:', webImagePath);

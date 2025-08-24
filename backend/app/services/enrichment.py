@@ -12,7 +12,11 @@ from .ai_service import generate_examples_with_ai  # Импорт AI
 from .image_finder import find_image_via_api  # Импорт image
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - ENRICH - %(levelname)s - %(message)s')
-AUDIO_DIR, IMAGE_DIR = Path("frontend/assets/audio"), Path("frontend/assets/images")
+
+# Получаем абсолютные пути к директориям
+BASE_DIR = Path(__file__).parent.parent.parent  # backend/
+AUDIO_DIR = BASE_DIR / "frontend" / "assets" / "audio"
+IMAGE_DIR = BASE_DIR / "frontend" / "assets" / "images"
 
 def ensure_dir_exists(*dirs): [d.mkdir(parents=True, exist_ok=True) for d in dirs if not d.exists()]
 ensure_dir_exists(AUDIO_DIR, IMAGE_DIR)
@@ -28,19 +32,23 @@ async def get_translation(text: str, from_lang: str, to_lang: str) -> Optional[s
 
 async def generate_audio(text: str, lang: str, prefix: str):
     try:
-        path = AUDIO_DIR / f"{prefix}_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
-        if path.exists(): return str(path)
+        filename = f"{prefix}_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
+        file_path = AUDIO_DIR / filename
+        
+        # Если файл уже существует, возвращаем относительный путь
+        if file_path.exists(): 
+            return f"assets/audio/{filename}"
         
         tld_map = {'pt': 'pt'}
         tld = tld_map.get(lang, 'com')
 
         def tts_sync():
             tts = gTTS(text=text, lang=lang, tld=tld, slow=False)
-            tts.save(str(path))
+            tts.save(str(file_path))
         
         await asyncio.get_running_loop().run_in_executor(None, tts_sync)
-        logging.info(f"Аудио '{text}' ({lang} / {tld}) сохранено: {path}")
-        return str(path)
+        logging.info(f"Аудио '{text}' ({lang} / {tld}) сохранено: {file_path}")
+        return f"assets/audio/{filename}"
     except Exception as e:
         logging.error(f"Ошибка генерации аудио: {e}")
         return None
@@ -48,14 +56,21 @@ async def generate_audio(text: str, lang: str, prefix: str):
 async def download_and_save_image(image_url: str, query: str) -> Optional[str]:
     if not image_url: return None
     try:
-        path = IMAGE_DIR / f"{hashlib.md5(query.encode()).hexdigest()}{Path(image_url.split('?')[0]).suffix or '.jpg'}"
+        filename = f"{hashlib.md5(query.encode()).hexdigest()}{Path(image_url.split('?')[0]).suffix or '.jpg'}"
+        file_path = IMAGE_DIR / filename
+        
+        # Если файл уже существует, возвращаем относительный путь
+        if file_path.exists():
+            return f"assets/images/{filename}"
+        
         async with aiohttp.ClientSession() as session:
             async with session.get(image_url) as response:
                 if response.status == 200:
                     content = await response.read()
-                    with open(path, 'wb') as f: 
+                    with open(file_path, 'wb') as f: 
                         f.write(content)
-                    return str(path)
+                    logging.info(f"Изображение для '{query}' сохранено: {file_path}")
+                    return f"assets/images/{filename}"
     except Exception as e: 
         logging.error(f"Ошибка скачивания картинки: {e}")
         return None
