@@ -41,6 +41,7 @@ class CardCreate(BaseModel):
     back_text: str
     difficulty: Optional[int] = 1
     next_review: Optional[str] = None
+    image_path: Optional[str] = None
 
 class Card(CardBase):
     model_config = ConfigDict(from_attributes=True) # Позволяет создавать схему из модели SQLAlchemy

@@ -86,3 +86,10 @@ assets/images/*
 # migrations/
 " > .gitignore
 
+# Generated assets
+backend/frontend/assets/images/
+backend/frontend/assets/audio/
+*.jpeg
+*.jpg
+*.mp3
+*.wav

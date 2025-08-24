@@ -1,4 +1,5 @@
 // Этот файл отвечает за манипуляции с DOM
+import { updateInterface, t } from '/static/js/i18n.js';
 
 // Находим элементы один раз и экспортируем их
 export const DOMElements = {
@@ -23,12 +24,29 @@ export function showWindow(windowId) {
     });
     document.getElementById(windowId).classList.remove('hidden');
     
+    // Обновляем переводы при переключении окон
+    if (typeof updateInterface === 'function') {
+        updateInterface();
+    }
+    
     // Управляем классом main-active для контейнера
     const appContainer = document.querySelector('.app-container');
+    const fabButton = document.getElementById('add-deck-btn');
+    
     if (windowId === 'main-window') {
         appContainer.classList.add('main-active');
+        // Прямое управление видимостью FAB кнопки
+        if (fabButton) {
+            fabButton.style.display = 'flex';
+        }
+        console.log('Main window shown, FAB visible');
     } else {
         appContainer.classList.remove('main-active');
+        // Прямое скрытие FAB кнопки
+        if (fabButton) {
+            fabButton.style.display = 'none';
+        }
+        console.log('Other window shown, FAB hidden');
     }
 }
 
@@ -88,8 +106,8 @@ export function showError(message) {
     DOMElements.decksContainer.innerHTML = `
         <div style="text-align: center; padding: 40px; color: #ff4757;">
             <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
-            <p>Ошибка: ${message}</p>
-            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #f4c300; border: none; border-radius: 10px; cursor: pointer;">Попробовать снова</button>
+            <p>${t('error')}: ${message}</p>
+            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #f4c300; border: none; border-radius: 10px; cursor: pointer;">${t('try_again')}</button>
         </div>
     `;
 }
