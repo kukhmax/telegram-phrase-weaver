@@ -105,18 +105,32 @@ async function request(endpoint, method = 'GET', body = null) {
 // Функция авторизации через Telegram WebApp
 async function authenticateUser() {
     try {
-        // Проверяем режим отладки
-        const isDebugMode = (window.location.hostname === 'localhost' || 
-                           window.location.hostname === '127.0.0.1' || 
-                           window.location.protocol === 'file:') &&
-                           !window.location.hostname.includes('pw-new.club');
+        // Проверяем, запущено ли в Telegram WebApp
+        const isTelegramWebApp = window.Telegram?.WebApp?.initData;
         
-        // Временно используем debug режим для продакшена пока не настроен Telegram Bot
-        const forceDebugMode = window.location.hostname.includes('pw-new.club');
+        console.log('Authentication context:', {
+            hostname: window.location.hostname,
+            isTelegramWebApp: !!isTelegramWebApp,
+            telegramWebApp: !!window.Telegram?.WebApp
+        });
         
-        if (isDebugMode || forceDebugMode) {
-            // Режим отладки - используем debug endpoint
-            console.log('Running in debug mode, using debug authentication...');
+        if (isTelegramWebApp) {
+            // Telegram WebApp авторизация
+            console.log('Authenticating with Telegram WebApp...');
+            
+            const initData = window.Telegram.WebApp.initData;
+            const response = await request('/auth/telegram', 'POST', { init_data: initData });
+            
+            // Сохраняем токен и данные пользователя
+            setAuthToken(response.access_token);
+            setUserData(response.user);
+            
+            console.log('Telegram authentication successful:', response.user);
+            return response;
+        } else {
+            // Debug режим для браузера и разработки
+            console.log('Using debug authentication...');
+            
             const response = await request('/auth/telegram/debug', 'POST');
             
             // Сохраняем токен и данные пользователя
@@ -126,42 +140,6 @@ async function authenticateUser() {
             console.log('Debug authentication successful:', response.user);
             return response;
         }
-
-        // Проверяем, запущено ли в Telegram
-        if (!window.Telegram?.WebApp) {
-            throw new Error('Приложение должно запускаться в Telegram');
-        }
-
-        // Получаем initData от Telegram
-        const initData = window.Telegram.WebApp.initData;
-        if (!initData) {
-            throw new Error('Нет данных авторизации от Telegram');
-        }
-
-        console.log('Authenticating with Telegram...');
-        
-        // Отправляем запрос на авторизацию
-        const response = await fetch(`${API_BASE_URL}/auth/telegram`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ init_data: initData })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || 'Ошибка авторизации');
-        }
-
-        const authData = await response.json();
-        
-        // Сохраняем токен и данные пользователя
-        setAuthToken(authData.access_token);
-        setUserData(authData.user);
-        
-        console.log('Authentication successful:', authData.user);
-        return authData;
         
     } catch (error) {
         console.error('Authentication error:', error);
