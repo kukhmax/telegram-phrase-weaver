@@ -771,9 +771,11 @@ docker compose -f docker-compose.prod.yml up -d
 
 **За год экономия составит €150-480!**
 
----
+---------------------------------------------------------------------
+---------------------------------------------------------------------
+---------------------------------------------------------------------
 
-# 🎉 ПОЗДРАВЛЯЕМ!
+# ВАЛИДАЦИЯ SSL (ПОДРОБНОЕ РУКОВОДСТВО!
 
 Вы успешно перенесли ваше приложение PhraseWeaver на собственный сервер!
 
@@ -854,3 +856,37 @@ docker compose -f docker-compose.prod.yml up -d
 - ✅ Безопасная архитектура
 - ✅ Автоматические перезапуски
 Теперь можно следовать инструкции для полного переноса! 🚀🐳
+
+# Блок для HTTP (порт 80)
+# Перенаправляет весь трафик на HTTPS
+server {
+    listen 80;
+    server_name pw-new.club www.pw-new.club;
+    return 301 https://$host$request_uri;
+}
+
+# Основной рабочий блок для HTTPS (порт 443)
+server {
+    listen 443 ssl http2;
+    server_name pw-new.club www.pw-new.club;
+
+    # Указываем пути к нашим сертификатам внутри контейнера
+    ssl_certificate /etc/ssl/pw-new-club/fullchain.pem;
+    ssl_certificate_key /etc/ssl/pw-new-club/private.key;
+
+    # Все остальные настройки вашего сайта
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://backend:8000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
