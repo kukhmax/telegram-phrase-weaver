@@ -1,41 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from sqlalchemy import select
+from pydantic import BaseModel
+from datetime import datetime
+
 from app.database import get_db
 from app.services.auth_service import auth_service
-from pydantic import BaseModel
 from app.models.user import User
-from datetime import datetime
+from app.dependencies import get_current_user
 from app import schemas 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-# Создаем схему зависимости для получения текущего пользователя
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
-
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
-    """Get current user from JWT token"""
-    try:
-        payload = auth_service.verify_access_token(token)
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    except HTTPException as e:
-        raise e
-
-    user = db.get(User, int(user_id))
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="User not found"
-        )
-    
-    return user
 
 class InitData(BaseModel):
     init_data: str

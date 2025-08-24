@@ -1,5 +1,6 @@
 # backend/app/main.py
 
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -7,6 +8,11 @@ from contextlib import asynccontextmanager
 from alembic import command, config as alembic_config
 from app.core.config import get_settings
 from app.routers import auth, cards, decks, training_stats, telegram
+from app.middleware import (
+    RateLimitMiddleware,
+    SecurityHeadersMiddleware,
+    RequestLoggingMiddleware
+)
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.services.notifications import send_daily_reminders  # TODO: implement
@@ -31,24 +37,65 @@ async def lifespan(app: FastAPI):
     yield  # App runs here
     # Optional shutdown logic
 
-app = FastAPI(title="PhraseWeaver API")
+app = FastAPI(
+    title="PhraseWeaver API",
+    description="API для изучения языков через Telegram Mini App",
+    version="1.0.0",
+    docs_url="/docs" if os.getenv("ENVIRONMENT") != "production" else None,
+    redoc_url="/redoc" if os.getenv("ENVIRONMENT") != "production" else None
+)
 
-origins = [
-    "https://pw-new.club",  # Продакшн домен
-    "https://www.pw-new.club",  # Продакшн домен с www
-    # "http://localhost",
-    # "http://localhost:8080", # Если вы вдруг запускаете фронтенд локально на другом порту
-]
+# Определяем разрешенные origins в зависимости от окружения
+if os.getenv("ENVIRONMENT") == "production":
+    allowed_origins = [
+        "https://pw-new.club",
+        "https://www.pw-new.club",
+        "https://web.telegram.org",
+        "https://telegram.org"
+    ]
+else:
+    # Для разработки разрешаем localhost
+    allowed_origins = [
+        "http://localhost",
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "http://localhost:8080",
+        "http://127.0.0.1:8000",
+        "https://pw-new.club",
+        "https://www.pw-new.club"
+    ]
 
+# Добавляем middleware в правильном порядке (последний добавленный выполняется первым)
 
-# CORS для Telegram Mini App (prod + local)
+# 1. CORS middleware (должен быть последним)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # В prod restrict to Telegram domains
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "X-Requested-With",
+        "Accept",
+        "Origin",
+        "User-Agent"
+    ],
+    expose_headers=["X-Request-ID"]
 )
+
+# 2. Security headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
+
+# 3. Rate limiting middleware
+app.add_middleware(
+    RateLimitMiddleware,
+    calls=100,  # 100 запросов
+    period=60   # за 60 секунд
+)
+
+# 4. Request logging middleware (выполняется первым)
+app.add_middleware(RequestLoggingMiddleware)
 
 
 

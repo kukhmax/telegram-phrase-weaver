@@ -8,7 +8,6 @@
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from typing import List
@@ -18,41 +17,9 @@ from ..models.user import User
 from ..models.deck import Deck
 from ..models.card import Card
 from ..schemas import DeckCreate, Deck as DeckSchema
-from ..services.auth_service import auth_service
+from ..dependencies import get_current_user
 
 router = APIRouter(prefix="/decks", tags=["decks"])
-
-# Создаем схему зависимости прямо здесь. Она будет ожидать токен в заголовке.
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token") # tokenUrl здесь не используется, но обязателен
-
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
-    """
-    Dependency to get current user from JWT token.
-    Provides more detailed error messages.
-    """
-    try:
-        payload = auth_service.verify_access_token(token)
-        # В токене мы сохраняем ID пользователя в поле 'sub' (subject)
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials, user_id missing",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    except HTTPException as e:
-        # Пробрасываем ошибки от verify_access_token (например, истекший токен)
-        raise e
-
-    user = db.get(User, int(user_id))
-
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="User not found"
-        )
-    
-    return user
 
 
 @router.post("/", response_model=DeckSchema, status_code=status.HTTP_201_CREATED)

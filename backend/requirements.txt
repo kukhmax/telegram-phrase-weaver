@@ -21,3 +21,8 @@ httpx  # Для Telegram API calls
 python-dotenv  # For .env file support
 requests  # For HTTP requests
 psycopg2-binary
+
+# Testing dependencies
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+httpx>=0.24.0  # For TestClient async support
