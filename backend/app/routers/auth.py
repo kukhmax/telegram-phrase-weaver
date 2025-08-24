@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from pydantic import BaseModel
@@ -36,29 +36,57 @@ def telegram_auth(data: InitData, db: Session = Depends(get_db)):
     
 # НОВЫЙ ОТЛАДОЧНЫЙ ЭНДПОИНТ
 @router.post("/telegram/debug", tags=["auth", "debug"])
-def telegram_auth_debug(db: Session = Depends(get_db)):
+def telegram_auth_debug(request: Request, db: Session = Depends(get_db)):
     """
-    DEBUG ONLY: Authenticates a predefined test user without initData verification.
+    DEBUG ONLY: Authenticates a user based on their User Agent for unique identification.
     """
-    # ID тестового пользователя. Можете выбрать любой, например, 12345678.
-    DEBUG_TELEGRAM_ID = 12345678
+    import hashlib
+    
+    # Получаем User Agent для создания уникального ID
+    user_agent = request.headers.get('user-agent', 'unknown')
+    
+    # Создаем уникальный Telegram ID на основе User Agent
+    # Это обеспечит, что каждый пользователь получит свой уникальный профиль
+    unique_string = f"debug_{user_agent}"
+    telegram_id = int(hashlib.md5(unique_string.encode()).hexdigest()[:8], 16)
+    
+    print(f"DEBUG AUTH: User Agent: {user_agent}")
+    print(f"DEBUG AUTH: Generated Telegram ID: {telegram_id}")
 
     # Логика похожа на get_or_create_user
-    result = db.execute(select(User).where(User.telegram_id == DEBUG_TELEGRAM_ID))
+    result = db.execute(select(User).where(User.telegram_id == telegram_id))
     user = result.scalars().first()
 
     if user:
         user.last_active = datetime.utcnow()
+        db.commit()
+        print(f"DEBUG AUTH: Found existing user: {user.username} ({user.first_name})")
     else:
+        # Создаем нового пользователя с уникальными данными
+        # Извлекаем информацию из User Agent для более персонализированного опыта
+        device_info = "Unknown"
+        if "Android" in user_agent:
+            device_info = "Android"
+        elif "iPhone" in user_agent or "iOS" in user_agent:
+            device_info = "iOS"
+        elif "Windows" in user_agent:
+            device_info = "Windows"
+        elif "Mac" in user_agent:
+            device_info = "Mac"
+        
         user = User(
-            telegram_id=DEBUG_TELEGRAM_ID,
-            username="debug_user",
-            first_name="Test",
+            telegram_id=telegram_id,
+            username=f"user_{str(telegram_id)[-6:]}",  # Последние 6 цифр ID
+            first_name=f"User ({device_info})",
             last_name="User",
             settings={},
             is_premium=False
         )
         db.add(user)
+        db.commit()
+        db.refresh(user)
+        
+        print(f"DEBUG AUTH: Created new user: {user.username} ({user.first_name})")
     
     db.commit()
     db.refresh(user)

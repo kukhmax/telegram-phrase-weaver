@@ -124,10 +124,23 @@ async function authenticateUser() {
             console.log('Telegram client detected, attempting authentication...');
             console.log('InitData length:', initData.length);
             
-            // Всегда используем debug режим для Telegram клиентов
-            // так как многие версии не предоставляют корректные initData
-            console.log('Using debug authentication for Telegram client...');
+            // Пробуем настоящую Telegram аутентификацию если есть initData
+            if (initData && initData.length > 50) {
+                console.log('Attempting real Telegram authentication with initData...');
+                try {
+                    const response = await request('/api/auth/telegram', 'POST', { init_data: initData });
+                    setAuthToken(response.access_token);
+                    setUserData(response.user);
+                    console.log('Real Telegram authentication successful:', response.user);
+                    return response;
+                } catch (authError) {
+                    console.error('Real Telegram auth failed:', authError);
+                    console.log('Falling back to debug authentication...');
+                }
+            }
             
+            // Fallback к debug режиму
+            console.log('Using debug authentication for Telegram client...');
             const response = await request('/api/auth/telegram/debug', 'POST');
             setAuthToken(response.access_token);
             setUserData(response.user);
