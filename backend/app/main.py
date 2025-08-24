@@ -51,7 +51,11 @@ if os.getenv("ENVIRONMENT") == "production":
         "https://pw-new.club",
         "https://www.pw-new.club",
         "https://web.telegram.org",
-        "https://telegram.org"
+        "https://telegram.org",
+        "https://telegram.me",
+        "https://t.me",
+        "tg://",
+        "*"  # Telegram WebApp может использовать различные origins
     ]
 else:
     # Для разработки разрешаем localhost
@@ -62,7 +66,10 @@ else:
         "http://localhost:8080",
         "http://127.0.0.1:8000",
         "https://pw-new.club",
-        "https://www.pw-new.club"
+        "https://www.pw-new.club",
+        "https://web.telegram.org",
+        "https://telegram.org",
+        "*"  # Для разработки разрешаем все
     ]
 
 # Добавляем middleware в правильном порядке (последний добавленный выполняется первым)
@@ -90,7 +97,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 # 3. Rate limiting middleware
 app.add_middleware(
     RateLimitMiddleware,
-    calls=100,  # 100 запросов
+    calls=200,  # 200 запросов (увеличено для Telegram WebApp)
     period=60   # за 60 секунд
 )
 
