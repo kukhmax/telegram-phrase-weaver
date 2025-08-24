@@ -110,8 +110,11 @@ async function authenticateUser() {
                            window.location.hostname === '127.0.0.1' || 
                            window.location.protocol === 'file:') &&
                            !window.location.hostname.includes('pw-new.club');
-
-        if (isDebugMode) {
+        
+        // Временно используем debug режим для продакшена пока не настроен Telegram Bot
+        const forceDebugMode = window.location.hostname.includes('pw-new.club');
+        
+        if (isDebugMode || forceDebugMode) {
             // Режим отладки - используем debug endpoint
             console.log('Running in debug mode, using debug authentication...');
             const response = await request('/auth/telegram/debug', 'POST');
