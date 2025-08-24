@@ -419,13 +419,26 @@ async function initializeApp() {
         // Если токена нет или он невалиден, авторизуемся
         if (!localStorage.getItem('auth_token')) {
             console.log('Authenticating user...');
-            await api.authenticateUser();
+            try {
+                await api.authenticateUser();
+                console.log('Authentication completed successfully');
+            } catch (authError) {
+                console.error('Authentication failed:', authError);
+                throw new Error(`Ошибка аутентификации: ${authError.message}`);
+            }
         }
 
         // Информация о пользователе скрыта
 
         // Загружаем данные пользователя
-        await refreshDecks();
+        try {
+            await refreshDecks();
+            console.log('Decks loaded successfully');
+        } catch (decksError) {
+            console.error('Failed to load decks:', decksError);
+            // Не прерываем инициализацию, просто показываем ошибку
+            showError(`Не удалось загрузить колоды: ${decksError.message}`);
+        }
 
         // Показываем главное окно
         showWindow('main-window');
@@ -434,7 +447,24 @@ async function initializeApp() {
         
     } catch (error) {
         console.error('App initialization failed:', error);
-        showError(`Ошибка инициализации: ${error.message}`);
+        console.error('Error stack:', error.stack);
+        
+        // Показываем детальную ошибку пользователю
+        const errorMessage = error.message || 'Неизвестная ошибка';
+        showError(`Ошибка инициализации: ${errorMessage}`);
+        
+        // Добавляем кнопку "Попробовать снова"
+        const errorContainer = document.querySelector('.error-message');
+        if (errorContainer && !errorContainer.querySelector('.retry-btn')) {
+            const retryBtn = document.createElement('button');
+            retryBtn.textContent = 'Попробовать снова';
+            retryBtn.className = 'retry-btn';
+            retryBtn.style.marginTop = '10px';
+            retryBtn.onclick = () => {
+                location.reload();
+            };
+            errorContainer.appendChild(retryBtn);
+        }
     }
 }
 
