@@ -74,12 +74,7 @@ async def enrich_phrase(phrase: str, keyword: str, lang_code: str, target_lang: 
     ai_data = await generate_examples_with_ai(phrase, keyword, language_full, target_lang_full)
     if not ai_data: 
         logging.error("Не удалось получить данные от AI")
-        return {"error": "AI сервис недоступен"}
-    
-    # Проверяем, есть ли ошибка в ответе AI
-    if isinstance(ai_data, dict) and "error" in ai_data:
-        logging.error(f"Ошибка от AI сервиса: {ai_data['error']}")
-        return ai_data  # Возвращаем ошибку как есть
+        return None
 
     image_query = ai_data.get("image_query", keyword)
     original_phrase_data = ai_data.get("original_phrase", {})

@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from app.database import get_db
@@ -10,32 +9,6 @@ from datetime import datetime
 from app import schemas 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-# Создаем схему зависимости для получения текущего пользователя
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
-
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
-    """Get current user from JWT token"""
-    try:
-        payload = auth_service.verify_access_token(token)
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    except HTTPException as e:
-        raise e
-
-    user = db.get(User, int(user_id))
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="User not found"
-        )
-    
-    return user
 
 class InitData(BaseModel):
     init_data: str
@@ -88,11 +61,3 @@ def telegram_auth_debug(db: Session = Depends(get_db)):
         "token_type": "bearer",
         "user": user_schema.model_dump()
     }
-
-@router.get("/me")
-def get_current_user_info(
-    current_user: User = Depends(get_current_user)
-):
-    """Get current user information"""
-    user_schema = schemas.User.model_validate(current_user)
-    return user_schema.model_dump()

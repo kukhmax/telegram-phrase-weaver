@@ -29,27 +29,22 @@ def init_db():
         engine = create_engine(sync_url, echo=True)
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         
-        # Async engine for FastAPI endpoints (только для PostgreSQL)
-        if not database_url.startswith("sqlite"):
-            async_url = database_url
-            if async_url.startswith("postgres://"):
-                async_url = async_url.replace("postgres://", "postgresql+asyncpg://", 1)
-            elif async_url.startswith("postgresql://"):
-                async_url = async_url.replace("postgresql://", "postgresql+asyncpg://")
-            elif not async_url.startswith("postgresql+asyncpg://"):
-                async_url = async_url.replace("postgresql+psycopg://", "postgresql+asyncpg://")
-            
-            async_engine = create_async_engine(async_url, echo=True)
-            AsyncSessionLocal = async_sessionmaker(
-                bind=async_engine,
-                class_=AsyncSession,
-                autocommit=False,
-                autoflush=False
-            )
-        else:
-            # Для SQLite не создаем асинхронный движок
-            async_engine = None
-            AsyncSessionLocal = None
+        # Async engine for FastAPI endpoints
+        async_url = database_url
+        if async_url.startswith("postgres://"):
+            async_url = async_url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif async_url.startswith("postgresql://"):
+            async_url = async_url.replace("postgresql://", "postgresql+asyncpg://")
+        elif not async_url.startswith("postgresql+asyncpg://"):
+            async_url = async_url.replace("postgresql+psycopg://", "postgresql+asyncpg://")
+        
+        async_engine = create_async_engine(async_url, echo=True)
+        AsyncSessionLocal = async_sessionmaker(
+            bind=async_engine,
+            class_=AsyncSession,
+            autocommit=False,
+            autoflush=False
+        )
 
 # Sync version for migrations
 def get_db():
