@@ -10,7 +10,7 @@ aiohttp==3.10.5
 gtts==2.5.3
 deep-translator==1.11.4
 google-generativeai==0.8.2
-pexels-api  # For Pexels API
+python-unsplash  # Latest for Unsplash
 apscheduler==3.10.4
 alembic  # Latest
 pydantic
@@ -19,5 +19,5 @@ pyjwt
 cryptography  # Для AES in auth
 httpx  # Для Telegram API calls
 python-dotenv  # For .env file support
-requests  # For HTTP requests
+python-unsplash  # For Unsplash API
 psycopg2-binary

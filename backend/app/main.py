@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from alembic import command, config as alembic_config
 from app.core.config import get_settings
-from app.routers import auth, cards, decks, training_stats, telegram
+from app.routers import auth, cards, decks
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.services.notifications import send_daily_reminders  # TODO: implement
@@ -34,8 +34,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="PhraseWeaver API")
 
 origins = [
-    "https://pw-new.club",  # Продакшн домен
-    "https://www.pw-new.club",  # Продакшн домен с www
+    "https://frontend-q7zq.onrender.com", # URL вашего фронтенда на Render
     # "http://localhost",
     # "http://localhost:8080", # Если вы вдруг запускаете фронтенд локально на другом порту
 ]
@@ -63,8 +62,6 @@ def health_check():
 app.include_router(auth.router)
 app.include_router(cards.router)
 app.include_router(decks.router)
-app.include_router(training_stats.router)
-app.include_router(telegram.router)
 
 # Статические файлы фронтенда
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
