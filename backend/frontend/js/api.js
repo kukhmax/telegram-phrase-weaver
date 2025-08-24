@@ -151,28 +151,28 @@ async function authenticateUser() {
 export const api = {
     // Авторизация
     authenticateUser,
-    getCurrentUser: () => request('/auth/me'),
+    getCurrentUser: () => request('/api/auth/me'),
     
     // Методы для работы с колодами
-    getDecks: () => request('/decks/'),
-    createDeck: (deckData) => request('/decks/', 'POST', deckData),
-    deleteDeck: (deckId) => request(`/decks/${deckId}`, 'DELETE'),
+    getDecks: () => request('/api/decks/'),
+    createDeck: (deckData) => request('/api/decks/', 'POST', deckData),
+    deleteDeck: (deckId) => request(`/api/decks/${deckId}`, 'DELETE'),
     
     // Методы для работы с карточками
-    getDeckCards: (deckId) => request(`/cards/deck/${deckId}`, 'GET'),
-    saveCard: (cardData) => request('/cards/save', 'POST', cardData),
-    enrichPhrase: (enrichData) => request('/cards/enrich', 'POST', enrichData),
-    generateAudio: (audioData) => request('/cards/generate-audio', 'POST', audioData),
-    updateCardStatus: (statusData) => request('/cards/update-status', 'POST', statusData),
-    deleteCard: (cardId) => request(`/cards/delete/${cardId}`, 'DELETE'),
+    getDeckCards: (deckId) => request(`/api/cards/deck/${deckId}`, 'GET'),
+    saveCard: (cardData) => request('/api/cards/save', 'POST', cardData),
+    enrichPhrase: (enrichData) => request('/api/cards/enrich', 'POST', enrichData),
+    generateAudio: (audioData) => request('/api/cards/generate-audio', 'POST', audioData),
+    updateCardStatus: (statusData) => request('/api/cards/update-status', 'POST', statusData),
+    deleteCard: (cardId) => request(`/api/cards/delete/${cardId}`, 'DELETE'),
     
     // Отладочные методы
-    authenticateDebug: () => request('/auth/telegram/debug', 'POST'),
+    authenticateDebug: () => request('/api/auth/telegram/debug', 'POST'),
     
     // Методы для работы со статистикой тренировок
-    getDailyTrainingStats: (days = 7) => request(`/training-stats/daily?days=${days}`, 'GET'),
+    getDailyTrainingStats: (days = 7) => request(`/api/training-stats/daily?days=${days}`, 'GET'),
     recordTrainingSession: (cardsStudied, sessionDuration = 0) => 
-        request('/training-stats/record', 'POST', { 
+        request('/api/training-stats/record', 'POST', { 
             cards_studied: cardsStudied, 
             session_duration: sessionDuration 
         })
