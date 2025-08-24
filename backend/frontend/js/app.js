@@ -447,7 +447,9 @@ async function refreshDecks() {
     try {
         showLoading(t('loading_decks'));
         const decks = await api.getDecks();
-        renderDecks(decks);
+        // Проверяем что decks не null и является массивом
+        const safeDecks = Array.isArray(decks) ? decks : [];
+        renderDecks(safeDecks);
     } catch (error) {
         console.error("Failed to refresh decks:", error);
         showError(error.message || 'Не удалось загрузить колоды');
