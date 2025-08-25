@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-User Test - Phrase Weaver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .user-info {
+            border-left-color: #28a745;
+            background: #f8fff8;
+        }
+        .data-info {
+            border-left-color: #ffc107;
+            background: #fffef8;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .create-btn {
+            background: #28a745;
+        }
+        .create-btn:hover {
+            background: #1e7e34;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .stat-card {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Multi-User System Test</h1>
+    <p>Эта страница тестирует изоляцию данных между пользователями</p>
+    
+    <div class="test-section user-info">
+        <h3>👤 Информация о пользователе</h3>
+        <div id="user-info">Загрузка...</div>
+        <button onclick="loadUserInfo()">Обновить информацию</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>📊 Статистика данных</h3>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="decks-count">-</div>
+                <div class="stat-label">Колоды</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="cards-count">-</div>
+                <div class="stat-label">Карточки</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="user-id">-</div>
+                <div class="stat-label">User ID</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="telegram-id">-</div>
+                <div class="stat-label">Telegram ID</div>
+            </div>
+        </div>
+        <button onclick="loadStats()">Обновить статистику</button>
+    </div>
+    
+    <div class="test-section data-info">
+        <h3>📚 Мои колоды</h3>
+        <div id="decks-list">Загрузка...</div>
+        <button onclick="loadDecks()">Загрузить колоды</button>
+        <button class="create-btn" onclick="createTestDeck()">Создать тестовую колоду</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>🔧 Тестовые действия</h3>
+        <button onclick="testAuthentication()">Тест аутентификации</button>
+        <button onclick="testDataIsolation()">Тест изоляции данных</button>
+        <button onclick="clearUserData()">Очистить данные пользователя</button>
+        <div id="test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>📝 Логи</h3>
+        <div id="logs"><pre>Логи появятся здесь...</pre></div>
+        <button onclick="clearLogs()">Очистить логи</button>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://pw-new.club';
+        let authToken = null;
+        let currentUser = null;
+        const logs = [];
+        
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logs.push(`[${timestamp}] ${message}`);
+            updateLogs();
+        }
+        
+        function updateLogs() {
+            document.getElementById('logs').innerHTML = 
+                '<pre>' + logs.slice(-20).join('\n') + '</pre>';
+        }
+        
+        function clearLogs() {
+            logs.length = 0;
+            updateLogs();
+        }
+        
+        async function request(endpoint, method = 'GET', body = null) {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            
+            const config = {
+                method,
+                headers
+            };
+            
+            if (body) {
+                config.body = JSON.stringify(body);
+            }
+            
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return await response.json();
+        }
+        
+        async function authenticate() {
+            try {
+                addLog('Начинаем аутентификацию...');
+                const response = await request('/api/auth/telegram/debug', 'POST');
+                authToken = response.access_token;
+                currentUser = response.user;
+                addLog(`Аутентификация успешна: ${currentUser.first_name} (ID: ${currentUser.id})`);
+                return response;
+            } catch (error) {
+                addLog(`Ошибка аутентификации: ${error.message}`);
+                throw error;
+            }
+        }
+        
+        async function loadUserInfo() {
+            try {
+                if (!authToken) {
+                    await authenticate();
+                }
+                
+                const userInfo = document.getElementById('user-info');
+                userInfo.innerHTML = `
+                    <strong>Имя:</strong> ${currentUser.first_name}<br>
+                    <strong>Username:</strong> ${currentUser.username}<br>
+                    <strong>ID:</strong> ${currentUser.id}<br>
+                    <strong>Telegram ID:</strong> ${currentUser.telegram_id}<br>
+                    <strong>Последняя активность:</strong> ${new Date(currentUser.last_active).toLocaleString()}<br>
+                    <strong>User Agent:</strong> ${navigator.userAgent}
+                `;
+                
+                document.getElementById('user-id').textContent = currentUser.id;
+                document.getElementById('telegram-id').textContent = currentUser.telegram_id;
+                
+                addLog('Информация о пользователе загружена');
+            } catch (error) {
+                document.getElementById('user-info').innerHTML = 
+                    `<div class="error">Ошибка: ${error.message}</div>`;
+                addLog(`Ошибка загрузки пользователя: ${error.message}`);
+            }
+        }
+        
+        async function loadDecks() {
+            try {
+                if (!authToken) {
+                    await authenticate();
+                }
+                
+                const decks = await request('/api/decks/');
+                const decksList = document.getElementById('decks-list');
+                
+                if (decks.length === 0) {
+                    decksList.innerHTML = '<p>У вас пока нет колод. Создайте первую!</p>';
+                } else {
+                    decksList.innerHTML = decks.map(deck => `
+                        <div style="background: #f8f9fa; padding: 10px; margin: 5px 0; border-radius: 4px;">
+                            <strong>${deck.name}</strong> (${deck.lang_from} → ${deck.lang_to})<br>
+                            <small>Карточек: ${deck.cards_count} | ID: ${deck.id}</small>
+                        </div>
+                    `).join('');
+                }
+                
+                document.getElementById('decks-count').textContent = decks.length;
+                addLog(`Загружено колод: ${decks.length}`);
+            } catch (error) {
+                document.getElementById('decks-list').innerHTML = 
+                    `<div class="error">Ошибка: ${error.message}</div>`;
+                addLog(`Ошибка загрузки колод: ${error.message}`);
+            }
+        }
+        
+        async function loadStats() {
+            try {
+                await loadUserInfo();
+                await loadDecks();
+                
+                // Подсчитаем общее количество карточек
+                const decks = await request('/api/decks/');
+                const totalCards = decks.reduce((sum, deck) => sum + deck.cards_count, 0);
+                document.getElementById('cards-count').textContent = totalCards;
+                
+                addLog('Статистика обновлена');
+            } catch (error) {
+                addLog(`Ошибка загрузки статистики: ${error.message}`);
+            }
+        }
+        
+        async function createTestDeck() {
+            try {
+                if (!authToken) {
+                    await authenticate();
+                }
+                
+                const deckName = `Тестовая колода ${new Date().toLocaleTimeString()}`;
+                const newDeck = await request('/api/decks/', 'POST', {
+                    name: deckName,
+                    description: 'Автоматически созданная тестовая колода',
+                    lang_from: 'en',
+                    lang_to: 'ru'
+                });
+                
+                addLog(`Создана колода: ${newDeck.name} (ID: ${newDeck.id})`);
+                await loadDecks();
+            } catch (error) {
+                addLog(`Ошибка создания колоды: ${error.message}`);
+            }
+        }
+        
+        async function testAuthentication() {
+            try {
+                addLog('=== ТЕСТ АУТЕНТИФИКАЦИИ ===');
+                
+                // Очищаем токен
+                authToken = null;
+                currentUser = null;
+                addLog('Токен очищен');
+                
+                // Пробуем аутентификацию
+                await authenticate();
+                addLog('✅ Аутентификация прошла успешно');
+                
+                // Проверяем доступ к данным
+                const decks = await request('/api/decks/');
+                addLog(`✅ Доступ к данным: найдено ${decks.length} колод`);
+                
+                document.getElementById('test-results').innerHTML = 
+                    '<div style="color: green;">✅ Тест аутентификации пройден</div>';
+            } catch (error) {
+                addLog(`❌ Тест аутентификации провален: ${error.message}`);
+                document.getElementById('test-results').innerHTML = 
+                    `<div style="color: red;">❌ Тест провален: ${error.message}</div>`;
+            }
+        }
+        
+        async function testDataIsolation() {
+            try {
+                addLog('=== ТЕСТ ИЗОЛЯЦИИ ДАННЫХ ===');
+                
+                if (!authToken) {
+                    await authenticate();
+                }
+                
+                // Получаем данные текущего пользователя
+                const myDecks = await request('/api/decks/');
+                addLog(`Мои колоды: ${myDecks.length}`);
+                
+                // Проверяем, что все колоды принадлежат текущему пользователю
+                const allBelongToMe = myDecks.every(deck => deck.user_id === currentUser.id);
+                
+                if (allBelongToMe) {
+                    addLog('✅ Все колоды принадлежат текущему пользователю');
+                    document.getElementById('test-results').innerHTML = 
+                        '<div style="color: green;">✅ Тест изоляции данных пройден</div>';
+                } else {
+                    addLog('❌ Найдены колоды других пользователей!');
+                    document.getElementById('test-results').innerHTML = 
+                        '<div style="color: red;">❌ Нарушена изоляция данных!</div>';
+                }
+            } catch (error) {
+                addLog(`❌ Тест изоляции провален: ${error.message}`);
+                document.getElementById('test-results').innerHTML = 
+                    `<div style="color: red;">❌ Тест провален: ${error.message}</div>`;
+            }
+        }
+        
+        async function clearUserData() {
+            if (confirm('Вы уверены, что хотите удалить все свои колоды?')) {
+                try {
+                    if (!authToken) {
+                        await authenticate();
+                    }
+                    
+                    const decks = await request('/api/decks/');
+                    
+                    for (const deck of decks) {
+                        await request(`/api/decks/${deck.id}`, 'DELETE');
+                        addLog(`Удалена колода: ${deck.name}`);
+                    }
+                    
+                    addLog('✅ Все данные пользователя очищены');
+                    await loadStats();
+                } catch (error) {
+                    addLog(`❌ Ошибка очистки данных: ${error.message}`);
+                }
+            }
+        }
+        
+        // Автоматическая инициализация
+        window.addEventListener('DOMContentLoaded', async () => {
+            addLog('Страница загружена');
+            addLog(`User Agent: ${navigator.userAgent}`);
+            
+            try {
+                await loadStats();
+            } catch (error) {
+                addLog(`Ошибка инициализации: ${error.message}`);
+            }
+        });
+    </script>
+</body>
+</html>
