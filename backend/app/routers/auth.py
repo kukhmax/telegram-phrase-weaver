@@ -48,7 +48,8 @@ def telegram_auth_debug(request: Request, db: Session = Depends(get_db)):
     # Создаем уникальный Telegram ID на основе User Agent
     # Это обеспечит, что каждый пользователь получит свой уникальный профиль
     unique_string = f"debug_{user_agent}"
-    telegram_id = int(hashlib.md5(unique_string.encode()).hexdigest()[:8], 16)
+    # Используем только первые 7 символов хеша для получения числа в диапазоне INTEGER
+    telegram_id = int(hashlib.md5(unique_string.encode()).hexdigest()[:7], 16) % 2000000000
     
     print(f"DEBUG AUTH: User Agent: {user_agent}")
     print(f"DEBUG AUTH: Generated Telegram ID: {telegram_id}")
