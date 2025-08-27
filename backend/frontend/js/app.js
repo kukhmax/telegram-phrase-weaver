@@ -577,6 +577,11 @@ window.showStatsModal = async function() {
         // Получаем статистику
         const stats = await getStatistics();
         
+        // Добавляем статистику текущей сессии к общей статистике
+        stats.againCards += sessionRepeatStats.againCards;
+        stats.goodCards += sessionRepeatStats.goodCards;
+        stats.easyCards += sessionRepeatStats.easyCards;
+        
         // Восстанавливаем оригинальное содержимое
         modalBody.innerHTML = originalContent;
         
@@ -1057,6 +1062,13 @@ let trainingData = {
     cardsStudiedInSession: 0
 };
 
+// Глобальная переменная для отслеживания статистики повторов в текущей сессии
+let sessionRepeatStats = {
+    againCards: 0,
+    goodCards: 0,
+    easyCards: 0
+};
+
 // Функция запуска тренировки
 window.startTraining = async function(deckId) {
     try {
@@ -1073,6 +1085,13 @@ window.startTraining = async function(deckId) {
         // Перемешиваем карточки и берем максимум 10
         const shuffledCards = response.cards.sort(() => Math.random() - 0.5);
         const selectedCards = shuffledCards.slice(0, Math.min(10, shuffledCards.length));
+        
+        // Сбрасываем статистику повторов для новой сессии
+        sessionRepeatStats = {
+            againCards: 0,
+            goodCards: 0,
+            easyCards: 0
+        };
         
         // Инициализируем данные тренировки
         trainingData = {
@@ -1242,6 +1261,17 @@ document.getElementById('easy-btn').addEventListener('click', async () => {
     await handleCardRating('easy');
 });
 
+// Функция для обновления статистики повторов в реальном времени
+function updateRepeatStatsDisplay() {
+    // Обновляем отображение статистики повторов, если модальное окно открыто
+    const statsModal = document.getElementById('stats-modal');
+    if (statsModal && !statsModal.classList.contains('hidden')) {
+        document.getElementById('again-cards-stat').textContent = sessionRepeatStats.againCards;
+        document.getElementById('good-cards-stat').textContent = sessionRepeatStats.goodCards;
+        document.getElementById('easy-cards-stat').textContent = sessionRepeatStats.easyCards;
+    }
+}
+
 // Функция обработки оценки карточки
 async function handleCardRating(rating) {
     const currentCard = trainingData.cards[trainingData.currentIndex];
@@ -1259,6 +1289,22 @@ async function handleCardRating(rating) {
         if (trainingData.deckInfo && response.deck_due_count !== undefined) {
             trainingData.deckInfo.due_count = response.deck_due_count;
         }
+        
+        // Обновляем статистику повторов в зависимости от рейтинга
+        switch (rating) {
+            case 'again':
+                sessionRepeatStats.againCards++;
+                break;
+            case 'good':
+                sessionRepeatStats.goodCards++;
+                break;
+            case 'easy':
+                sessionRepeatStats.easyCards++;
+                break;
+        }
+        
+        // Обновляем отображение статистики в реальном времени
+        updateRepeatStatsDisplay();
         
         // Увеличиваем счетчик изученных карточек в сессии
         trainingData.cardsStudiedInSession++;
