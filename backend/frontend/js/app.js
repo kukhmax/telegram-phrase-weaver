@@ -1294,17 +1294,23 @@ async function handleCardRating(rating) {
         }
         
         // Обновляем статистику повторов в зависимости от рейтинга
+        console.log(`Before rating ${rating}:`, JSON.stringify(sessionRepeatStats));
         switch (rating) {
             case 'again':
                 sessionRepeatStats.againCards++;
+                console.log('Incremented againCards to', sessionRepeatStats.againCards);
                 break;
             case 'good':
                 sessionRepeatStats.goodCards++;
+                console.log('Incremented goodCards to', sessionRepeatStats.goodCards);
                 break;
             case 'easy':
                 sessionRepeatStats.easyCards++;
+                console.log('Incremented easyCards to', sessionRepeatStats.easyCards);
                 break;
         }
+        
+        console.log(`After rating ${rating}:`, JSON.stringify(sessionRepeatStats));
         
         // Обновляем отображение статистики в реальном времени
         updateRepeatStatsDisplay();
