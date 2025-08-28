@@ -973,6 +973,12 @@ document.addEventListener('click', (event) => {
     document.getElementById('back-to-main-btn').addEventListener('click', () => {
         showWindow('main-window');
     });
+    
+    // Обработчик кнопки "Назад" из окна генерации карточек
+    document.getElementById('back-from-generate-btn').addEventListener('click', async () => {
+        await refreshDecks(); // Обновляем список колод
+        showWindow('main-window');
+    });
 
     // Обработчик кнопки "Выделить все"
 const selectAllBtn = document.getElementById('select-all-btn');
