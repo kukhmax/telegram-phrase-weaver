@@ -228,7 +228,14 @@ function createSavedCard(card, deck) {
     // Подготавливаем изображение
     let imageHtml = '';
     if (card.image_path && card.image_path.trim() !== '') {
-        const webImagePath = card.image_path.replace('frontend/', '/static/');
+        let webImagePath;
+        if (card.image_path.startsWith('assets/')) {
+            webImagePath = `/static/${card.image_path}`;
+        } else if (card.image_path.startsWith('/static/')) {
+            webImagePath = card.image_path;
+        } else {
+            webImagePath = card.image_path.replace('frontend/', '/static/');
+        }
         imageHtml = `
             <div class="card-image-container">
                 <img src="${webImagePath}" alt="Keyword Image" class="card-image">
@@ -412,13 +419,26 @@ async function initializeApp() {
         // Если токена нет или он невалиден, авторизуемся
         if (!localStorage.getItem('auth_token')) {
             console.log('Authenticating user...');
-            await api.authenticateUser();
+            try {
+                await api.authenticateUser();
+                console.log('Authentication completed successfully');
+            } catch (authError) {
+                console.error('Authentication failed:', authError);
+                throw new Error(`Ошибка аутентификации: ${authError.message}`);
+            }
         }
 
         // Информация о пользователе скрыта
 
         // Загружаем данные пользователя
-        await refreshDecks();
+        try {
+            await refreshDecks();
+            console.log('Decks loaded successfully');
+        } catch (decksError) {
+            console.error('Failed to load decks:', decksError);
+            // Не прерываем инициализацию, просто показываем ошибку
+            showError(`Не удалось загрузить колоды: ${decksError.message}`);
+        }
 
         // Показываем главное окно
         showWindow('main-window');
@@ -427,7 +447,24 @@ async function initializeApp() {
         
     } catch (error) {
         console.error('App initialization failed:', error);
-        showError(`Ошибка инициализации: ${error.message}`);
+        console.error('Error stack:', error.stack);
+        
+        // Показываем детальную ошибку пользователю
+        const errorMessage = error.message || 'Неизвестная ошибка';
+        showError(`Ошибка инициализации: ${errorMessage}`);
+        
+        // Добавляем кнопку "Попробовать снова"
+        const errorContainer = document.querySelector('.error-message');
+        if (errorContainer && !errorContainer.querySelector('.retry-btn')) {
+            const retryBtn = document.createElement('button');
+            retryBtn.textContent = 'Попробовать снова';
+            retryBtn.className = 'retry-btn';
+            retryBtn.style.marginTop = '10px';
+            retryBtn.onclick = () => {
+                location.reload();
+            };
+            errorContainer.appendChild(retryBtn);
+        }
     }
 }
 
@@ -539,6 +576,11 @@ window.showStatsModal = async function() {
         
         // Получаем статистику
         const stats = await getStatistics();
+        
+        // Добавляем статистику текущей сессии к общей статистике
+        stats.againCards += sessionRepeatStats.againCards;
+        stats.goodCards += sessionRepeatStats.goodCards;
+        stats.easyCards += sessionRepeatStats.easyCards;
         
         // Восстанавливаем оригинальное содержимое
         modalBody.innerHTML = originalContent;
@@ -931,6 +973,12 @@ document.addEventListener('click', (event) => {
     document.getElementById('back-to-main-btn').addEventListener('click', () => {
         showWindow('main-window');
     });
+    
+    // Обработчик кнопки "Назад" из окна генерации карточек
+    document.getElementById('back-from-generate-btn').addEventListener('click', async () => {
+        await refreshDecks(); // Обновляем список колод
+        showWindow('main-window');
+    });
 
     // Обработчик кнопки "Выделить все"
 const selectAllBtn = document.getElementById('select-all-btn');
@@ -989,8 +1037,15 @@ function showButtonLoading(show) {
 function updatePhraseImage(imagePath) {
     const imageElement = document.getElementById('phrase-image');
     if (imagePath && imagePath.trim() !== '') {
-        // Конвертируем локальный путь в веб-URL
-        const webImagePath = imagePath.replace('frontend/', '/static/');
+        // Формируем правильный путь для статических файлов
+        let webImagePath;
+        if (imagePath.startsWith('assets/')) {
+            webImagePath = `/static/${imagePath}`;
+        } else if (imagePath.startsWith('/static/')) {
+            webImagePath = imagePath;
+        } else {
+            webImagePath = imagePath.replace('frontend/', '/static/');
+        }
         imageElement.src = webImagePath;
         imageElement.alt = 'Keyword Image';
         console.log('Updated phrase image:', webImagePath);
@@ -1013,6 +1068,13 @@ let trainingData = {
     cardsStudiedInSession: 0
 };
 
+// Глобальная переменная для отслеживания статистики повторов в текущей сессии
+let sessionRepeatStats = {
+    againCards: 0,
+    goodCards: 0,
+    easyCards: 0
+};
+
 // Функция запуска тренировки
 window.startTraining = async function(deckId) {
     try {
@@ -1029,6 +1091,13 @@ window.startTraining = async function(deckId) {
         // Перемешиваем карточки и берем максимум 10
         const shuffledCards = response.cards.sort(() => Math.random() - 0.5);
         const selectedCards = shuffledCards.slice(0, Math.min(10, shuffledCards.length));
+        
+        // Сбрасываем статистику повторов для новой сессии
+        sessionRepeatStats = {
+            againCards: 0,
+            goodCards: 0,
+            easyCards: 0
+        };
         
         // Инициализируем данные тренировки
         trainingData = {
@@ -1198,6 +1267,20 @@ document.getElementById('easy-btn').addEventListener('click', async () => {
     await handleCardRating('easy');
 });
 
+// Функция для обновления статистики повторов в реальном времени
+function updateRepeatStatsDisplay() {
+    // Обновляем отображение статистики повторов в DOM элементах
+    const againStat = document.getElementById('again-cards-stat');
+    const goodStat = document.getElementById('good-cards-stat');
+    const easyStat = document.getElementById('easy-cards-stat');
+    
+    if (againStat) againStat.textContent = sessionRepeatStats.againCards;
+    if (goodStat) goodStat.textContent = sessionRepeatStats.goodCards;
+    if (easyStat) easyStat.textContent = sessionRepeatStats.easyCards;
+    
+    console.log('Updated repeat stats:', sessionRepeatStats);
+}
+
 // Функция обработки оценки карточки
 async function handleCardRating(rating) {
     const currentCard = trainingData.cards[trainingData.currentIndex];
@@ -1215,6 +1298,28 @@ async function handleCardRating(rating) {
         if (trainingData.deckInfo && response.deck_due_count !== undefined) {
             trainingData.deckInfo.due_count = response.deck_due_count;
         }
+        
+        // Обновляем статистику повторов в зависимости от рейтинга
+        console.log(`Before rating ${rating}:`, JSON.stringify(sessionRepeatStats));
+        switch (rating) {
+            case 'again':
+                sessionRepeatStats.againCards++;
+                console.log('Incremented againCards to', sessionRepeatStats.againCards);
+                break;
+            case 'good':
+                sessionRepeatStats.goodCards++;
+                console.log('Incremented goodCards to', sessionRepeatStats.goodCards);
+                break;
+            case 'easy':
+                sessionRepeatStats.easyCards++;
+                console.log('Incremented easyCards to', sessionRepeatStats.easyCards);
+                break;
+        }
+        
+        console.log(`After rating ${rating}:`, JSON.stringify(sessionRepeatStats));
+        
+        // Обновляем отображение статистики в реальном времени
+        updateRepeatStatsDisplay();
         
         // Увеличиваем счетчик изученных карточек в сессии
         trainingData.cardsStudiedInSession++;
