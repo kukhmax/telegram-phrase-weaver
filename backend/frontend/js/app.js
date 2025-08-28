@@ -1263,13 +1263,16 @@ document.getElementById('easy-btn').addEventListener('click', async () => {
 
 // Функция для обновления статистики повторов в реальном времени
 function updateRepeatStatsDisplay() {
-    // Обновляем отображение статистики повторов, если модальное окно открыто
-    const statsModal = document.getElementById('stats-modal');
-    if (statsModal && !statsModal.classList.contains('hidden')) {
-        document.getElementById('again-cards-stat').textContent = sessionRepeatStats.againCards;
-        document.getElementById('good-cards-stat').textContent = sessionRepeatStats.goodCards;
-        document.getElementById('easy-cards-stat').textContent = sessionRepeatStats.easyCards;
-    }
+    // Обновляем отображение статистики повторов в DOM элементах
+    const againStat = document.getElementById('again-cards-stat');
+    const goodStat = document.getElementById('good-cards-stat');
+    const easyStat = document.getElementById('easy-cards-stat');
+    
+    if (againStat) againStat.textContent = sessionRepeatStats.againCards;
+    if (goodStat) goodStat.textContent = sessionRepeatStats.goodCards;
+    if (easyStat) easyStat.textContent = sessionRepeatStats.easyCards;
+    
+    console.log('Updated repeat stats:', sessionRepeatStats);
 }
 
 // Функция обработки оценки карточки
