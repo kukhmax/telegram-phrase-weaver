@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy.sql import func
 from app.database import Base
 
 class Deck(Base):
@@ -11,3 +12,4 @@ class Deck(Base):
     lang_to = Column(String)
     cards_count = Column(Integer, default=0)
     due_count = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

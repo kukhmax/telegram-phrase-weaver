@@ -47,9 +47,13 @@ def get_decks(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Gets all decks for the current user.
+    Gets all decks for the current user, ordered by creation date (newest first).
     """
-    result = db.execute(select(Deck).where(Deck.user_id == current_user.id))
+    result = db.execute(
+        select(Deck)
+        .where(Deck.user_id == current_user.id)
+        .order_by(Deck.created_at.desc())
+    )
     decks = result.scalars().all()
     return decks
 

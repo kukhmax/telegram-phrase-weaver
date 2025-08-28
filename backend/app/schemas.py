@@ -133,6 +133,7 @@ class Deck(DeckBase):
     user_id: int
     cards_count: int
     due_count: int
+    created_at: datetime
 
 # ==================
 #       User
