@@ -983,8 +983,18 @@ document.addEventListener('click', (event) => {
                     
                     // Автоматически определяем ключевое слово
                     let keyword = '';
-                    if (currentGeneratedData?.phrases?.[index]?.keyword) {
-                        keyword = currentGeneratedData.phrases[index].keyword;
+                    let gapFill = null;
+                    
+                    // Получаем данные из ответа ИИ
+                    if (index === 0 && currentGeneratedData?.original_phrase) {
+                        // Оригинальная фраза
+                        keyword = findKeywordInPhrase(originalText) || '';
+                        gapFill = currentGeneratedData.original_phrase.gap_fill || null;
+                    } else if (currentGeneratedData?.additional_examples?.[index - 1]) {
+                        // Дополнительные примеры (индекс сдвинут на -1)
+                        const example = currentGeneratedData.additional_examples[index - 1];
+                        keyword = findKeywordInPhrase(originalText) || '';
+                        gapFill = example.gap_fill || null;
                     } else {
                         keyword = findKeywordInPhrase(originalText) || '';
                     }
@@ -993,15 +1003,17 @@ document.addEventListener('click', (event) => {
                         deck_id: currentDeckId,
                         front_text: originalText,
                         back_text: translationText,
-                        keyword: keyword || null, // Добавляем ключевое слово
+                        keyword: keyword || null,
+                        gap_fill: gapFill,
                         difficulty: 1,
                         next_review: new Date().toISOString(),
                         image_path: currentGeneratedData?.image_path || null
                     };
                     
-                    console.log('💾 Сохраняем карточку с ключевым словом:', {
+                    console.log('💾 Сохраняем карточку с gap_fill:', {
                         phrase: originalText,
                         keyword: keyword,
+                        gap_fill: gapFill,
                         cardData: cardData
                     });
                     phrasesToSave.push(cardData);
@@ -1248,8 +1260,18 @@ function loadTrainingCard() {
         answerInput.setAttribute('data-reverse', 'true');
         currentCard.expectedAnswer = currentCard.front_text;
     } else {
-        // Заполнение пропусков - показываем фразу с пропуском вместо ключевого слова
-        const phraseWithGap = createPhraseWithGap(currentCard.front_text, currentCard.keyword);
+        // Заполнение пропусков - используем готовую фразу с пропуском из ИИ или создаем на лету
+        let phraseWithGap;
+        if (currentCard.gap_fill) {
+            // Используем готовую фразу с пропуском от ИИ
+            phraseWithGap = currentCard.gap_fill.replace(/_____/g, '<span class="word-gap">_____</span>');
+            console.log('✅ Используем готовую gap_fill фразу:', phraseWithGap);
+        } else {
+            // Fallback: создаем пропуск на лету
+            phraseWithGap = createPhraseWithGap(currentCard.front_text, currentCard.keyword);
+            console.log('⚠️ Создаем пропуск на лету (нет gap_fill):', phraseWithGap);
+        }
+        
         phraseElement.innerHTML = phraseWithGap;
         answerInput.placeholder = t('enter_missing_word');
         answerInput.setAttribute('data-reverse', 'false');

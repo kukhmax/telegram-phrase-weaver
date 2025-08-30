@@ -71,6 +71,7 @@ class CardService:
                     "front_text": card.phrase,
                     "back_text": card.translation,
                     "keyword": card.keyword,
+                    "gap_fill": card.gap_fill,
                     "difficulty": 1,  # Пока используем значение по умолчанию
                     "next_review": card.due_date.isoformat() if card.due_date else None,
                     "image_path": card.image_path
@@ -117,7 +118,8 @@ class CardService:
                 deck_id=card_data.deck_id,
                 phrase=card_data.front_text,
                 translation=card_data.back_text,
-                keyword="",  # Пока оставляем пустым
+                keyword=card_data.keyword or "",
+                gap_fill=card_data.gap_fill,
                 audio_path=None,
                 image_path=card_data.image_path,
                 examples=None,

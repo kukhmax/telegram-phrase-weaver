@@ -9,6 +9,7 @@ class Card(Base):
     phrase = Column(String)
     translation = Column(String)
     keyword = Column(String)
+    gap_fill = Column(String)  # Фраза с пропущенным ключевым словом
     audio_path = Column(String)
     image_path = Column(String)
     examples = Column(JSON)  # List of additional examples
