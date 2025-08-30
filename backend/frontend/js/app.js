@@ -106,6 +106,21 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
                     🔊
                 </button>
             </div>
+            <div class="keyword-selection" style="margin-top: 10px; padding: 8px; background-color: #f8f9fa; border-radius: 5px;">
+                <label class="keyword-label" style="font-size: 12px; color: #666; display: block; margin-bottom: 4px;">🎯 Ключевое слово для пропуска:</label>
+                <div style="display: flex; gap: 5px; align-items: center;">
+                    <input type="text" class="keyword-input" value="${findKeywordInPhrase(phrase.original) || ''}" 
+                           placeholder="Выберите слово" 
+                           data-index="${index}" 
+                           style="flex: 1; padding: 4px 8px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px;"
+                           onchange="updatePhraseKeyword(${index}, this.value)">
+                    <button class="keyword-suggest-btn" onclick="suggestKeywords(${index})" 
+                            style="padding: 4px 8px; background: #007bff; color: white; border: none; border-radius: 3px; font-size: 11px; cursor: pointer;"
+                            title="Предложить варианты">
+                        💡
+                    </button>
+                </div>
+            </div>
         </div>
         <div class="phrase-actions">
             <button class="phrase-btn select-btn" onclick="togglePhraseSelection(${index})">
@@ -117,7 +132,50 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
         </div>
     `;
     
+    // Сохраняем ключевое слово в данных фразы
+    if (!phrase.keyword) {
+        phrase.keyword = findKeywordInPhrase(phrase.original) || '';
+    }
+    
     return card;
+}
+
+// Функция обновления ключевого слова фразы
+window.updatePhraseKeyword = function(index, keyword) {
+    if (currentGeneratedData && currentGeneratedData.phrases && currentGeneratedData.phrases[index]) {
+        currentGeneratedData.phrases[index].keyword = keyword.trim();
+        console.log('🔄 Обновлено ключевое слово:', {
+            index: index,
+            phrase: currentGeneratedData.phrases[index].original,
+            keyword: keyword.trim()
+        });
+    }
+};
+
+// Функция предложения ключевых слов
+window.suggestKeywords = function(index) {
+    if (!currentGeneratedData || !currentGeneratedData.phrases || !currentGeneratedData.phrases[index]) {
+        return;
+    }
+    
+    const phrase = currentGeneratedData.phrases[index].original;
+    const words = phrase.toLowerCase().split(/\s+/).map(word => 
+        word.replace(/[^\p{L}]/gu, '')
+    ).filter(word => word.length > 2);
+    
+    // Исключаем служебные слова
+    const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'и', 'в', 'не', 'на', 'с', 'он', 'а', 'как', 'что', 'это']);
+    
+    const candidates = words.filter(word => !stopWords.has(word)).sort((a, b) => b.length - a.length);
+    
+    if (candidates.length > 0) {
+        const suggestion = candidates[0];
+        const input = document.querySelector(`input[data-index="${index}"]`);
+        if (input) {
+            input.value = suggestion;
+            updatePhraseKeyword(index, suggestion);
+        }
+    }
 }
 
 // Функция для переключения выбора фразы
@@ -937,16 +995,30 @@ document.addEventListener('click', (event) => {
                     const originalText = card.querySelector('.phrase-line:first-child .phrase-text').textContent;
                     const translationText = card.querySelector('.phrase-line:last-child .phrase-text').textContent;
                     
+                    // Получаем ключевое слово из поля ввода или из данных фразы
+                    let keyword = '';
+                    const keywordInput = card.querySelector('.keyword-input');
+                    if (keywordInput) {
+                        keyword = keywordInput.value.trim();
+                    } else if (currentGeneratedData?.phrases?.[index]?.keyword) {
+                        keyword = currentGeneratedData.phrases[index].keyword;
+                    }
+                    
                     const cardData = {
                         deck_id: currentDeckId,
                         front_text: originalText,
                         back_text: translationText,
+                        keyword: keyword || null, // Добавляем ключевое слово
                         difficulty: 1,
                         next_review: new Date().toISOString(),
                         image_path: currentGeneratedData?.image_path || null
                     };
                     
-                    console.log('Card data to save:', cardData);
+                    console.log('💾 Сохраняем карточку с ключевым словом:', {
+                        phrase: originalText,
+                        keyword: keyword,
+                        cardData: cardData
+                    });
                     phrasesToSave.push(cardData);
                 }
             });
@@ -1139,7 +1211,7 @@ function loadTrainingCard() {
         imageElement.alt = 'Mascot';
     }
     
-    // ПРИНУДИТЕЛЬНОЕ ТЕСТИРОВАНИЕ: заполнение пропусков для всех карточек
+    // Сбалансированный выбор типа упражнения
     let exerciseType;
     
     // Автоматически находим ключевое слово если его нет
@@ -1147,18 +1219,30 @@ function loadTrainingCard() {
         currentCard.keyword = findKeywordInPhrase(currentCard.front_text);
     }
     
-    // ВРЕМЕННО: принудительно показываем заполнение пропусков для тестирования
+    // Выбираем тип упражнения с правильным распределением
     if (currentCard.keyword && currentCard.keyword.trim() !== '') {
-        exerciseType = 2; // ВСЕГДА заполнение пропусков для тестирования
-        console.log('🎯 ПРИНУДИТЕЛЬНОЕ заполнение пропусков:', {
+        const rand = Math.random();
+        if (rand < 0.4) {
+            exerciseType = 2; // 40% - заполнение пропусков
+        } else if (rand < 0.7) {
+            exerciseType = 0; // 30% - перевод
+        } else {
+            exerciseType = 1; // 30% - обратный перевод
+        }
+        console.log('🎯 Выбран тип упражнения:', {
             phrase: currentCard.front_text,
             keyword: currentCard.keyword,
-            exerciseType: exerciseType
+            exerciseType: exerciseType,
+            type: exerciseType === 2 ? 'заполнение пропусков' : exerciseType === 0 ? 'перевод' : 'обратный перевод'
         });
     } else {
-        // Если не удалось найти ключевое слово, используем обычные упражнения
+        // Если нет ключевого слова, используем только перевод и обратный перевод
         exerciseType = Math.floor(Math.random() * 2); // 0 или 1
-        console.log('❌ Ключевое слово не найдено для:', currentCard.front_text);
+        console.log('📝 Обычное упражнение (нет ключевого слова):', {
+            phrase: currentCard.front_text,
+            exerciseType: exerciseType,
+            type: exerciseType === 0 ? 'перевод' : 'обратный перевод'
+        });
     }
     
     currentCard.exerciseType = exerciseType;
