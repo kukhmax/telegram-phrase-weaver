@@ -1264,6 +1264,20 @@ function loadTrainingCard() {
     document.getElementById('correct-answer').classList.add('hidden');
     document.getElementById('rating-buttons').classList.add('hidden');
     
+    // Управляем кнопкой подсказки
+    const hintBtn = document.getElementById('hint-btn');
+    const hintText = document.getElementById('hint-text');
+    
+    if (exerciseType === 2) {
+        // Показываем кнопку подсказки только для заполнения пропусков
+        hintBtn.classList.remove('hidden');
+        hintText.classList.add('hidden'); // Скрываем текст подсказки
+    } else {
+        // Скрываем кнопку подсказки для других типов упражнений
+        hintBtn.classList.add('hidden');
+        hintText.classList.add('hidden');
+    }
+    
     // Показываем кнопку проверки
     document.getElementById('check-btn').style.display = 'block';
     document.getElementById('check-btn').disabled = false;
@@ -1776,6 +1790,21 @@ document.getElementById('play-audio-btn').addEventListener('click', () => {
             extractLanguageCode(trainingData.deckInfo.lang_from) : 
             extractLanguageCode(trainingData.deckInfo.lang_to);
         playAudio(text, langCode);
+    }
+});
+
+// Обработчик кнопки подсказки
+document.getElementById('hint-btn').addEventListener('click', () => {
+    const currentCard = trainingData.cards[trainingData.currentIndex];
+    const hintText = document.getElementById('hint-text');
+    
+    if (currentCard && currentCard.exerciseType === 2) {
+        // Показываем перевод фразы как подсказку
+        hintText.textContent = currentCard.back_text;
+        hintText.classList.remove('hidden');
+        
+        // Скрываем кнопку подсказки после использования
+        document.getElementById('hint-btn').classList.add('hidden');
     }
 });
 
