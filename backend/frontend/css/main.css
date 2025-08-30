@@ -83,6 +83,46 @@ body {
     height: 20px !important;
 }
 
+/* Мобильные устройства и Telegram WebApp */
+@media (max-width: 768px) {
+    .header-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+    }
+    
+    .header-btn img {
+        width: 16px !important;
+        height: 16px !important;
+    }
+    
+    .stats-icon,
+    .settings-icon {
+        width: 16px !important;
+        height: 16px !important;
+    }
+}
+
+/* Очень маленькие экраны (Telegram на телефоне) */
+@media (max-width: 480px) {
+    .header-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+    }
+    
+    .header-btn img {
+        width: 14px !important;
+        height: 14px !important;
+    }
+    
+    .stats-icon,
+    .settings-icon {
+        width: 14px !important;
+        height: 14px !important;
+    }
+}
+
 /* Main Content */
 .app-main {
     color: var(--text-color);
