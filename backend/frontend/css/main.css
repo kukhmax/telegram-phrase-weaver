@@ -114,13 +114,13 @@ body {
     background-color: #fff;
     border: 2px solid #f4c300;
     border-radius: 20px;
-    padding: 20px;
+    padding: 7px 10px 7px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     text-align: left;
     box-shadow: 0 4px 12px rgba(244, 195, 0, 0.2);
-    margin-bottom: 10px;
+    margin-bottom: 5px;
 }
 
 .deck-info .deck-name {
@@ -137,7 +137,8 @@ body {
 .deck-info .deck-langs {
     font-size: 16px;
     font-weight: 500;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    margin-top: 20px;
 }
 .deck-info .deck-stats {
     font-size: 14px;
@@ -651,7 +652,7 @@ body {
     background: #f8f9fa;
     border: 2px solid #e9ecef;
     border-radius: 15px;
-    padding: 20px;
+    padding: 0.5em;
     transition: all 0.3s ease;
 }
 
@@ -663,7 +664,7 @@ body {
 /* Изображение в карточке */
 .card-image-container {
     text-align: center;
-    margin-bottom: 15px;
+    margin-bottom: 5px;
 }
 
 .card-image {
@@ -675,7 +676,9 @@ body {
 }
 
 .card-content {
-    margin-bottom: 15px;
+    margin-bottom: 5px;
+    margin-right: 10px;
+    text-align: left;
 }
 
 .card-side {
