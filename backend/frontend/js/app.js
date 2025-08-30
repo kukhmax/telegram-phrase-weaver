@@ -106,21 +106,7 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
                     🔊
                 </button>
             </div>
-            <div class="keyword-selection" style="margin-top: 10px; padding: 8px; background-color: #f8f9fa; border-radius: 5px;">
-                <label class="keyword-label" style="font-size: 12px; color: #666; display: block; margin-bottom: 4px;">🎯 Ключевое слово для пропуска:</label>
-                <div style="display: flex; gap: 5px; align-items: center;">
-                    <input type="text" class="keyword-input" value="${findKeywordInPhrase(phrase.original) || ''}" 
-                           placeholder="Выберите слово" 
-                           data-index="${index}" 
-                           style="flex: 1; padding: 4px 8px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px;"
-                           onchange="updatePhraseKeyword(${index}, this.value)">
-                    <button class="keyword-suggest-btn" onclick="suggestKeywords(${index})" 
-                            style="padding: 4px 8px; background: #007bff; color: white; border: none; border-radius: 3px; font-size: 11px; cursor: pointer;"
-                            title="Предложить варианты">
-                        💡
-                    </button>
-                </div>
-            </div>
+
         </div>
         <div class="phrase-actions">
             <button class="phrase-btn select-btn" onclick="togglePhraseSelection(${index})">
@@ -995,13 +981,12 @@ document.addEventListener('click', (event) => {
                     const originalText = card.querySelector('.phrase-line:first-child .phrase-text').textContent;
                     const translationText = card.querySelector('.phrase-line:last-child .phrase-text').textContent;
                     
-                    // Получаем ключевое слово из поля ввода или из данных фразы
+                    // Автоматически определяем ключевое слово
                     let keyword = '';
-                    const keywordInput = card.querySelector('.keyword-input');
-                    if (keywordInput) {
-                        keyword = keywordInput.value.trim();
-                    } else if (currentGeneratedData?.phrases?.[index]?.keyword) {
+                    if (currentGeneratedData?.phrases?.[index]?.keyword) {
                         keyword = currentGeneratedData.phrases[index].keyword;
+                    } else {
+                        keyword = findKeywordInPhrase(originalText) || '';
                     }
                     
                     const cardData = {
