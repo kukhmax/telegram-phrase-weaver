@@ -1139,8 +1139,24 @@ function loadTrainingCard() {
         imageElement.alt = 'Mascot';
     }
     
-    // Случайно выбираем тип упражнения: 0 - перевод, 1 - обратный перевод, 2 - заполнение пропусков
-    const exerciseType = Math.floor(Math.random() * 3);
+    // Выбираем тип упражнения: приоритет заполнению пропусков для карточек с ключевыми словами
+    let exerciseType;
+    
+    // Если есть ключевое слово, увеличиваем вероятность заполнения пропусков до 60%
+    if (currentCard.keyword && currentCard.keyword.trim() !== '') {
+        const rand = Math.random();
+        if (rand < 0.6) {
+            exerciseType = 2; // Заполнение пропусков
+        } else if (rand < 0.8) {
+            exerciseType = 0; // Перевод
+        } else {
+            exerciseType = 1; // Обратный перевод
+        }
+    } else {
+        // Для карточек без ключевых слов используем только перевод и обратный перевод
+        exerciseType = Math.floor(Math.random() * 2); // 0 или 1
+    }
+    
     currentCard.exerciseType = exerciseType;
     
     const phraseElement = document.getElementById('training-phrase');
@@ -1160,19 +1176,11 @@ function loadTrainingCard() {
         currentCard.expectedAnswer = currentCard.front_text;
     } else {
         // Заполнение пропусков - показываем фразу с пропуском вместо ключевого слова
-        if (currentCard.keyword && currentCard.keyword.trim() !== '') {
-            const phraseWithGap = createPhraseWithGap(currentCard.front_text, currentCard.keyword);
-            phraseElement.innerHTML = phraseWithGap;
-            answerInput.placeholder = t('enter_missing_word');
-            answerInput.setAttribute('data-reverse', 'false');
-            currentCard.expectedAnswer = currentCard.keyword;
-        } else {
-            // Если нет ключевого слова, используем обычный перевод
-            phraseElement.textContent = currentCard.front_text;
-            answerInput.placeholder = t('enter_translation');
-            answerInput.setAttribute('data-reverse', 'false');
-            currentCard.expectedAnswer = currentCard.back_text;
-        }
+        const phraseWithGap = createPhraseWithGap(currentCard.front_text, currentCard.keyword);
+        phraseElement.innerHTML = phraseWithGap;
+        answerInput.placeholder = t('enter_missing_word');
+        answerInput.setAttribute('data-reverse', 'false');
+        currentCard.expectedAnswer = currentCard.keyword;
     }
     
     // Очищаем поле ввода и сбрасываем состояния
