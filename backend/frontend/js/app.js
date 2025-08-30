@@ -1139,25 +1139,40 @@ function loadTrainingCard() {
         imageElement.alt = 'Mascot';
     }
     
-    // Случайно выбираем направление обучения
-    const isForward = Math.random() < 0.5; // 50% вероятность каждого направления
-    currentCard.isForward = isForward;
+    // Случайно выбираем тип упражнения: 0 - перевод, 1 - обратный перевод, 2 - заполнение пропусков
+    const exerciseType = Math.floor(Math.random() * 3);
+    currentCard.exerciseType = exerciseType;
     
     const phraseElement = document.getElementById('training-phrase');
     const answerInput = document.getElementById('answer-input');
     
-    if (isForward) {
+    if (exerciseType === 0) {
         // Показываем фразу на изучаемом языке, ожидаем перевод
         phraseElement.textContent = currentCard.front_text;
         answerInput.placeholder = t('enter_translation');
         answerInput.setAttribute('data-reverse', 'false');
         currentCard.expectedAnswer = currentCard.back_text;
-    } else {
+    } else if (exerciseType === 1) {
         // Показываем перевод, ожидаем фразу на изучаемом языке
         phraseElement.textContent = currentCard.back_text;
         answerInput.placeholder = t('enter_phrase');
         answerInput.setAttribute('data-reverse', 'true');
         currentCard.expectedAnswer = currentCard.front_text;
+    } else {
+        // Заполнение пропусков - показываем фразу с пропуском вместо ключевого слова
+        if (currentCard.keyword && currentCard.keyword.trim() !== '') {
+            const phraseWithGap = createPhraseWithGap(currentCard.front_text, currentCard.keyword);
+            phraseElement.innerHTML = phraseWithGap;
+            answerInput.placeholder = t('enter_missing_word');
+            answerInput.setAttribute('data-reverse', 'false');
+            currentCard.expectedAnswer = currentCard.keyword;
+        } else {
+            // Если нет ключевого слова, используем обычный перевод
+            phraseElement.textContent = currentCard.front_text;
+            answerInput.placeholder = t('enter_translation');
+            answerInput.setAttribute('data-reverse', 'false');
+            currentCard.expectedAnswer = currentCard.back_text;
+        }
     }
     
     // Очищаем поле ввода и сбрасываем состояния
@@ -1171,6 +1186,85 @@ function loadTrainingCard() {
     // Показываем кнопку проверки
     document.getElementById('check-btn').style.display = 'block';
     document.getElementById('check-btn').disabled = false;
+}
+
+// Функция создания фразы с пропуском
+function createPhraseWithGap(phrase, keyword) {
+    if (!phrase || !keyword) return phrase;
+    
+    // Создаем регулярное выражение для поиска ключевого слова (учитываем разные формы)
+    const keywordRegex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+    
+    // Заменяем ключевое слово на пропуск
+    const phraseWithGap = phrase.replace(keywordRegex, '<span class="word-gap">_____</span>');
+    
+    return phraseWithGap;
+}
+
+// Функция проверки ответа для ключевых слов
+function checkKeywordAnswer(userAnswer, correctAnswer) {
+    const userLower = userAnswer.toLowerCase().trim();
+    const correctLower = correctAnswer.toLowerCase().trim();
+    
+    // Точное совпадение
+    if (userLower === correctLower) {
+        return true;
+    }
+    
+    // Проверяем частичное совпадение (если ответ содержит правильное слово)
+    if (userLower.includes(correctLower) || correctLower.includes(userLower)) {
+        return true;
+    }
+    
+    // Проверяем схожесть (простая проверка на опечатки)
+    if (Math.abs(userAnswer.length - correctAnswer.length) <= 2) {
+        const similarity = calculateSimilarity(userLower, correctLower);
+        return similarity > 0.8; // 80% схожести
+    }
+    
+    return false;
+}
+
+// Функция расчета схожести строк (алгоритм Левенштейна упрощенный)
+function calculateSimilarity(str1, str2) {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    
+    if (longer.length === 0) {
+        return 1.0;
+    }
+    
+    const editDistance = levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+}
+
+// Расстояние Левенштейна
+function levenshteinDistance(str1, str2) {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+        matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+        matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+        for (let j = 1; j <= str1.length; j++) {
+            if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+    
+    return matrix[str2.length][str1.length];
 }
 
 // Функция обновления прогресса
@@ -1196,8 +1290,16 @@ function checkAnswer() {
         return;
     }
     
-    // Простая проверка (можно улучшить)
-    const isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+    // Проверка ответа в зависимости от типа упражнения
+    let isCorrect = false;
+    
+    if (currentCard.exerciseType === 2) {
+        // Для заполнения пропусков - более гибкая проверка
+        isCorrect = checkKeywordAnswer(userAnswer, correctAnswer);
+    } else {
+        // Для обычных переводов - простая проверка
+        isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+    }
     
     // Сохраняем результат для использования в кнопках оценки
     currentCard.lastAnswerCorrect = isCorrect;
@@ -1211,8 +1313,8 @@ function checkAnswer() {
         answerInput.classList.remove('correct');
         
         // Показываем правильный ответ
-    const correctAnswerDiv = document.getElementById('correct-answer');
-    correctAnswerDiv.textContent = `${t('correct_answer')} ${correctAnswer}`;
+        const correctAnswerDiv = document.getElementById('correct-answer');
+        correctAnswerDiv.textContent = `${t('correct_answer')} ${correctAnswer}`;
         correctAnswerDiv.classList.remove('hidden');
     }
     

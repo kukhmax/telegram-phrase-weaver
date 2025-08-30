@@ -70,6 +70,7 @@ class CardService:
                     "id": card.id,
                     "front_text": card.phrase,
                     "back_text": card.translation,
+                    "keyword": card.keyword,
                     "difficulty": 1,  # Пока используем значение по умолчанию
                     "next_review": card.due_date.isoformat() if card.due_date else None,
                     "image_path": card.image_path

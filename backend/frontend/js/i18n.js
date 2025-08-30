@@ -56,6 +56,7 @@ const translations = {
         // Тренировка
         enter_translation: 'Введите перевод...',
         enter_phrase: 'Введите фразу...',
+        enter_missing_word: 'Введите пропущенное слово...',
         check: 'Проверить',
         correct_answer: 'Правильный ответ:',
         again: 'Снова',
@@ -180,9 +181,10 @@ const translations = {
         cards: 'Cards',
         training: 'Training',
         
-        // Training
+        // Тренировка
         enter_translation: 'Enter translation...',
         enter_phrase: 'Enter phrase...',
+        enter_missing_word: 'Enter missing word...',
         check: 'Check',
         correct_answer: 'Correct answer:',
         again: 'Again',

@@ -1078,6 +1078,34 @@ body {
     text-align: center;
 }
 
+/* Стили для пропусков в упражнениях заполнения */
+.word-gap {
+    display: inline-block;
+    min-width: 80px;
+    padding: 2px 8px;
+    margin: 0 2px;
+    background-color: #f8f9fa;
+    border: 2px dashed #6c757d;
+    border-radius: 4px;
+    color: #6c757d;
+    font-weight: bold;
+    text-align: center;
+    font-family: monospace;
+    letter-spacing: 2px;
+    animation: pulse-gap 2s infinite;
+}
+
+@keyframes pulse-gap {
+    0%, 100% {
+        background-color: #f8f9fa;
+        border-color: #6c757d;
+    }
+    50% {
+        background-color: #e9ecef;
+        border-color: #495057;
+    }
+}
+
 /* Кнопка проверки */
 .check-btn {
     background: linear-gradient(135deg, #1800ad, #2c1bbd);
