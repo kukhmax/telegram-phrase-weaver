@@ -1200,69 +1200,275 @@ function loadTrainingCard() {
     document.getElementById('check-btn').disabled = false;
 }
 
-// Функция автоматического поиска ключевого слова в фразе
+// Универсальная мультиязычная функция поиска ключевого слова
 function findKeywordInPhrase(phrase) {
     if (!phrase) return null;
     
-    // Разбиваем фразу на слова и очищаем от знаков препинания
+    console.log('🔍 Анализ фразы для поиска ключевого слова:', phrase);
+    
+    // Разбиваем фразу на слова с поддержкой Unicode
     const words = phrase.toLowerCase().split(/\s+/).map(word => 
-        word.replace(/[^a-zA-Zа-яёА-ЯЁ]/g, '')
+        word.replace(/[^\p{L}]/gu, '') // Поддержка всех Unicode букв
     ).filter(word => word.length > 0);
     
-    // Исключаем служебные слова
-    const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'must', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'this', 'that', 'these', 'those'];
+    console.log('📝 Найденные слова:', words);
     
-    // Ищем подходящее слово (длиннее 3 символов, не служебное)
+    // Универсальный список служебных слов для основных языков
+    const universalStopWords = new Set([
+        // Английские
+        'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+        'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did',
+        'will', 'would', 'could', 'should', 'may', 'might', 'can', 'must', 'shall',
+        'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+        'my', 'your', 'his', 'her', 'its', 'our', 'their', 'this', 'that', 'these', 'those',
+        'not', 'no', 'yes', 'all', 'any', 'some', 'each', 'every', 'other', 'another',
+        // Русские
+        'и', 'в', 'не', 'на', 'я', 'быть', 'с', 'он', 'а', 'как', 'что', 'это', 'она', 'так',
+        'его', 'но', 'да', 'ты', 'к', 'у', 'же', 'вы', 'за', 'бы', 'по', 'только', 'ее', 'мне',
+        'было', 'вот', 'от', 'меня', 'еще', 'нет', 'о', 'из', 'ему', 'теперь', 'когда', 'даже',
+        'ну', 'вдруг', 'ли', 'если', 'уже', 'или', 'ни', 'был', 'него', 'до', 'вас', 'нибудь',
+        // Немецкие
+        'der', 'die', 'das', 'und', 'oder', 'aber', 'in', 'auf', 'zu', 'mit', 'von', 'für',
+        'ist', 'sind', 'war', 'waren', 'haben', 'hat', 'hatte', 'werden', 'wird', 'wurde',
+        'ich', 'du', 'er', 'sie', 'es', 'wir', 'ihr', 'mein', 'dein', 'sein', 'unser',
+        // Французские
+        'le', 'la', 'les', 'un', 'une', 'et', 'ou', 'mais', 'dans', 'sur', 'avec', 'de', 'du',
+        'est', 'sont', 'était', 'étaient', 'avoir', 'être', 'je', 'tu', 'il', 'elle', 'nous', 'vous',
+        // Испанские
+        'el', 'la', 'los', 'las', 'un', 'una', 'y', 'o', 'pero', 'en', 'con', 'de', 'del',
+        'es', 'son', 'era', 'eran', 'tener', 'ser', 'yo', 'tú', 'él', 'ella', 'nosotros', 'vosotros',
+        // Итальянские
+        'il', 'la', 'lo', 'gli', 'le', 'un', 'una', 'e', 'o', 'ma', 'in', 'con', 'di', 'del',
+        'è', 'sono', 'era', 'erano', 'avere', 'essere', 'io', 'tu', 'lui', 'lei', 'noi', 'voi',
+        // Португальские
+        'o', 'a', 'os', 'as', 'um', 'uma', 'e', 'ou', 'mas', 'em', 'com', 'de', 'do', 'da',
+        'é', 'são', 'era', 'eram', 'ter', 'ser', 'eu', 'tu', 'ele', 'ela', 'nós', 'vós',
+        // Голландские
+        'de', 'het', 'een', 'en', 'of', 'maar', 'in', 'op', 'met', 'van', 'voor',
+        'is', 'zijn', 'was', 'waren', 'hebben', 'heeft', 'had', 'ik', 'jij', 'hij', 'zij', 'wij'
+    ]);
+    
+    // Ищем подходящие слова (не служебные, длиннее 2 символов)
     const candidates = words.filter(word => 
-        word.length > 3 && 
-        !stopWords.includes(word) &&
-        /^[a-zA-Zа-яёА-ЯЁ]+$/.test(word)
+        word.length > 2 && 
+        !universalStopWords.has(word) &&
+        /^\p{L}+$/u.test(word) // Только Unicode буквы
     );
     
-    // Возвращаем первое подходящее слово или самое длинное
+    console.log('🎯 Кандидаты на ключевое слово:', candidates);
+    
+    // Возвращаем самое длинное значимое слово
     if (candidates.length > 0) {
-        return candidates.sort((a, b) => b.length - a.length)[0];
+        const keyword = candidates.sort((a, b) => b.length - a.length)[0];
+        console.log('✅ Выбрано ключевое слово:', keyword);
+        return keyword;
     }
     
-    // Если не нашли подходящих, берем любое слово длиннее 2 символов
-    const fallback = words.filter(word => word.length > 2 && !stopWords.includes(word));
-    return fallback.length > 0 ? fallback[0] : null;
+    console.log('❌ Ключевое слово не найдено');
+    return null;
 }
 
-// Функция создания фразы с пропуском
+// Универсальная функция получения корня слова (мультиязычная)
+function getUniversalWordStem(word) {
+    if (!word || word.length < 3) return word;
+    
+    const lowerWord = word.toLowerCase();
+    
+    // Универсальные паттерны окончаний для разных языков
+    const universalEndings = [
+        // Русские (длинные сначала)
+        'ость', 'ение', 'ание', 'ться', 'ется', 'ются', 'ался', 'алась', 'алось', 'ались',
+        'ует', 'уют', 'ает', 'ают', 'ить', 'ать', 'еть', 'оть', 'уть', 'ыть',
+        'ый', 'ая', 'ое', 'ые', 'ой', 'ей', 'ом', 'ами', 'ах', 'ов', 'ев',
+        'ал', 'ла', 'ло', 'ли', 'ем', 'ешь', 'ет', 'ете', 'ут', 'ют',
+        // Английские
+        'ing', 'tion', 'sion', 'ness', 'ment', 'able', 'ible', 'ful', 'less',
+        'ous', 'ive', 'ical', 'ary', 'ory', 'ize', 'ise', 'ed', 'er', 'est', 'ly',
+        // Немецкие
+        'ung', 'heit', 'keit', 'lich', 'isch', 'ern', 'eln', 'nen', 'ten', 'den',
+        // Французские
+        'tion', 'sion', 'ment', 'ique', 'able', 'ible', 'eur', 'euse', 'ant', 'ent',
+        // Испанские
+        'ción', 'sión', 'mente', 'able', 'ible', 'ador', 'edor', 'ando', 'endo', 'ido',
+        // Итальянские
+        'zione', 'sione', 'mente', 'abile', 'ibile', 'atore', 'endo', 'ando', 'ato',
+        // Португальские
+        'ção', 'são', 'mente', 'ável', 'ível', 'ador', 'endo', 'ando', 'ado',
+        // Общие короткие окончания
+        'es', 'en', 'er', 'el', 'le', 'te', 'de', 'se', 're', 's'
+    ].sort((a, b) => b.length - a.length);
+    
+    for (const ending of universalEndings) {
+        if (lowerWord.endsWith(ending) && lowerWord.length > ending.length + 2) {
+            return lowerWord.slice(0, -ending.length);
+        }
+    }
+    
+    return lowerWord;
+}
+
+// Универсальная функция создания фразы с пропуском (мультиязычная)
 function createPhraseWithGap(phrase, keyword) {
     if (!phrase || !keyword) return phrase;
     
-    // Создаем регулярное выражение для поиска ключевого слова (учитываем разные формы)
+    console.log('🔍 Создание пропуска для:', { phrase, keyword });
+    
+    const words = phrase.split(/\s+/);
+    const keywordStem = getUniversalWordStem(keyword);
+    
+    // Ищем слово для замены по разным критериям
+    let foundWordIndex = -1;
+    let foundWord = '';
+    
+    // 1. Точное совпадение
+    for (let i = 0; i < words.length; i++) {
+        const cleanWord = words[i].replace(/[^\p{L}]/gu, '');
+        if (cleanWord.toLowerCase() === keyword.toLowerCase()) {
+            foundWordIndex = i;
+            foundWord = words[i];
+            console.log('✅ Точное совпадение найдено:', foundWord);
+            break;
+        }
+    }
+    
+    // 2. Совпадение по корню
+    if (foundWordIndex === -1 && keywordStem.length > 2) {
+        for (let i = 0; i < words.length; i++) {
+            const cleanWord = words[i].replace(/[^\p{L}]/gu, '');
+            const wordStem = getUniversalWordStem(cleanWord);
+            
+            if (wordStem === keywordStem) {
+                foundWordIndex = i;
+                foundWord = words[i];
+                console.log('✅ Совпадение по корню:', { foundWord, wordStem, keywordStem });
+                break;
+            }
+        }
+    }
+    
+    // 3. Частичное совпадение (содержит или содержится)
+    if (foundWordIndex === -1) {
+        for (let i = 0; i < words.length; i++) {
+            const cleanWord = words[i].replace(/[^\p{L}]/gu, '').toLowerCase();
+            const keywordLower = keyword.toLowerCase();
+            
+            if ((cleanWord.includes(keywordLower) && cleanWord.length > keywordLower.length) ||
+                (keywordLower.includes(cleanWord) && keywordLower.length > cleanWord.length)) {
+                foundWordIndex = i;
+                foundWord = words[i];
+                console.log('✅ Частичное совпадение:', foundWord);
+                break;
+            }
+        }
+    }
+    
+    // 4. Схожесть по Левенштейну
+    if (foundWordIndex === -1) {
+        let bestMatch = -1;
+        let bestSimilarity = 0;
+        
+        for (let i = 0; i < words.length; i++) {
+            const cleanWord = words[i].replace(/[^\p{L}]/gu, '').toLowerCase();
+            if (cleanWord.length > 2) {
+                const similarity = calculateSimilarity(cleanWord, keyword.toLowerCase());
+                if (similarity > 0.7 && similarity > bestSimilarity) {
+                    bestSimilarity = similarity;
+                    bestMatch = i;
+                }
+            }
+        }
+        
+        if (bestMatch !== -1) {
+            foundWordIndex = bestMatch;
+            foundWord = words[bestMatch];
+            console.log('✅ Схожесть по Левенштейну:', { foundWord, similarity: bestSimilarity });
+        }
+    }
+    
+    // Если нашли слово для замены
+    if (foundWordIndex !== -1) {
+        const modifiedWords = [...words];
+        modifiedWords[foundWordIndex] = '<span class="word-gap">_____</span>';
+        
+        const result = modifiedWords.join(' ');
+        console.log('✅ Создан пропуск:', result);
+        return result;
+    }
+    
+    // Fallback: простая замена по регулярному выражению
+    console.log('⚠️ Используем простую замену для:', keyword);
     const keywordRegex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
-    
-    // Заменяем ключевое слово на пропуск
-    const phraseWithGap = phrase.replace(keywordRegex, '<span class="word-gap">_____</span>');
-    
-    return phraseWithGap;
+    return phrase.replace(keywordRegex, '<span class="word-gap">_____</span>');
 }
 
-// Функция проверки ответа для ключевых слов
+// Универсальная функция проверки ответа (мультиязычная)
 function checkKeywordAnswer(userAnswer, correctAnswer) {
     const userLower = userAnswer.toLowerCase().trim();
     const correctLower = correctAnswer.toLowerCase().trim();
     
-    // Точное совпадение
+    console.log('🔍 Проверка ответа:', {
+        userAnswer: userAnswer,
+        correctAnswer: correctAnswer
+    });
+    
+    // 1. Точное совпадение
     if (userLower === correctLower) {
+        console.log('✅ Точное совпадение');
         return true;
     }
     
-    // Проверяем частичное совпадение (если ответ содержит правильное слово)
+    // 2. Проверяем совпадение по корню слова (мультиязычно)
+    const userStem = getUniversalWordStem(userLower);
+    const correctStem = getUniversalWordStem(correctLower);
+    
+    if (userStem === correctStem && userStem.length > 2) {
+        console.log('✅ Совпадение по корню:', { userStem, correctStem });
+        return true;
+    }
+    
+    // 3. Частичное совпадение (содержит или содержится)
     if (userLower.includes(correctLower) || correctLower.includes(userLower)) {
+        console.log('✅ Частичное совпадение');
         return true;
     }
     
-    // Проверяем схожесть (простая проверка на опечатки)
-    if (Math.abs(userAnswer.length - correctAnswer.length) <= 2) {
+    // 4. Схожесть по алгоритму Левенштейна
+    if (Math.abs(userAnswer.length - correctAnswer.length) <= 3) {
         const similarity = calculateSimilarity(userLower, correctLower);
-        return similarity > 0.8; // 80% схожести
+        if (similarity > 0.75) {
+            console.log('✅ Схожесть по Левенштейну:', similarity);
+            return true;
+        }
     }
     
+    // 5. Дополнительная проверка: схожесть корней
+    if (userStem.length > 2 && correctStem.length > 2) {
+        const stemSimilarity = calculateSimilarity(userStem, correctStem);
+        if (stemSimilarity > 0.8) {
+            console.log('✅ Схожесть корней:', stemSimilarity);
+            return true;
+        }
+    }
+    
+    // 6. Проверка на разные формы одного слова (транслитерация)
+    const userClean = userLower.replace(/[^\p{L}]/gu, '');
+    const correctClean = correctLower.replace(/[^\p{L}]/gu, '');
+    
+    if (userClean.length > 2 && correctClean.length > 2) {
+        // Проверяем, не является ли один ответ подстрокой другого (с учетом минимальной длины)
+        const minLength = Math.min(userClean.length, correctClean.length);
+        if (minLength >= 4) {
+            const longerWord = userClean.length > correctClean.length ? userClean : correctClean;
+            const shorterWord = userClean.length > correctClean.length ? correctClean : userClean;
+            
+            if (longerWord.includes(shorterWord) && shorterWord.length / longerWord.length > 0.6) {
+                console.log('✅ Один ответ содержит другой:', { longerWord, shorterWord });
+                return true;
+            }
+        }
+    }
+    
+    console.log('❌ Ответ не принят');
     return false;
 }
 
