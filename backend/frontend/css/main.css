@@ -64,6 +64,23 @@ body {
     border: none;
     font-size: 24px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.header-btn img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.stats-icon,
+.settings-icon {
+    width: 20px !important;
+    height: 20px !important;
 }
 
 /* Main Content */
