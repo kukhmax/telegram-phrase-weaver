@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест заполнения пропусков</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .word-gap {
+            display: inline-block;
+            min-width: 80px;
+            padding: 2px 8px;
+            margin: 0 2px;
+            background-color: #f8f9fa;
+            border: 2px dashed #6c757d;
+            border-radius: 4px;
+            color: #6c757d;
+            font-weight: bold;
+            text-align: center;
+            font-family: monospace;
+            letter-spacing: 2px;
+            animation: pulse-gap 2s infinite;
+        }
+        @keyframes pulse-gap {
+            0%, 100% {
+                background-color: #f8f9fa;
+                border-color: #6c757d;
+            }
+            50% {
+                background-color: #e9ecef;
+                border-color: #495057;
+            }
+        }
+        .test-phrase {
+            font-size: 18px;
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .answer-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .check-btn {
+            background-color: #f4c300;
+            color: #1800ad;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Тест функционала заполнения пропусков</h1>
+    
+    <div class="test-phrase" id="phrase-display"></div>
+    
+    <input type="text" id="answer-input" class="answer-input" placeholder="Введите пропущенное слово...">
+    
+    <button id="check-btn" class="check-btn">Проверить</button>
+    
+    <div id="result" class="result" style="display: none;"></div>
+    
+    <script>
+        // Тестовые данные
+        const testCards = [
+            { phrase: "I love programming", keyword: "love" },
+            { phrase: "She is reading a book", keyword: "reading" },
+            { phrase: "We went to the store yesterday", keyword: "went" },
+            { phrase: "The cat is sleeping on the sofa", keyword: "sleeping" }
+        ];
+        
+        let currentCard = null;
+        let currentIndex = 0;
+        
+        // Функция создания фразы с пропуском
+        function createPhraseWithGap(phrase, keyword) {
+            if (!phrase || !keyword) return phrase;
+            
+            const keywordRegex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\b`, 'gi');
+            const phraseWithGap = phrase.replace(keywordRegex, '<span class="word-gap">_____</span>');
+            
+            return phraseWithGap;
+        }
+        
+        // Функция проверки ответа
+        function checkKeywordAnswer(userAnswer, correctAnswer) {
+            const userLower = userAnswer.toLowerCase().trim();
+            const correctLower = correctAnswer.toLowerCase().trim();
+            
+            if (userLower === correctLower) {
+                return true;
+            }
+            
+            if (userLower.includes(correctLower) || correctLower.includes(userLower)) {
+                return true;
+            }
+            
+            if (Math.abs(userAnswer.length - correctAnswer.length) <= 2) {
+                const similarity = calculateSimilarity(userLower, correctLower);
+                return similarity > 0.8;
+            }
+            
+            return false;
+        }
+        
+        function calculateSimilarity(str1, str2) {
+            const longer = str1.length > str2.length ? str1 : str2;
+            const shorter = str1.length > str2.length ? str2 : str1;
+            
+            if (longer.length === 0) {
+                return 1.0;
+            }
+            
+            const editDistance = levenshteinDistance(longer, shorter);
+            return (longer.length - editDistance) / longer.length;
+        }
+        
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            return matrix[str2.length][str1.length];
+        }
+        
+        // Загрузка карточки
+        function loadCard() {
+            currentCard = testCards[currentIndex];
+            const phraseWithGap = createPhraseWithGap(currentCard.phrase, currentCard.keyword);
+            
+            document.getElementById('phrase-display').innerHTML = phraseWithGap;
+            document.getElementById('answer-input').value = '';
+            document.getElementById('result').style.display = 'none';
+        }
+        
+        // Проверка ответа
+        function checkAnswer() {
+            const userAnswer = document.getElementById('answer-input').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!userAnswer) {
+                alert('Пожалуйста, введите ответ');
+                return;
+            }
+            
+            const isCorrect = checkKeywordAnswer(userAnswer, currentCard.keyword);
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result ' + (isCorrect ? 'correct' : 'incorrect');
+            resultDiv.textContent = isCorrect 
+                ? `Правильно! Ответ: ${currentCard.keyword}` 
+                : `Неправильно. Правильный ответ: ${currentCard.keyword}`;
+        }
+        
+        // Следующая карточка
+        function nextCard() {
+            currentIndex = (currentIndex + 1) % testCards.length;
+            loadCard();
+        }
+        
+        // Обработчики событий
+        document.getElementById('check-btn').addEventListener('click', checkAnswer);
+        document.getElementById('answer-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+        
+        // Добавляем кнопку "Следующая карточка"
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Следующая карточка';
+        nextBtn.className = 'check-btn';
+        nextBtn.style.marginLeft = '10px';
+        nextBtn.addEventListener('click', nextCard);
+        document.getElementById('check-btn').parentNode.appendChild(nextBtn);
+        
+        // Загружаем первую карточку
+        loadCard();
+    </script>
+</body>
+</html>
