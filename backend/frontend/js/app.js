@@ -1139,21 +1139,26 @@ function loadTrainingCard() {
         imageElement.alt = 'Mascot';
     }
     
-    // Выбираем тип упражнения: приоритет заполнению пропусков для карточек с ключевыми словами
+    // Выбираем тип упражнения: заполнение пропусков доступно для всех карточек
     let exerciseType;
     
-    // Если есть ключевое слово, увеличиваем вероятность заполнения пропусков до 60%
+    // Автоматически находим ключевое слово если его нет
+    if (!currentCard.keyword || currentCard.keyword.trim() === '') {
+        currentCard.keyword = findKeywordInPhrase(currentCard.front_text);
+    }
+    
+    // Если удалось найти или есть ключевое слово, увеличиваем вероятность заполнения пропусков
     if (currentCard.keyword && currentCard.keyword.trim() !== '') {
         const rand = Math.random();
-        if (rand < 0.6) {
-            exerciseType = 2; // Заполнение пропусков
-        } else if (rand < 0.8) {
-            exerciseType = 0; // Перевод
+        if (rand < 0.5) {
+            exerciseType = 2; // Заполнение пропусков - 50%
+        } else if (rand < 0.75) {
+            exerciseType = 0; // Перевод - 25%
         } else {
-            exerciseType = 1; // Обратный перевод
+            exerciseType = 1; // Обратный перевод - 25%
         }
     } else {
-        // Для карточек без ключевых слов используем только перевод и обратный перевод
+        // Для карточек без подходящих слов используем только перевод и обратный перевод
         exerciseType = Math.floor(Math.random() * 2); // 0 или 1
     }
     
@@ -1194,6 +1199,35 @@ function loadTrainingCard() {
     // Показываем кнопку проверки
     document.getElementById('check-btn').style.display = 'block';
     document.getElementById('check-btn').disabled = false;
+}
+
+// Функция автоматического поиска ключевого слова в фразе
+function findKeywordInPhrase(phrase) {
+    if (!phrase) return null;
+    
+    // Разбиваем фразу на слова и очищаем от знаков препинания
+    const words = phrase.toLowerCase().split(/\s+/).map(word => 
+        word.replace(/[^a-zA-Zа-яёА-ЯЁ]/g, '')
+    ).filter(word => word.length > 0);
+    
+    // Исключаем служебные слова
+    const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'must', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'this', 'that', 'these', 'those'];
+    
+    // Ищем подходящее слово (длиннее 3 символов, не служебное)
+    const candidates = words.filter(word => 
+        word.length > 3 && 
+        !stopWords.includes(word) &&
+        /^[a-zA-Zа-яёА-ЯЁ]+$/.test(word)
+    );
+    
+    // Возвращаем первое подходящее слово или самое длинное
+    if (candidates.length > 0) {
+        return candidates.sort((a, b) => b.length - a.length)[0];
+    }
+    
+    // Если не нашли подходящих, берем любое слово длиннее 2 символов
+    const fallback = words.filter(word => word.length > 2 && !stopWords.includes(word));
+    return fallback.length > 0 ? fallback[0] : null;
 }
 
 // Функция создания фразы с пропуском
