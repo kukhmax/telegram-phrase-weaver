@@ -272,6 +272,7 @@ body {
     flex-direction: row;
     gap: 14px;
     width: 100%;
+    justify-content: space-evenly;
 }
 
 .action-btn {
