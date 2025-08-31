@@ -270,7 +270,7 @@ body {
 .deck-actions {
     display: flex;
     flex-direction: row;
-    gap: 14px;
+    gap: 7px;
     width: 100%;
     justify-content: space-evenly;
 }
@@ -285,6 +285,7 @@ body {
     min-width: 100px;
     font-size: 14px;
     margin: 2px 0;
+    width: 100%;
 }
 .add-cards-btn {
     background-color: #28a745;
