@@ -106,20 +106,48 @@ body {
 /* Очень маленькие экраны (Telegram на телефоне) */
 @media (max-width: 480px) {
     .header-btn {
-        width: 28px;
-        height: 28px;
-        font-size: 16px;
+        width: 24px;
+        height: 24px;
+        font-size: 14px;
+        padding: 2px;
     }
     
     .header-btn img {
-        width: 14px !important;
-        height: 14px !important;
+        width: 12px !important;
+        height: 12px !important;
     }
     
     .stats-icon,
     .settings-icon {
-        width: 14px !important;
-        height: 14px !important;
+        width: 12px !important;
+        height: 12px !important;
+    }
+}
+
+/* Специальные стили для Telegram WebApp */
+@media (max-width: 400px) {
+    .header-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        padding: 1px;
+        min-width: 20px;
+        min-height: 20px;
+    }
+    
+    .header-btn img {
+        width: 10px !important;
+        height: 10px !important;
+        max-width: 10px !important;
+        max-height: 10px !important;
+    }
+    
+    .stats-icon,
+    .settings-icon {
+        width: 10px !important;
+        height: 10px !important;
+        max-width: 10px !important;
+        max-height: 10px !important;
     }
 }
 
@@ -1145,7 +1173,7 @@ body {
     padding: 2px 8px;
     margin: 0 2px;
     background-color: #f8f9fa;
-    border: 2px dashed #6c757d;
+    border: 2px #6c757d;
     border-radius: 4px;
     color: #6c757d;
     font-weight: bold;
@@ -1178,7 +1206,7 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     width: 100%;
-    max-width: 200px;
+    /* max-width: 200px; */
 }
 
 .check-btn:hover {
