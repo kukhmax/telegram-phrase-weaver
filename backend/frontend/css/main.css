@@ -98,8 +98,8 @@ body {
     
     .stats-icon,
     .settings-icon {
-        width: 16px !important;
-        height: 16px !important;
+        width: 30px !important;
+        height: 30px !important;
     }
 }
 
@@ -113,14 +113,14 @@ body {
     }
     
     .header-btn img {
-        width: 12px !important;
-        height: 12px !important;
+        width: 30px !important;
+        height: 30px !important;
     }
     
     .stats-icon,
     .settings-icon {
-        width: 18px !important;
-        height: 18px !important;
+        width: 30px !important;
+        height: 30px !important;
     }
 }
 
