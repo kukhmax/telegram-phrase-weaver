@@ -909,6 +909,38 @@ document.addEventListener('click', (event) => {
         }
     });
 
+    // Обработчик кнопки "Добавить карточки"
+    document.addEventListener('click', async (event) => {
+        if (event.target.classList.contains('add-cards-btn')) {
+            event.preventDefault();
+            
+            const deckCard = event.target.closest('.deck-card');
+            const deckId = parseInt(deckCard.dataset.deckId);
+            
+            // Переходим к генерации карточек для этой колоды
+            currentDeckId = deckId;
+            
+            // Получаем информацию о колоде для отображения языков
+            const deckName = deckCard.querySelector('.deck-name').textContent;
+            const langFromText = deckCard.querySelector('.lang-from').textContent;
+            const langToText = deckCard.querySelector('.lang-to').textContent;
+            
+            // Извлекаем коды языков
+            const langFromCode = extractLanguageCode(langFromText).toUpperCase();
+            const langToCode = extractLanguageCode(langToText).toUpperCase();
+            
+            // Получаем флаги
+            const langFromFlag = getLanguageFlag(langFromCode.toLowerCase());
+            const langToFlag = getLanguageFlag(langToCode.toLowerCase());
+            
+            // Обновляем отображение языков в окне генерации
+            document.getElementById('lang-from-display').textContent = `${langFromFlag}${langFromCode}`;
+            document.getElementById('lang-to-display').textContent = `${langToFlag}${langToCode}`;
+            
+            showWindow('generate-cards-window');
+        }
+    });
+
     // Обработчик формы генерации фраз
     document.getElementById('generate-cards-form').addEventListener('submit', async (event) => {
         event.preventDefault();

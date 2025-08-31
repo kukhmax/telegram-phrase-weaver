@@ -79,8 +79,8 @@ body {
 
 .stats-icon,
 .settings-icon {
-    width: 20px !important;
-    height: 20px !important;
+    width: 30px !important;
+    height: 30px !important;
 }
 
 /* Мобильные устройства и Telegram WebApp */
@@ -92,8 +92,8 @@ body {
     }
     
     .header-btn img {
-        width: 16px !important;
-        height: 16px !important;
+        width: 30px !important;
+        height: 30px !important;
     }
     
     .stats-icon,
@@ -282,6 +282,10 @@ body {
     min-width: 100px;
     font-size: 14px;
     margin: 2px 0;
+}
+.add-cards-btn {
+    background-color: #28a745;
+    color: white;
 }
 .cards-btn {
     background-color: #f4c300;
@@ -649,7 +653,7 @@ body {
 }
 
 .action-btn.secondary {
-    background: #6c757d !important;
+    background: #b5223e !important;
     color: white;
 }
 

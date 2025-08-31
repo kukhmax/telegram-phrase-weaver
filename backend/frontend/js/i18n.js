@@ -67,6 +67,7 @@ const translations = {
         training_complete: 'Тренировка завершена!',
         
         // Кнопки действий
+        add_cards: 'Добавить карточки',
         cards: 'Карточки',
         training: 'Тренировка',
         delete: 'Удалить',
@@ -196,6 +197,7 @@ const translations = {
         training_complete: 'Training Complete!',
         
         // Action buttons
+        add_cards: 'Add Cards',
         cards: 'Cards',
         training: 'Training',
         delete: 'Delete',
