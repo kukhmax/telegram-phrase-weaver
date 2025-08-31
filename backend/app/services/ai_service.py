@@ -22,11 +22,11 @@ Given:
 Please:
 1. Create an English search query (1-2 words) for finding an image that best visually represents the keyword "{keyword}". Call this field "image_query".
 2. Take the original phrase "{phrase}" and provide its accurate translation to {target_language}. In the original phrase, wrap the keyword "{keyword}" (in any of its forms) with HTML tags <b> and </b>.
-3. Create a gap-fill version of the original phrase by replacing the keyword with "_____" (5 underscores). Call this "gap_fill_phrase".
+3. Create a gap-fill version of the original phrase by replacing EXACTLY the keyword "{keyword}" (or its grammatical form that appears in the phrase) with "_____" (5 underscores). IMPORTANT: Replace only the specific word that corresponds to "{keyword}", not any other words. Call this "gap_fill".
 4. Generate 5 additional realistic example sentences using the keyword "{keyword}" in different grammatical forms (conjugations, declensions, etc.).
 5. For each of the 5 additional examples, provide accurate translations to {target_language}.
 6. In each of the 5 additional examples, find and wrap the keyword "{keyword}" (in any of its forms) with HTML tags <b> and </b>.
-7. For each of the 5 additional examples, create a gap-fill version by replacing the keyword with "_____" (5 underscores).
+7. For each of the 5 additional examples, create a gap-fill version by replacing EXACTLY the keyword "{keyword}" (or its grammatical form) with "_____" (5 underscores). IMPORTANT: Replace only the specific word that corresponds to "{keyword}", not any other words. Call this "gap_fill".
 
 Return ONLY a valid JSON object without any other words or formatting.
 Format example:

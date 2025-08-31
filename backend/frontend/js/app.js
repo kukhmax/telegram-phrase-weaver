@@ -1262,20 +1262,34 @@ function loadTrainingCard() {
     } else {
         // Заполнение пропусков - используем готовую фразу с пропуском из ИИ или создаем на лету
         let phraseWithGap;
+        let expectedAnswer;
+        
         if (currentCard.gap_fill) {
             // Используем готовую фразу с пропуском от ИИ
             phraseWithGap = currentCard.gap_fill.replace(/_____/g, '<span class="word-gap">_____</span>');
-            console.log('✅ Используем готовую gap_fill фразу:', phraseWithGap);
+            
+            // Определяем правильный ответ, сравнивая оригинальную фразу с gap_fill
+            expectedAnswer = findMissingWordFromGapFill(currentCard.front_text, currentCard.gap_fill);
+            if (!expectedAnswer) {
+                expectedAnswer = currentCard.keyword; // Fallback
+            }
+            
+            console.log('✅ Используем готовую gap_fill фразу:', {
+                original: currentCard.front_text,
+                gap_fill: currentCard.gap_fill,
+                expected_answer: expectedAnswer
+            });
         } else {
             // Fallback: создаем пропуск на лету
             phraseWithGap = createPhraseWithGap(currentCard.front_text, currentCard.keyword);
+            expectedAnswer = currentCard.keyword;
             console.log('⚠️ Создаем пропуск на лету (нет gap_fill):', phraseWithGap);
         }
         
         phraseElement.innerHTML = phraseWithGap;
         answerInput.placeholder = t('enter_missing_word');
         answerInput.setAttribute('data-reverse', 'false');
-        currentCard.expectedAnswer = currentCard.keyword;
+        currentCard.expectedAnswer = expectedAnswer;
     }
     
     // Очищаем поле ввода и сбрасываем состояния
@@ -1306,6 +1320,43 @@ function loadTrainingCard() {
 }
 
 // Универсальная мультиязычная функция поиска ключевого слова
+function findMissingWordFromGapFill(originalPhrase, gapFillPhrase) {
+    if (!originalPhrase || !gapFillPhrase) return null;
+    
+    console.log('🔍 Поиск пропущенного слова:', { originalPhrase, gapFillPhrase });
+    
+    // Разбиваем фразы на слова
+    const originalWords = originalPhrase.split(/\s+/);
+    const gapFillWords = gapFillPhrase.split(/\s+/);
+    
+    // Если количество слов не совпадает, ищем позицию пропуска
+    if (originalWords.length !== gapFillWords.length) {
+        // Ищем позицию где появился пропуск "_____"
+        for (let i = 0; i < gapFillWords.length; i++) {
+            if (gapFillWords[i].includes('_____')) {
+                // Возвращаем соответствующее слово из оригинальной фразы
+                if (i < originalWords.length) {
+                    const missingWord = originalWords[i].replace(/[^\p{L}]/gu, ''); // Убираем пунктуацию
+                    console.log('✅ Найдено пропущенное слово (разная длина):', missingWord);
+                    return missingWord;
+                }
+            }
+        }
+    } else {
+        // Если длина одинаковая, сравниваем слово за словом
+        for (let i = 0; i < originalWords.length; i++) {
+            if (gapFillWords[i].includes('_____')) {
+                const missingWord = originalWords[i].replace(/[^\p{L}]/gu, ''); // Убираем пунктуацию
+                console.log('✅ Найдено пропущенное слово (одинаковая длина):', missingWord);
+                return missingWord;
+            }
+        }
+    }
+    
+    console.log('⚠️ Не удалось найти пропущенное слово');
+    return null;
+}
+
 function findKeywordInPhrase(phrase) {
     if (!phrase) return null;
     
