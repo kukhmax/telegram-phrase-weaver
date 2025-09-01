@@ -269,10 +269,10 @@ body {
 
 .deck-actions {
     display: flex;
-    flex-direction: row;
-    gap: 14px;
+    flex-wrap: wrap;
+    gap: 5px;
     width: 100%;
-    justify-content: space-evenly;
+    justify-content: space-between;
 }
 
 .action-btn {
@@ -284,9 +284,9 @@ body {
     cursor: pointer;
     min-width: 100px;
     font-size: 14px;
-    margin: 2px 0;
-    width: 100%;
-    
+    margin: 5px;
+    width: calc(50% - 10px);
+    display: inline-block;
 }
 .add-cards-btn {
     background-color: #28a745;
