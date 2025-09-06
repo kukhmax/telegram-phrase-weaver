@@ -342,14 +342,14 @@ body {
 .deck-info .deck-stats {
     font-size: 14px;
     color: #343a40;
+    padding-bottom: 5px;
 }
 
 .deck-actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: row;
     gap: 5px;
     width: 100%;
-    justify-content: space-between;
 }
 
 .action-btn {
@@ -1083,11 +1083,18 @@ body {
     background-color: #e63946;
 }
 
+.select-save-btns {
+    display: flex;
+    flex-direction: row;
+    gap: 1px;
+    margin-bottom: 10px;
+}
+
 /* Действия с фразами */
 .phrases-actions {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 1px;
     margin-top: 20px;
 }
 
@@ -1099,10 +1106,11 @@ body {
     cursor: pointer;
     font-size: 16px;
     transition: all 0.3s ease;
+    width: 100%;
 }
 
 .save-btn {
-    background-color: #28a745;
+    background-color: #2b8740;
     color: white;
 }
 
@@ -1111,7 +1119,7 @@ body {
 }
 
 .save-btn:disabled {
-    background-color: #6c757d;
+    background-color: #28a74585;
     cursor: not-allowed;
 }
 
@@ -1125,7 +1133,7 @@ body {
 }
 
 .back-btn {
-    background-color: #6c757d;
+    background-color: #6c757db5;
     color: white;
 }
 
@@ -1154,7 +1162,6 @@ body {
 .select-all-btn {
     background-color: #17a2b8;
     color: white;
-    margin-bottom: 15px;
 }
 
 .select-all-btn:hover {

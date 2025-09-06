@@ -2005,8 +2005,11 @@ function updateWordTags(phrase) {
     container.innerHTML = '';
     
     if (!phrase.trim()) {
+        container.classList.add('hidden');
         return;
     }
+    
+    container.classList.remove('hidden');
     
     // Разбиваем фразу на слова, удаляя знаки препинания
     const words = phrase.trim().split(/\s+/).filter(word => {
