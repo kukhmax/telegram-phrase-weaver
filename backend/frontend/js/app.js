@@ -941,6 +941,19 @@ document.addEventListener('click', (event) => {
         }
     });
 
+    // Обработчик кнопки очистки поля фразы
+    document.getElementById('clear-phrase-btn').addEventListener('click', () => {
+        const phraseInput = document.getElementById('phrase-input');
+        phraseInput.value = '';
+        phraseInput.focus();
+        updateWordTags('');
+    });
+
+    // Обработчик изменения текста в поле фразы для создания тегов слов
+    document.getElementById('phrase-input').addEventListener('input', (event) => {
+        updateWordTags(event.target.value);
+    });
+
     // Обработчик формы генерации фраз
     document.getElementById('generate-cards-form').addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -1985,3 +1998,36 @@ document.getElementById('stats-modal').addEventListener('click', (e) => {
         }
     }
 });
+
+// Функция для обновления тегов слов
+function updateWordTags(phrase) {
+    const container = document.getElementById('word-tags-container');
+    container.innerHTML = '';
+    
+    if (!phrase.trim()) {
+        return;
+    }
+    
+    // Разбиваем фразу на слова, удаляя знаки препинания
+    const words = phrase.trim().split(/\s+/).filter(word => {
+        // Убираем пустые строки и слова состоящие только из знаков препинания
+        const cleanWord = word.replace(/[^\w\u00C0-\u017F\u0400-\u04FF]/g, '');
+        return cleanWord.length > 0;
+    });
+    
+    words.forEach(word => {
+        // Очищаем слово от знаков препинания для отображения
+        const cleanWord = word.replace(/[^\w\u00C0-\u017F\u0400-\u04FF]/g, '');
+        if (cleanWord.length > 0) {
+            const tag = document.createElement('span');
+            tag.className = 'word-tag';
+            tag.textContent = cleanWord;
+            tag.addEventListener('click', () => {
+                const keywordInput = document.getElementById('keyword-input');
+                keywordInput.value = cleanWord;
+                keywordInput.focus();
+            });
+            container.appendChild(tag);
+        }
+    });
+}

@@ -187,6 +187,83 @@ body {
     }
 }
 
+/* Стили для контейнера поля ввода фразы */
+.phrase-input-container {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+}
+
+.phrase-input-container textarea {
+    flex: 1;
+    padding-right: 40px; /* Место для кнопки очистки */
+}
+
+/* Кнопка очистки поля */
+.clear-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #999;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+    background: #f0f0f0;
+    color: #666;
+}
+
+.clear-btn:active {
+    background: #e0e0e0;
+}
+
+/* Контейнер для тегов слов */
+.word-tags-container {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+/* Теги слов */
+.word-tag {
+    display: inline-block;
+    padding: 6px 12px;
+    background: var(--brand-yellow);
+    color: var(--brand-blue);
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.word-tag:hover {
+    background: #e6b000;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.word-tag:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
 /* Main Content */
 .app-main {
     color: var(--text-color);

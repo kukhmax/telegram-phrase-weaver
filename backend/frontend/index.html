@@ -97,7 +97,13 @@
                 <form id="generate-cards-form" class="form-container">
                     <div class="form-group">
                         <label for="phrase-input" data-translate="phrase_label">Фраза:</label>
-                        <textarea id="phrase-input" name="phrase" data-translate="phrase_placeholder" placeholder="Введите фразу для изучения" required></textarea>
+                        <div class="phrase-input-container">
+                            <textarea id="phrase-input" name="phrase" data-translate="phrase_placeholder" placeholder="Введите фразу для изучения" required></textarea>
+                            <button type="button" id="clear-phrase-btn" class="clear-btn" title="Очистить поле">&times;</button>
+                        </div>
+                        <div id="word-tags-container" class="word-tags-container hidden">
+                            <!-- Теги слов будут добавлены динамически -->
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="keyword-input" data-translate="keyword_label">Ключевое слово:</label>
