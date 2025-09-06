@@ -70,10 +70,7 @@ function displayGeneratedPhrases(data, langFrom, langTo) {
     
     // Создаем HTML для каждой фразы
     allPhrases.forEach((phrase, index) => {
-        // ИСПРАВЛЕНИЕ: меняем местами langFrom и langTo, так как:
-        // phrase.original должна отображаться с флагом изучаемого языка (langTo)
-        // phrase.translation должна отображаться с флагом языка перевода (langFrom)
-        const phraseCard = createPhraseCard(phrase, index, langTo, langFrom);
+        const phraseCard = createPhraseCard(phrase, index, langFrom, langTo);
         container.appendChild(phraseCard);
     });
     
@@ -96,16 +93,16 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
     card.innerHTML = `
         <div class="phrase-content">
             <div class="phrase-line">
-                <span class="flag-emoji">${langFromFlag}</span>
+                <span class="flag-emoji">${langToFlag}</span>
                 <span class="phrase-text">${phrase.original}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}', '${extractLanguageCode(langFrom)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}'', '${extractLanguageCode(langTo)}'')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="phrase-line">
-                <span class="flag-emoji">${langToFlag}</span>
+                <span class="flag-emoji">${langFromFlag}</span>
                 <span class="phrase-text">${phrase.translation}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', '${extractLanguageCode(langTo)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}'', '${extractLanguageCode(langFrom)}'')" title="Прослушать">
                     🔊
                 </button>
             </div>
