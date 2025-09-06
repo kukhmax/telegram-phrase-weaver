@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional
 import aiohttp
 from gtts import gTTS
+from .tts_service import tts_service
 from deep_translator import GoogleTranslator
 
 from .ai_service import generate_examples_with_ai  # Импорт AI
@@ -30,7 +31,42 @@ async def get_translation(text: str, from_lang: str, to_lang: str) -> Optional[s
         logging.error(f"Ошибка перевода: {e}")
         return None
 
-async def generate_audio(text: str, lang: str, prefix: str):
+async def generate_audio(text: str, lang: str, prefix: str, use_chatterbox: bool = True):
+    """
+    Генерирует аудио с использованием нового TTS сервиса
+    
+    Args:
+        text: Текст для озвучки
+        lang: Код языка
+        prefix: Префикс для имени файла
+        use_chatterbox: Использовать Chatterbox TTS (по умолчанию True)
+    """
+    try:
+        # Используем новый TTS сервис
+        audio_path = await tts_service.generate_audio(
+            text=text,
+            language_id=lang,
+            use_chatterbox=use_chatterbox,
+            prefix=prefix
+        )
+        
+        if audio_path:
+            logging.info(f"Аудио '{text}' ({lang}) сохранено через TTS сервис: {audio_path}")
+            return audio_path
+        else:
+            logging.warning(f"TTS сервис не смог сгенерировать аудио для '{text}' ({lang})")
+            return None
+            
+    except Exception as e:
+        logging.error(f"Ошибка генерации аудио через TTS сервис: {e}")
+        # Fallback на старый метод
+        return await generate_audio_legacy(text, lang, prefix)
+
+
+async def generate_audio_legacy(text: str, lang: str, prefix: str):
+    """
+    Старый метод генерации аудио с gTTS (fallback)
+    """
     try:
         filename = f"{prefix}_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
         file_path = AUDIO_DIR / filename
@@ -47,10 +83,10 @@ async def generate_audio(text: str, lang: str, prefix: str):
             tts.save(str(file_path))
         
         await asyncio.get_running_loop().run_in_executor(None, tts_sync)
-        logging.info(f"Аудио '{text}' ({lang} / {tld}) сохранено: {file_path}")
+        logging.info(f"Аудио '{text}' ({lang} / {tld}) сохранено (legacy): {file_path}")
         return f"assets/audio/{filename}"
     except Exception as e:
-        logging.error(f"Ошибка генерации аудио: {e}")
+        logging.error(f"Ошибка генерации аудио (legacy): {e}")
         return None
 
 async def download_and_save_image(image_url: str, query: str) -> Optional[str]:

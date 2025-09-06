@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from alembic import command, config as alembic_config
 from app.core.config import get_settings
-from app.routers import auth, cards, decks, training_stats, telegram
+from app.routers import auth, cards, decks, training_stats, telegram, tts
 from app.middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
@@ -119,6 +119,7 @@ app.include_router(cards.router)
 app.include_router(decks.router)
 app.include_router(training_stats.router)
 app.include_router(telegram.router)
+app.include_router(tts.router)
 
 # Статические файлы фронтенда
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
