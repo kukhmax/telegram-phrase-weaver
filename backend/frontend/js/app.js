@@ -70,7 +70,10 @@ function displayGeneratedPhrases(data, langFrom, langTo) {
     
     // Создаем HTML для каждой фразы
     allPhrases.forEach((phrase, index) => {
-        const phraseCard = createPhraseCard(phrase, index, langFrom, langTo);
+        // ИСПРАВЛЕНИЕ: меняем местами langFrom и langTo, так как:
+        // phrase.original должна отображаться с флагом изучаемого языка (langTo)
+        // phrase.translation должна отображаться с флагом языка перевода (langFrom)
+        const phraseCard = createPhraseCard(phrase, index, langTo, langFrom);
         container.appendChild(phraseCard);
     });
     
