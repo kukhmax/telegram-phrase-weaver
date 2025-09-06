@@ -358,8 +358,8 @@ window.playAudio = async function(text, langCode) {
         // Очищаем текст от HTML тегов
         const cleanText = text.replace(/<[^>]*>/g, '');
         
-        // Сначала пробуем Web Speech API (для десктопа)
-        if ('speechSynthesis' in window && !window.Telegram?.WebApp) {
+        // Всегда используем серверную генерацию аудио для лучшего качества
+        if (false) { // Отключаем Web Speech API
             // Останавливаем предыдущее воспроизведение
             window.speechSynthesis.cancel();
             
