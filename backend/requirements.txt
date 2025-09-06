@@ -26,3 +26,4 @@ psycopg2-binary
 pytest>=7.0.0
 pytest-asyncio>=0.21.0
 httpx>=0.24.0  # For TestClient async support
+aiogram==3.13.1

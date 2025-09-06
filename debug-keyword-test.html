@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отладка поиска ключевых слов</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .test-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .test-btn {
+            background-color: #f4c300;
+            color: #1800ad;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            border-left: 5px solid #007bff;
+        }
+        .keyword-highlight {
+            background-color: #fff3cd;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .test-examples {
+            background-color: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .example-item {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            border-left: 3px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔍 Отладка автоматического поиска ключевых слов</h1>
+        
+        <div class="test-examples">
+            <h3>📝 Примеры для тестирования:</h3>
+            <div class="example-item">"I love programming" → ожидаем: <strong>programming</strong></div>
+            <div class="example-item">"She is reading a book" → ожидаем: <strong>reading</strong></div>
+            <div class="example-item">"We went to the store" → ожидаем: <strong>store</strong></div>
+            <div class="example-item">"The cat is sleeping" → ожидаем: <strong>sleeping</strong></div>
+            <div class="example-item">"I bought a new car" → ожидаем: <strong>bought</strong></div>
+        </div>
+        
+        <h3>🧪 Тестирование функции:</h3>
+        <input type="text" id="test-phrase" class="test-input" placeholder="Введите фразу для тестирования..." value="I love programming">
+        
+        <button id="test-btn" class="test-btn">Найти ключевое слово</button>
+        <button id="test-all-btn" class="test-btn">Тестировать все примеры</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
+        
+        <h3>📊 Тест логики выбора упражнений:</h3>
+        <button id="test-logic-btn" class="test-btn">Тестировать логику (100 раз)</button>
+        <div id="logic-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <script>
+        // Копия функции из основного приложения
+        function findKeywordInPhrase(phrase) {
+            if (!phrase) return null;
+            
+            // Разбиваем фразу на слова и очищаем от знаков препинания
+            const words = phrase.toLowerCase().split(/\s+/).map(word => 
+                word.replace(/[^a-zA-Zа-яёА-ЯЁ]/g, '')
+            ).filter(word => word.length > 0);
+            
+            // Исключаем служебные слова
+            const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'must', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'this', 'that', 'these', 'those'];
+            
+            // Ищем подходящее слово (длиннее 3 символов, не служебное)
+            const candidates = words.filter(word => 
+                word.length > 3 && 
+                !stopWords.includes(word) &&
+                /^[a-zA-Zа-яёА-ЯЁ]+$/.test(word)
+            );
+            
+            // Возвращаем первое подходящее слово или самое длинное
+            if (candidates.length > 0) {
+                return candidates.sort((a, b) => b.length - a.length)[0];
+            }
+            
+            // Если не нашли подходящих, берем любое слово длиннее 2 символов
+            const fallback = words.filter(word => word.length > 2 && !stopWords.includes(word));
+            return fallback.length > 0 ? fallback[0] : null;
+        }
+        
+        // Копия логики выбора упражнений
+        function selectExerciseType(keyword) {
+            if (keyword && keyword.trim() !== '') {
+                const rand = Math.random();
+                if (rand < 0.5) {
+                    return 2; // Заполнение пропусков - 50%
+                } else if (rand < 0.75) {
+                    return 0; // Перевод - 25%
+                } else {
+                    return 1; // Обратный перевод - 25%
+                }
+            } else {
+                return Math.floor(Math.random() * 2); // 0 или 1
+            }
+        }
+        
+        // Тестирование одной фразы
+        function testPhrase() {
+            const phrase = document.getElementById('test-phrase').value.trim();
+            const result = document.getElementById('result');
+            
+            if (!phrase) {
+                alert('Введите фразу для тестирования');
+                return;
+            }
+            
+            const keyword = findKeywordInPhrase(phrase);
+            
+            result.style.display = 'block';
+            result.innerHTML = `
+                <h4>🔍 Результат анализа:</h4>
+                <p><strong>Фраза:</strong> "${phrase}"</p>
+                <p><strong>Найденное ключевое слово:</strong> ${keyword ? `<span class="keyword-highlight">${keyword}</span>` : '<em>не найдено</em>'}</p>
+                <p><strong>Статус:</strong> ${keyword ? '✅ Заполнение пропусков доступно' : '❌ Только перевод и обратный перевод'}</p>
+            `;
+            
+            console.log('Тест фразы:', { phrase, keyword });
+        }
+        
+        // Тестирование всех примеров
+        function testAllExamples() {
+            const examples = [
+                'I love programming',
+                'She is reading a book',
+                'We went to the store',
+                'The cat is sleeping',
+                'I bought a new car',
+                'Hello world',
+                'The quick brown fox',
+                'I am happy',
+                'This is a test'
+            ];
+            
+            const result = document.getElementById('result');
+            result.style.display = 'block';
+            
+            let html = '<h4>📋 Результаты тестирования всех примеров:</h4>';
+            
+            examples.forEach(phrase => {
+                const keyword = findKeywordInPhrase(phrase);
+                const status = keyword ? '✅' : '❌';
+                html += `
+                    <div style="margin: 10px 0; padding: 10px; background: ${keyword ? '#d4edda' : '#f8d7da'}; border-radius: 5px;">
+                        <strong>${phrase}</strong> → ${keyword ? `<span class="keyword-highlight">${keyword}</span>` : '<em>не найдено</em>'} ${status}
+                    </div>
+                `;
+            });
+            
+            result.innerHTML = html;
+        }
+        
+        // Тестирование логики выбора упражнений
+        function testExerciseLogic() {
+            const testPhrase = 'I love programming';
+            const keyword = findKeywordInPhrase(testPhrase);
+            
+            let stats = {
+                fillCount: 0,
+                translationCount: 0,
+                reverseCount: 0
+            };
+            
+            const iterations = 1000;
+            
+            for (let i = 0; i < iterations; i++) {
+                const exerciseType = selectExerciseType(keyword);
+                if (exerciseType === 2) {
+                    stats.fillCount++;
+                } else if (exerciseType === 0) {
+                    stats.translationCount++;
+                } else {
+                    stats.reverseCount++;
+                }
+            }
+            
+            const result = document.getElementById('logic-result');
+            result.style.display = 'block';
+            result.innerHTML = `
+                <h4>📊 Статистика выбора упражнений (${iterations} итераций):</h4>
+                <p><strong>Тестовая фраза:</strong> "${testPhrase}"</p>
+                <p><strong>Найденное ключевое слово:</strong> <span class="keyword-highlight">${keyword}</span></p>
+                <div style="margin: 15px 0;">
+                    <div>🎯 <strong>Заполнение пропусков:</strong> ${stats.fillCount} (${Math.round(stats.fillCount/iterations*100)}%) - ожидаем ~50%</div>
+                    <div>📝 <strong>Перевод:</strong> ${stats.translationCount} (${Math.round(stats.translationCount/iterations*100)}%) - ожидаем ~25%</div>
+                    <div>🔄 <strong>Обратный перевод:</strong> ${stats.reverseCount} (${Math.round(stats.reverseCount/iterations*100)}%) - ожидаем ~25%</div>
+                </div>
+                <p><strong>Вывод:</strong> ${stats.fillCount > 400 ? '✅ Логика работает корректно' : '❌ Проблема с логикой'}</p>
+            `;
+            
+            console.log('Статистика упражнений:', stats);
+        }
+        
+        // Обработчики событий
+        document.getElementById('test-btn').addEventListener('click', testPhrase);
+        document.getElementById('test-all-btn').addEventListener('click', testAllExamples);
+        document.getElementById('test-logic-btn').addEventListener('click', testExerciseLogic);
+        
+        document.getElementById('test-phrase').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                testPhrase();
+            }
+        });
+        
+        console.log('🔍 Отладочная страница загружена!');
+        console.log('📝 Введите фразу и нажмите "Найти ключевое слово" для тестирования');
+        
+        // Автоматический тест при загрузке
+        setTimeout(() => {
+            testAllExamples();
+        }, 1000);
+    </script>
+</body>
+</html>

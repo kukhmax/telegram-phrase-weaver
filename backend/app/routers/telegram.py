@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 import logging
+import json
 from typing import Dict, Any
+from ..services.telegram_bot import process_webhook_update
 
 router = APIRouter(prefix="/telegram", tags=["telegram"])
 
@@ -13,6 +15,8 @@ class WebhookUpdate(BaseModel):
     message: Dict[str, Any] = None
     callback_query: Dict[str, Any] = None
     inline_query: Dict[str, Any] = None
+
+
 
 @router.post("/webhook")
 async def telegram_webhook(request: Request):
@@ -28,18 +32,12 @@ async def telegram_webhook(request: Request):
         logger.info(f"Received Telegram webhook: {body.decode('utf-8')[:200]}...")
         
         # Parse JSON
-        import json
         update_data = json.loads(body)
         
-        # Process the update (for now just log it)
+        # Process the update using aiogram
         logger.info(f"Telegram update received: {update_data.get('update_id')}")
+        await process_webhook_update(update_data)
         
-        # Here you can add your bot logic:
-        # - Handle /start command
-        # - Handle button clicks
-        # - Send responses back to users
-        
-        # For now, just return OK to acknowledge receipt
         return {"ok": True}
         
     except json.JSONDecodeError as e:
@@ -48,6 +46,8 @@ async def telegram_webhook(request: Request):
     except Exception as e:
         logger.error(f"Error processing webhook: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
 
 @router.get("/webhook")
 async def webhook_info():

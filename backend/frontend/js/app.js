@@ -106,6 +106,7 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
                     🔊
                 </button>
             </div>
+
         </div>
         <div class="phrase-actions">
             <button class="phrase-btn select-btn" onclick="togglePhraseSelection(${index})">
@@ -117,7 +118,50 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
         </div>
     `;
     
+    // Сохраняем ключевое слово в данных фразы
+    if (!phrase.keyword) {
+        phrase.keyword = findKeywordInPhrase(phrase.original) || '';
+    }
+    
     return card;
+}
+
+// Функция обновления ключевого слова фразы
+window.updatePhraseKeyword = function(index, keyword) {
+    if (currentGeneratedData && currentGeneratedData.phrases && currentGeneratedData.phrases[index]) {
+        currentGeneratedData.phrases[index].keyword = keyword.trim();
+        console.log('🔄 Обновлено ключевое слово:', {
+            index: index,
+            phrase: currentGeneratedData.phrases[index].original,
+            keyword: keyword.trim()
+        });
+    }
+};
+
+// Функция предложения ключевых слов
+window.suggestKeywords = function(index) {
+    if (!currentGeneratedData || !currentGeneratedData.phrases || !currentGeneratedData.phrases[index]) {
+        return;
+    }
+    
+    const phrase = currentGeneratedData.phrases[index].original;
+    const words = phrase.toLowerCase().split(/\s+/).map(word => 
+        word.replace(/[^\p{L}]/gu, '')
+    ).filter(word => word.length > 2);
+    
+    // Исключаем служебные слова
+    const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'и', 'в', 'не', 'на', 'с', 'он', 'а', 'как', 'что', 'это']);
+    
+    const candidates = words.filter(word => !stopWords.has(word)).sort((a, b) => b.length - a.length);
+    
+    if (candidates.length > 0) {
+        const suggestion = candidates[0];
+        const input = document.querySelector(`input[data-index="${index}"]`);
+        if (input) {
+            input.value = suggestion;
+            updatePhraseKeyword(index, suggestion);
+        }
+    }
 }
 
 // Функция для переключения выбора фразы
@@ -865,6 +909,57 @@ document.addEventListener('click', (event) => {
         }
     });
 
+    // Обработчик кнопки "Добавить карточки"
+    document.addEventListener('click', async (event) => {
+        if (event.target.classList.contains('add-cards-btn')) {
+            event.preventDefault();
+            
+            const deckCard = event.target.closest('.deck-card');
+            const deckId = parseInt(deckCard.dataset.deckId);
+            
+            // Переходим к генерации карточек для этой колоды
+            currentDeckId = deckId;
+            
+            // Получаем информацию о колоде для отображения языков
+            const deckName = deckCard.querySelector('.deck-name').textContent;
+            const langFromText = deckCard.querySelector('.lang-from').textContent;
+            const langToText = deckCard.querySelector('.lang-to').textContent;
+            
+            // Извлекаем коды языков
+            const langFromCode = extractLanguageCode(langFromText).toUpperCase();
+            const langToCode = extractLanguageCode(langToText).toUpperCase();
+            
+            // Получаем флаги
+            const langFromFlag = getLanguageFlag(langFromCode.toLowerCase());
+            const langToFlag = getLanguageFlag(langToCode.toLowerCase());
+            
+            // Обновляем отображение языков в окне генерации
+            document.getElementById('lang-from-display').textContent = `${langFromFlag}${langFromCode}`;
+            document.getElementById('lang-to-display').textContent = `${langToFlag}${langToCode}`;
+            
+            showWindow('generate-cards-window');
+        }
+    });
+
+    // Обработчик кнопки очистки поля фразы
+    document.getElementById('clear-phrase-btn').addEventListener('click', () => {
+        const phraseInput = document.getElementById('phrase-input');
+        phraseInput.value = '';
+        phraseInput.focus();
+        updateWordTags('');
+    });
+    
+    document.getElementById('clear-keyword-btn').addEventListener('click', () => {
+        const keywordInput = document.getElementById('keyword-input');
+        keywordInput.value = '';
+        keywordInput.focus();
+    });
+
+    // Обработчик изменения текста в поле фразы для создания тегов слов
+    document.getElementById('phrase-input').addEventListener('input', (event) => {
+        updateWordTags(event.target.value);
+    });
+
     // Обработчик формы генерации фраз
     document.getElementById('generate-cards-form').addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -937,16 +1032,41 @@ document.addEventListener('click', (event) => {
                     const originalText = card.querySelector('.phrase-line:first-child .phrase-text').textContent;
                     const translationText = card.querySelector('.phrase-line:last-child .phrase-text').textContent;
                     
+                    // Автоматически определяем ключевое слово
+                    let keyword = '';
+                    let gapFill = null;
+                    
+                    // Получаем данные из ответа ИИ
+                    if (index === 0 && currentGeneratedData?.original_phrase) {
+                        // Оригинальная фраза
+                        keyword = findKeywordInPhrase(originalText) || '';
+                        gapFill = currentGeneratedData.original_phrase.gap_fill || null;
+                    } else if (currentGeneratedData?.additional_examples?.[index - 1]) {
+                        // Дополнительные примеры (индекс сдвинут на -1)
+                        const example = currentGeneratedData.additional_examples[index - 1];
+                        keyword = findKeywordInPhrase(originalText) || '';
+                        gapFill = example.gap_fill || null;
+                    } else {
+                        keyword = findKeywordInPhrase(originalText) || '';
+                    }
+                    
                     const cardData = {
                         deck_id: currentDeckId,
                         front_text: originalText,
                         back_text: translationText,
+                        keyword: keyword || null,
+                        gap_fill: gapFill,
                         difficulty: 1,
                         next_review: new Date().toISOString(),
                         image_path: currentGeneratedData?.image_path || null
                     };
                     
-                    console.log('Card data to save:', cardData);
+                    console.log('💾 Сохраняем карточку с gap_fill:', {
+                        phrase: originalText,
+                        keyword: keyword,
+                        gap_fill: gapFill,
+                        cardData: cardData
+                    });
                     phrasesToSave.push(cardData);
                 }
             });
@@ -996,7 +1116,7 @@ if (selectAllBtn) {
             selectBtn.textContent = 'Выбрать';
             selectBtn.classList.remove('selected');
         });
-        selectAllBtn.textContent = 'Выделить все';
+        selectAllBtn.textContent = t('select_all');
     } else {
         // Выделяем все
         selectedPhrases.clear();
@@ -1007,7 +1127,7 @@ if (selectAllBtn) {
             selectBtn.textContent = 'Выбрано';
             selectBtn.classList.add('selected');
         });
-        selectAllBtn.textContent = 'Снять выделение';
+        selectAllBtn.textContent = t('deselect_all');
     }
     
     updatePhrasesCounter();
@@ -1139,25 +1259,88 @@ function loadTrainingCard() {
         imageElement.alt = 'Mascot';
     }
     
-    // Случайно выбираем направление обучения
-    const isForward = Math.random() < 0.5; // 50% вероятность каждого направления
-    currentCard.isForward = isForward;
+    // Сбалансированный выбор типа упражнения
+    let exerciseType;
+    
+    // Автоматически находим ключевое слово если его нет
+    if (!currentCard.keyword || currentCard.keyword.trim() === '') {
+        currentCard.keyword = findKeywordInPhrase(currentCard.front_text);
+    }
+    
+    // Выбираем тип упражнения с правильным распределением
+    if (currentCard.keyword && currentCard.keyword.trim() !== '') {
+        const rand = Math.random();
+        if (rand < 0.4) {
+            exerciseType = 2; // 40% - заполнение пропусков
+        } else if (rand < 0.7) {
+            exerciseType = 0; // 30% - перевод
+        } else {
+            exerciseType = 1; // 30% - обратный перевод
+        }
+        console.log('🎯 Выбран тип упражнения:', {
+            phrase: currentCard.front_text,
+            keyword: currentCard.keyword,
+            exerciseType: exerciseType,
+            type: exerciseType === 2 ? 'заполнение пропусков' : exerciseType === 0 ? 'перевод' : 'обратный перевод'
+        });
+    } else {
+        // Если нет ключевого слова, используем только перевод и обратный перевод
+        exerciseType = Math.floor(Math.random() * 2); // 0 или 1
+        console.log('📝 Обычное упражнение (нет ключевого слова):', {
+            phrase: currentCard.front_text,
+            exerciseType: exerciseType,
+            type: exerciseType === 0 ? 'перевод' : 'обратный перевод'
+        });
+    }
+    
+    currentCard.exerciseType = exerciseType;
     
     const phraseElement = document.getElementById('training-phrase');
     const answerInput = document.getElementById('answer-input');
     
-    if (isForward) {
+    if (exerciseType === 0) {
         // Показываем фразу на изучаемом языке, ожидаем перевод
         phraseElement.textContent = currentCard.front_text;
         answerInput.placeholder = t('enter_translation');
         answerInput.setAttribute('data-reverse', 'false');
         currentCard.expectedAnswer = currentCard.back_text;
-    } else {
+    } else if (exerciseType === 1) {
         // Показываем перевод, ожидаем фразу на изучаемом языке
         phraseElement.textContent = currentCard.back_text;
         answerInput.placeholder = t('enter_phrase');
         answerInput.setAttribute('data-reverse', 'true');
         currentCard.expectedAnswer = currentCard.front_text;
+    } else {
+        // Заполнение пропусков - используем готовую фразу с пропуском из ИИ или создаем на лету
+        let phraseWithGap;
+        let expectedAnswer;
+        
+        if (currentCard.gap_fill) {
+            // Используем готовую фразу с пропуском от ИИ
+            phraseWithGap = currentCard.gap_fill.replace(/_____/g, '<span class="word-gap">_____</span>');
+            
+            // Определяем правильный ответ, сравнивая оригинальную фразу с gap_fill
+            expectedAnswer = findMissingWordFromGapFill(currentCard.front_text, currentCard.gap_fill);
+            if (!expectedAnswer) {
+                expectedAnswer = currentCard.keyword; // Fallback
+            }
+            
+            console.log('✅ Используем готовую gap_fill фразу:', {
+                original: currentCard.front_text,
+                gap_fill: currentCard.gap_fill,
+                expected_answer: expectedAnswer
+            });
+        } else {
+            // Fallback: создаем пропуск на лету
+            phraseWithGap = createPhraseWithGap(currentCard.front_text, currentCard.keyword);
+            expectedAnswer = currentCard.keyword;
+            console.log('⚠️ Создаем пропуск на лету (нет gap_fill):', phraseWithGap);
+        }
+        
+        phraseElement.innerHTML = phraseWithGap;
+        answerInput.placeholder = t('enter_missing_word');
+        answerInput.setAttribute('data-reverse', 'false');
+        currentCard.expectedAnswer = expectedAnswer;
     }
     
     // Очищаем поле ввода и сбрасываем состояния
@@ -1168,9 +1351,374 @@ function loadTrainingCard() {
     document.getElementById('correct-answer').classList.add('hidden');
     document.getElementById('rating-buttons').classList.add('hidden');
     
+    // Управляем кнопкой подсказки
+    const hintBtn = document.getElementById('hint-btn');
+    const hintText = document.getElementById('hint-text');
+    
+    if (exerciseType === 2) {
+        // Показываем кнопку подсказки только для заполнения пропусков
+        hintBtn.classList.remove('hidden');
+        hintText.classList.add('hidden'); // Скрываем текст подсказки
+    } else {
+        // Скрываем кнопку подсказки для других типов упражнений
+        hintBtn.classList.add('hidden');
+        hintText.classList.add('hidden');
+    }
+    
     // Показываем кнопку проверки
     document.getElementById('check-btn').style.display = 'block';
     document.getElementById('check-btn').disabled = false;
+}
+
+// Универсальная мультиязычная функция поиска ключевого слова
+function findMissingWordFromGapFill(originalPhrase, gapFillPhrase) {
+    if (!originalPhrase || !gapFillPhrase) return null;
+    
+    console.log('🔍 Поиск пропущенного слова:', { originalPhrase, gapFillPhrase });
+    
+    // Разбиваем фразы на слова
+    const originalWords = originalPhrase.split(/\s+/);
+    const gapFillWords = gapFillPhrase.split(/\s+/);
+    
+    // Если количество слов не совпадает, ищем позицию пропуска
+    if (originalWords.length !== gapFillWords.length) {
+        // Ищем позицию где появился пропуск "_____"
+        for (let i = 0; i < gapFillWords.length; i++) {
+            if (gapFillWords[i].includes('_____')) {
+                // Возвращаем соответствующее слово из оригинальной фразы
+                if (i < originalWords.length) {
+                    const missingWord = originalWords[i].replace(/[^\p{L}]/gu, ''); // Убираем пунктуацию
+                    console.log('✅ Найдено пропущенное слово (разная длина):', missingWord);
+                    return missingWord;
+                }
+            }
+        }
+    } else {
+        // Если длина одинаковая, сравниваем слово за словом
+        for (let i = 0; i < originalWords.length; i++) {
+            if (gapFillWords[i].includes('_____')) {
+                const missingWord = originalWords[i].replace(/[^\p{L}]/gu, ''); // Убираем пунктуацию
+                console.log('✅ Найдено пропущенное слово (одинаковая длина):', missingWord);
+                return missingWord;
+            }
+        }
+    }
+    
+    console.log('⚠️ Не удалось найти пропущенное слово');
+    return null;
+}
+
+function findKeywordInPhrase(phrase) {
+    if (!phrase) return null;
+    
+    console.log('🔍 Анализ фразы для поиска ключевого слова:', phrase);
+    
+    // Разбиваем фразу на слова с поддержкой Unicode
+    const words = phrase.toLowerCase().split(/\s+/).map(word => 
+        word.replace(/[^\p{L}]/gu, '') // Поддержка всех Unicode букв
+    ).filter(word => word.length > 0);
+    
+    console.log('📝 Найденные слова:', words);
+    
+    // Универсальный список служебных слов для основных языков
+    const universalStopWords = new Set([
+        // Английские
+        'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+        'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did',
+        'will', 'would', 'could', 'should', 'may', 'might', 'can', 'must', 'shall',
+        'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+        'my', 'your', 'his', 'her', 'its', 'our', 'their', 'this', 'that', 'these', 'those',
+        'not', 'no', 'yes', 'all', 'any', 'some', 'each', 'every', 'other', 'another',
+        // Русские
+        'и', 'в', 'не', 'на', 'я', 'быть', 'с', 'он', 'а', 'как', 'что', 'это', 'она', 'так',
+        'его', 'но', 'да', 'ты', 'к', 'у', 'же', 'вы', 'за', 'бы', 'по', 'только', 'ее', 'мне',
+        'было', 'вот', 'от', 'меня', 'еще', 'нет', 'о', 'из', 'ему', 'теперь', 'когда', 'даже',
+        'ну', 'вдруг', 'ли', 'если', 'уже', 'или', 'ни', 'был', 'него', 'до', 'вас', 'нибудь',
+        // Немецкие
+        'der', 'die', 'das', 'und', 'oder', 'aber', 'in', 'auf', 'zu', 'mit', 'von', 'für',
+        'ist', 'sind', 'war', 'waren', 'haben', 'hat', 'hatte', 'werden', 'wird', 'wurde',
+        'ich', 'du', 'er', 'sie', 'es', 'wir', 'ihr', 'mein', 'dein', 'sein', 'unser',
+        // Французские
+        'le', 'la', 'les', 'un', 'une', 'et', 'ou', 'mais', 'dans', 'sur', 'avec', 'de', 'du',
+        'est', 'sont', 'était', 'étaient', 'avoir', 'être', 'je', 'tu', 'il', 'elle', 'nous', 'vous',
+        // Испанские
+        'el', 'la', 'los', 'las', 'un', 'una', 'y', 'o', 'pero', 'en', 'con', 'de', 'del',
+        'es', 'son', 'era', 'eran', 'tener', 'ser', 'yo', 'tú', 'él', 'ella', 'nosotros', 'vosotros',
+        // Итальянские
+        'il', 'la', 'lo', 'gli', 'le', 'un', 'una', 'e', 'o', 'ma', 'in', 'con', 'di', 'del',
+        'è', 'sono', 'era', 'erano', 'avere', 'essere', 'io', 'tu', 'lui', 'lei', 'noi', 'voi',
+        // Португальские
+        'o', 'a', 'os', 'as', 'um', 'uma', 'e', 'ou', 'mas', 'em', 'com', 'de', 'do', 'da',
+        'é', 'são', 'era', 'eram', 'ter', 'ser', 'eu', 'tu', 'ele', 'ela', 'nós', 'vós',
+        // Голландские
+        'de', 'het', 'een', 'en', 'of', 'maar', 'in', 'op', 'met', 'van', 'voor',
+        'is', 'zijn', 'was', 'waren', 'hebben', 'heeft', 'had', 'ik', 'jij', 'hij', 'zij', 'wij'
+    ]);
+    
+    // Ищем подходящие слова (не служебные, длиннее 2 символов)
+    const candidates = words.filter(word => 
+        word.length > 2 && 
+        !universalStopWords.has(word) &&
+        /^\p{L}+$/u.test(word) // Только Unicode буквы
+    );
+    
+    console.log('🎯 Кандидаты на ключевое слово:', candidates);
+    
+    // Возвращаем самое длинное значимое слово
+    if (candidates.length > 0) {
+        const keyword = candidates.sort((a, b) => b.length - a.length)[0];
+        console.log('✅ Выбрано ключевое слово:', keyword);
+        return keyword;
+    }
+    
+    console.log('❌ Ключевое слово не найдено');
+    return null;
+}
+
+// Универсальная функция получения корня слова (мультиязычная)
+function getUniversalWordStem(word) {
+    if (!word || word.length < 3) return word;
+    
+    const lowerWord = word.toLowerCase();
+    
+    // Универсальные паттерны окончаний для разных языков
+    const universalEndings = [
+        // Русские (длинные сначала)
+        'ость', 'ение', 'ание', 'ться', 'ется', 'ются', 'ался', 'алась', 'алось', 'ались',
+        'ует', 'уют', 'ает', 'ают', 'ить', 'ать', 'еть', 'оть', 'уть', 'ыть',
+        'ый', 'ая', 'ое', 'ые', 'ой', 'ей', 'ом', 'ами', 'ах', 'ов', 'ев',
+        'ал', 'ла', 'ло', 'ли', 'ем', 'ешь', 'ет', 'ете', 'ут', 'ют',
+        // Английские
+        'ing', 'tion', 'sion', 'ness', 'ment', 'able', 'ible', 'ful', 'less',
+        'ous', 'ive', 'ical', 'ary', 'ory', 'ize', 'ise', 'ed', 'er', 'est', 'ly',
+        // Немецкие
+        'ung', 'heit', 'keit', 'lich', 'isch', 'ern', 'eln', 'nen', 'ten', 'den',
+        // Французские
+        'tion', 'sion', 'ment', 'ique', 'able', 'ible', 'eur', 'euse', 'ant', 'ent',
+        // Испанские
+        'ción', 'sión', 'mente', 'able', 'ible', 'ador', 'edor', 'ando', 'endo', 'ido',
+        // Итальянские
+        'zione', 'sione', 'mente', 'abile', 'ibile', 'atore', 'endo', 'ando', 'ato',
+        // Португальские
+        'ção', 'são', 'mente', 'ável', 'ível', 'ador', 'endo', 'ando', 'ado',
+        // Общие короткие окончания
+        'es', 'en', 'er', 'el', 'le', 'te', 'de', 'se', 're', 's'
+    ].sort((a, b) => b.length - a.length);
+    
+    for (const ending of universalEndings) {
+        if (lowerWord.endsWith(ending) && lowerWord.length > ending.length + 2) {
+            return lowerWord.slice(0, -ending.length);
+        }
+    }
+    
+    return lowerWord;
+}
+
+// Универсальная функция создания фразы с пропуском (мультиязычная)
+function createPhraseWithGap(phrase, keyword) {
+    if (!phrase || !keyword) return phrase;
+    
+    console.log('🔍 Создание пропуска для:', { phrase, keyword });
+    
+    const words = phrase.split(/\s+/);
+    const keywordStem = getUniversalWordStem(keyword);
+    
+    // Ищем слово для замены по разным критериям
+    let foundWordIndex = -1;
+    let foundWord = '';
+    
+    // 1. Точное совпадение
+    for (let i = 0; i < words.length; i++) {
+        const cleanWord = words[i].replace(/[^\p{L}]/gu, '');
+        if (cleanWord.toLowerCase() === keyword.toLowerCase()) {
+            foundWordIndex = i;
+            foundWord = words[i];
+            console.log('✅ Точное совпадение найдено:', foundWord);
+            break;
+        }
+    }
+    
+    // 2. Совпадение по корню
+    if (foundWordIndex === -1 && keywordStem.length > 2) {
+        for (let i = 0; i < words.length; i++) {
+            const cleanWord = words[i].replace(/[^\p{L}]/gu, '');
+            const wordStem = getUniversalWordStem(cleanWord);
+            
+            if (wordStem === keywordStem) {
+                foundWordIndex = i;
+                foundWord = words[i];
+                console.log('✅ Совпадение по корню:', { foundWord, wordStem, keywordStem });
+                break;
+            }
+        }
+    }
+    
+    // 3. Частичное совпадение (содержит или содержится)
+    if (foundWordIndex === -1) {
+        for (let i = 0; i < words.length; i++) {
+            const cleanWord = words[i].replace(/[^\p{L}]/gu, '').toLowerCase();
+            const keywordLower = keyword.toLowerCase();
+            
+            if ((cleanWord.includes(keywordLower) && cleanWord.length > keywordLower.length) ||
+                (keywordLower.includes(cleanWord) && keywordLower.length > cleanWord.length)) {
+                foundWordIndex = i;
+                foundWord = words[i];
+                console.log('✅ Частичное совпадение:', foundWord);
+                break;
+            }
+        }
+    }
+    
+    // 4. Схожесть по Левенштейну
+    if (foundWordIndex === -1) {
+        let bestMatch = -1;
+        let bestSimilarity = 0;
+        
+        for (let i = 0; i < words.length; i++) {
+            const cleanWord = words[i].replace(/[^\p{L}]/gu, '').toLowerCase();
+            if (cleanWord.length > 2) {
+                const similarity = calculateSimilarity(cleanWord, keyword.toLowerCase());
+                if (similarity > 0.7 && similarity > bestSimilarity) {
+                    bestSimilarity = similarity;
+                    bestMatch = i;
+                }
+            }
+        }
+        
+        if (bestMatch !== -1) {
+            foundWordIndex = bestMatch;
+            foundWord = words[bestMatch];
+            console.log('✅ Схожесть по Левенштейну:', { foundWord, similarity: bestSimilarity });
+        }
+    }
+    
+    // Если нашли слово для замены
+    if (foundWordIndex !== -1) {
+        const modifiedWords = [...words];
+        modifiedWords[foundWordIndex] = '<span class="word-gap">_____</span>';
+        
+        const result = modifiedWords.join(' ');
+        console.log('✅ Создан пропуск:', result);
+        return result;
+    }
+    
+    // Fallback: простая замена по регулярному выражению
+    console.log('⚠️ Используем простую замену для:', keyword);
+    const keywordRegex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+    return phrase.replace(keywordRegex, '<span class="word-gap">_____</span>');
+}
+
+// Универсальная функция проверки ответа (мультиязычная)
+function checkKeywordAnswer(userAnswer, correctAnswer) {
+    const userLower = userAnswer.toLowerCase().trim();
+    const correctLower = correctAnswer.toLowerCase().trim();
+    
+    console.log('🔍 Проверка ответа:', {
+        userAnswer: userAnswer,
+        correctAnswer: correctAnswer
+    });
+    
+    // 1. Точное совпадение
+    if (userLower === correctLower) {
+        console.log('✅ Точное совпадение');
+        return true;
+    }
+    
+    // 2. Проверяем совпадение по корню слова (мультиязычно)
+    const userStem = getUniversalWordStem(userLower);
+    const correctStem = getUniversalWordStem(correctLower);
+    
+    if (userStem === correctStem && userStem.length > 2) {
+        console.log('✅ Совпадение по корню:', { userStem, correctStem });
+        return true;
+    }
+    
+    // 3. Частичное совпадение (содержит или содержится)
+    if (userLower.includes(correctLower) || correctLower.includes(userLower)) {
+        console.log('✅ Частичное совпадение');
+        return true;
+    }
+    
+    // 4. Схожесть по алгоритму Левенштейна
+    if (Math.abs(userAnswer.length - correctAnswer.length) <= 3) {
+        const similarity = calculateSimilarity(userLower, correctLower);
+        if (similarity > 0.75) {
+            console.log('✅ Схожесть по Левенштейну:', similarity);
+            return true;
+        }
+    }
+    
+    // 5. Дополнительная проверка: схожесть корней
+    if (userStem.length > 2 && correctStem.length > 2) {
+        const stemSimilarity = calculateSimilarity(userStem, correctStem);
+        if (stemSimilarity > 0.8) {
+            console.log('✅ Схожесть корней:', stemSimilarity);
+            return true;
+        }
+    }
+    
+    // 6. Проверка на разные формы одного слова (транслитерация)
+    const userClean = userLower.replace(/[^\p{L}]/gu, '');
+    const correctClean = correctLower.replace(/[^\p{L}]/gu, '');
+    
+    if (userClean.length > 2 && correctClean.length > 2) {
+        // Проверяем, не является ли один ответ подстрокой другого (с учетом минимальной длины)
+        const minLength = Math.min(userClean.length, correctClean.length);
+        if (minLength >= 4) {
+            const longerWord = userClean.length > correctClean.length ? userClean : correctClean;
+            const shorterWord = userClean.length > correctClean.length ? correctClean : userClean;
+            
+            if (longerWord.includes(shorterWord) && shorterWord.length / longerWord.length > 0.6) {
+                console.log('✅ Один ответ содержит другой:', { longerWord, shorterWord });
+                return true;
+            }
+        }
+    }
+    
+    console.log('❌ Ответ не принят');
+    return false;
+}
+
+// Функция расчета схожести строк (алгоритм Левенштейна упрощенный)
+function calculateSimilarity(str1, str2) {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    
+    if (longer.length === 0) {
+        return 1.0;
+    }
+    
+    const editDistance = levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+}
+
+// Расстояние Левенштейна
+function levenshteinDistance(str1, str2) {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+        matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+        matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+        for (let j = 1; j <= str1.length; j++) {
+            if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+    
+    return matrix[str2.length][str1.length];
 }
 
 // Функция обновления прогресса
@@ -1196,8 +1744,16 @@ function checkAnswer() {
         return;
     }
     
-    // Простая проверка (можно улучшить)
-    const isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+    // Проверка ответа в зависимости от типа упражнения
+    let isCorrect = false;
+    
+    if (currentCard.exerciseType === 2) {
+        // Для заполнения пропусков - более гибкая проверка
+        isCorrect = checkKeywordAnswer(userAnswer, correctAnswer);
+    } else {
+        // Для обычных переводов - простая проверка
+        isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+    }
     
     // Сохраняем результат для использования в кнопках оценки
     currentCard.lastAnswerCorrect = isCorrect;
@@ -1211,8 +1767,8 @@ function checkAnswer() {
         answerInput.classList.remove('correct');
         
         // Показываем правильный ответ
-    const correctAnswerDiv = document.getElementById('correct-answer');
-    correctAnswerDiv.textContent = `${t('correct_answer')} ${correctAnswer}`;
+        const correctAnswerDiv = document.getElementById('correct-answer');
+        correctAnswerDiv.textContent = `${t('correct_answer')} ${correctAnswer}`;
         correctAnswerDiv.classList.remove('hidden');
     }
     
@@ -1361,6 +1917,21 @@ document.getElementById('play-audio-btn').addEventListener('click', () => {
     }
 });
 
+// Обработчик кнопки подсказки
+document.getElementById('hint-btn').addEventListener('click', () => {
+    const currentCard = trainingData.cards[trainingData.currentIndex];
+    const hintText = document.getElementById('hint-text');
+    
+    if (currentCard && currentCard.exerciseType === 2) {
+        // Показываем перевод фразы как подсказку
+        hintText.textContent = currentCard.back_text;
+        hintText.classList.remove('hidden');
+        
+        // Скрываем кнопку подсказки после использования
+        document.getElementById('hint-btn').classList.add('hidden');
+    }
+});
+
 // Обработчики для модального окна настроек
 document.getElementById('settings-btn').addEventListener('click', () => {
     const modal = document.getElementById('settings-modal');
@@ -1433,3 +2004,39 @@ document.getElementById('stats-modal').addEventListener('click', (e) => {
         }
     }
 });
+
+// Функция для обновления тегов слов
+function updateWordTags(phrase) {
+    const container = document.getElementById('word-tags-container');
+    container.innerHTML = '';
+    
+    if (!phrase.trim()) {
+        container.classList.add('hidden');
+        return;
+    }
+    
+    container.classList.remove('hidden');
+    
+    // Разбиваем фразу на слова, удаляя знаки препинания
+    const words = phrase.trim().split(/\s+/).filter(word => {
+        // Убираем пустые строки и слова состоящие только из знаков препинания
+        const cleanWord = word.replace(/[^\w\u00C0-\u017F\u0400-\u04FF]/g, '');
+        return cleanWord.length > 0;
+    });
+    
+    words.forEach(word => {
+        // Очищаем слово от знаков препинания для отображения
+        const cleanWord = word.replace(/[^\w\u00C0-\u017F\u0400-\u04FF]/g, '');
+        if (cleanWord.length > 0) {
+            const tag = document.createElement('span');
+            tag.className = 'word-tag';
+            tag.textContent = cleanWord;
+            tag.addEventListener('click', () => {
+                const keywordInput = document.getElementById('keyword-input');
+                keywordInput.value = cleanWord;
+                keywordInput.focus();
+            });
+            container.appendChild(tag);
+        }
+    });
+}

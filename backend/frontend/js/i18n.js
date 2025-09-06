@@ -46,6 +46,7 @@ const translations = {
         phrases_count: 'фраз',
         selected: 'выбрано',
         select_all: 'Выделить все',
+        deselect_all: 'Снять выделение',
         save_selected: 'Сохранить выбранные',
         regenerate: 'Обогатить заново',
         
@@ -56,6 +57,8 @@ const translations = {
         // Тренировка
         enter_translation: 'Введите перевод...',
         enter_phrase: 'Введите фразу...',
+        enter_missing_word: 'Введите пропущенное слово...',
+        hint: '💡 Подсказка',
         check: 'Проверить',
         correct_answer: 'Правильный ответ:',
         again: 'Снова',
@@ -65,6 +68,7 @@ const translations = {
         training_complete: 'Тренировка завершена!',
         
         // Кнопки действий
+        add_cards: 'Добавить карточки',
         cards: 'Карточки',
         training: 'Тренировка',
         delete: 'Удалить',
@@ -173,6 +177,7 @@ const translations = {
         phrases_count: 'phrases',
         selected: 'selected',
         select_all: 'Select All',
+        deselect_all: 'Deselect All',
         save_selected: 'Save Selected',
         regenerate: 'Regenerate',
         
@@ -180,9 +185,11 @@ const translations = {
         cards: 'Cards',
         training: 'Training',
         
-        // Training
+        // Тренировка
         enter_translation: 'Enter translation...',
         enter_phrase: 'Enter phrase...',
+        enter_missing_word: 'Enter missing word...',
+        hint: '💡 Hint',
         check: 'Check',
         correct_answer: 'Correct answer:',
         again: 'Again',
@@ -192,6 +199,7 @@ const translations = {
         training_complete: 'Training Complete!',
         
         // Action buttons
+        add_cards: 'Add Cards',
         cards: 'Cards',
         training: 'Training',
         delete: 'Delete',

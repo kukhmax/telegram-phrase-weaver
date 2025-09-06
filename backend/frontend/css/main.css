@@ -64,6 +64,235 @@ body {
     border: none;
     font-size: 24px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.header-btn img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.stats-icon,
+.settings-icon {
+    width: 30px !important;
+    height: 30px !important;
+}
+
+/* Мобильные устройства и Telegram WebApp */
+@media (max-width: 768px) {
+    .header-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+    }
+    
+    .header-btn img {
+        width: 30px !important;
+        height: 30px !important;
+    }
+    
+    .stats-icon,
+    .settings-icon {
+        width: 30px !important;
+        height: 30px !important;
+    }
+}
+
+.header-name-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: 40px;
+    padding: 0 10px;
+}
+
+.header-name {
+    height: 140px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Очень маленькие экраны (Telegram на телефоне) */
+@media (max-width: 480px) {
+    .header-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+        padding: 2px;
+    }
+    
+    .header-btn img {
+        width: 30px !important;
+        height: 30px !important;
+    }
+    
+    .stats-icon,
+    .settings-icon {
+        width: 30px !important;
+        height: 30px !important;
+    }
+}
+
+/* Специальные стили для Telegram WebApp */
+@media (max-width: 400px) {
+    .header-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        padding: 1px;
+        min-width: 20px;
+        min-height: 20px;
+    }
+    
+    .header-btn img {
+        width: 30px !important;
+        height: 30px !important;
+        max-width: 30px !important;
+        max-height: 30px !important;
+    }
+    
+    .stats-icon,
+    .settings-icon {
+        width: 10px !important;
+        height: 10px !important;
+        max-width: 10px !important;
+        max-height: 10px !important;
+    }
+}
+
+/* Принудительные стили для Telegram WebApp */
+.tg-viewport .header-btn {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 10px !important;
+    padding: 1px !important;
+}
+
+.tg-viewport .header-btn img,
+.tg-viewport .stats-icon,
+.tg-viewport .settings-icon {
+    width: 8px !important;
+    height: 8px !important;
+    max-width: 8px !important;
+    max-height: 8px !important;
+}
+
+/* Дополнительные стили для мобильных устройств */
+@media screen and (max-device-width: 480px) {
+    .header-btn {
+        width: 18px !important;
+        height: 18px !important;
+        font-size: 10px !important;
+        padding: 1px !important;
+    }
+    
+    .header-btn img,
+    .stats-icon,
+    .settings-icon {
+        width: 30px !important;
+        height: 30px !important;
+        max-width: 30px !important;
+        max-height: 30px !important;
+    }
+}
+
+/* Стили для контейнера поля ввода фразы */
+.phrase-input-container {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+}
+
+.phrase-input-container textarea {
+    flex: 1;
+    padding-right: 40px; /* Место для кнопки очистки */
+}
+
+/* Стили для контейнера поля ввода ключевого слова */
+.keyword-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.keyword-input-container input {
+    flex: 1;
+    padding-right: 40px; /* Место для кнопки очистки */
+}
+
+/* Кнопка очистки поля */
+.clear-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #999;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+    background: #f0f0f0;
+    color: #666;
+}
+
+.clear-btn:active {
+    background: #e0e0e0;
+}
+
+/* Контейнер для тегов слов */
+.word-tags-container {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+/* Теги слов */
+.word-tag {
+    display: inline-block;
+    padding: 6px 12px;
+    background: var(--brand-yellow);
+    color: var(--brand-blue);
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.word-tag:hover {
+    background: #e6b000;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.word-tag:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 /* Main Content */
@@ -111,43 +340,58 @@ body {
 }
 
 .deck-card {
-    background-color: #fff;
+    background-color: #f4c3001a;
     border: 2px solid #f4c300;
     border-radius: 20px;
-    padding: 20px;
+    padding: 7px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    text-align: left;
+    text-align: center;
     box-shadow: 0 4px 12px rgba(244, 195, 0, 0.2);
-    margin-bottom: 10px;
+    margin-bottom: 5px;
+    flex-direction: column;
 }
 
 .deck-info .deck-name {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
     color: var(--brand-blue);
     margin: 0 0 4px 0;
 }
+
+.deck-description {
+    margin: 7px auto 10px;
+}
+
 .deck-info .deck-description {
     font-size: 14px;
     color: #6c757d;
     margin: 0 0 8px 0;
 }
 .deck-info .deck-langs {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     margin-bottom: 8px;
 }
+
 .deck-info .deck-stats {
     font-size: 14px;
     color: #343a40;
+    padding-bottom: 5px;
+}
+
+.deck-leng-stat {
+    display: flex;
+    flex-direction: row;
+    gap: 100px;
 }
 
 .deck-actions {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    gap: 5px;
+    width: 100%;
 }
 
 .action-btn {
@@ -159,7 +403,13 @@ body {
     cursor: pointer;
     min-width: 100px;
     font-size: 14px;
-    margin: 2px 0;
+    margin: 5px;
+    width: calc(50% - 10px);
+    display: inline-block;
+}
+.add-cards-btn {
+    background-color: #28a745;
+    color: white;
 }
 .cards-btn {
     background-color: #f4c300;
@@ -384,8 +634,9 @@ body {
 }
 
 .deck-name {
-    font-weight: 500;
-    color: #333;
+    font-weight: 700;
+    color: #1800ad;
+    margin: auto 5px;
 }
 
 .deck-cards-count {
@@ -527,7 +778,7 @@ body {
 }
 
 .action-btn.secondary {
-    background: #6c757d !important;
+    background: #b5223e !important;
     color: white;
 }
 
@@ -651,7 +902,7 @@ body {
     background: #f8f9fa;
     border: 2px solid #e9ecef;
     border-radius: 15px;
-    padding: 20px;
+    padding: 0.5em;
     transition: all 0.3s ease;
 }
 
@@ -663,7 +914,7 @@ body {
 /* Изображение в карточке */
 .card-image-container {
     text-align: center;
-    margin-bottom: 15px;
+    margin-bottom: 5px;
 }
 
 .card-image {
@@ -675,7 +926,9 @@ body {
 }
 
 .card-content {
-    margin-bottom: 15px;
+    margin-bottom: 5px;
+    margin-right: 10px;
+    text-align: left;
 }
 
 .card-side {
@@ -873,11 +1126,18 @@ body {
     background-color: #e63946;
 }
 
+.select-save-btns {
+    display: flex;
+    flex-direction: row;
+    gap: 1px;
+    margin-bottom: 10px;
+}
+
 /* Действия с фразами */
 .phrases-actions {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 1px;
     margin-top: 20px;
 }
 
@@ -889,10 +1149,11 @@ body {
     cursor: pointer;
     font-size: 16px;
     transition: all 0.3s ease;
+    width: 100%;
 }
 
 .save-btn {
-    background-color: #28a745;
+    background-color: #2b8740;
     color: white;
 }
 
@@ -901,7 +1162,7 @@ body {
 }
 
 .save-btn:disabled {
-    background-color: #6c757d;
+    background-color: #28a74585;
     cursor: not-allowed;
 }
 
@@ -915,7 +1176,7 @@ body {
 }
 
 .back-btn {
-    background-color: #6c757d;
+    background-color: #6c757db5;
     color: white;
 }
 
@@ -944,7 +1205,6 @@ body {
 .select-all-btn {
     background-color: #17a2b8;
     color: white;
-    margin-bottom: 15px;
 }
 
 .select-all-btn:hover {
@@ -1078,6 +1338,34 @@ body {
     text-align: center;
 }
 
+/* Стили для пропусков в упражнениях заполнения */
+.word-gap {
+    display: inline-block;
+    min-width: 80px;
+    padding: 2px 8px;
+    margin: 0 2px;
+    background-color: #f8f9fa;
+    border: 2px #6c757d;
+    border-radius: 4px;
+    color: #6c757d;
+    font-weight: bold;
+    text-align: center;
+    font-family: monospace;
+    letter-spacing: 2px;
+    animation: pulse-gap 2s infinite;
+}
+
+@keyframes pulse-gap {
+    0%, 100% {
+        background-color: #f8f9fa;
+        border-color: #6c757d;
+    }
+    50% {
+        background-color: #e9ecef;
+        border-color: #495057;
+    }
+}
+
 /* Кнопка проверки */
 .check-btn {
     background: linear-gradient(135deg, #1800ad, #2c1bbd);
@@ -1090,7 +1378,7 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     width: 100%;
-    max-width: 200px;
+    /* max-width: 200px; */
 }
 
 .check-btn:hover {
@@ -1104,6 +1392,53 @@ body {
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+}
+
+/* Кнопка подсказки */
+.hint-btn {
+    background: linear-gradient(135deg, #f4c300, #e6b800);
+    color: #1800ad;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.hint-btn:hover {
+    background: linear-gradient(135deg, #e6b800, #d4a700);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(244, 195, 0, 0.3);
+}
+
+.hint-text {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+    font-size: 14px;
+    color: #856404;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Кнопки оценки */

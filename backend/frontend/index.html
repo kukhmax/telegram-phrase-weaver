@@ -15,12 +15,14 @@
         <!-- ОБЩИЙ HEADER -->
         <header class="app-header clickable-header">
             <button id="stats-btn" class="header-btn" data-translate="stats_button" title="Statistics">
-                <img src="/static/assets/icons/stats.png" alt="Stats" class="stats-icon" style="height: 1em;">
+                <img src="/static/assets/icons/growth.png" alt="Stats" class="stats-icon">
             </button>
-            <h1>PHRASE WEAVER</h1>
+            <button class="header-name-btn">
+                <img src="/static/assets/icons/PHRASE WEAVER.png" alt="PHRASE WEAVER" class="header-name">
+            </button>
             <div id="user-info" style="display: none; color: #1800ad; font-size: 14px; font-weight: 500;"></div>
             <button id="settings-btn" class="header-btn">
-                <img src="/static/assets/icons/setting.png" alt="Settings" class="settings-icon" style="height: 1em;">
+                <img src="/static/assets/icons/tutorial.png" alt="Settings" class="settings-icon">
             </button>
         </header>
 
@@ -42,7 +44,7 @@
         <!-- ОКНО №2: Создание новой колоды -->
         <div id="create-deck-window" class="app-window hidden">
             <main class="app-main">
-                <img src="/static/assets/icons/mascot.png" alt="Mascot" class="mascot">
+                <img src="/static/assets/icons/croc.png" alt="Mascot" class="mascot">
                 <h2 data-translate="deck_creation">Создать новую колоду</h2>
                 <form id="create-deck-form" class="form-container">
                     <!-- ... все поля формы остаются как были ... -->
@@ -89,7 +91,7 @@
         <!-- ОКНО №3: Генерация карточек -->
         <div id="generate-cards-window" class="app-window hidden">
             <main class="app-main">
-                <img src="/static/assets/icons/mascot.png" alt="Mascot" class="mascot">
+                <img src="/static/assets/icons/book.png" alt="Mascot" class="mascot">
                 <h2 data-translate="phrase_generation">Генерация карточек</h2>
                 <div id="deck-languages" class="deck-languages">
                     <span id="lang-from-display"></span> → <span id="lang-to-display"></span>
@@ -97,11 +99,20 @@
                 <form id="generate-cards-form" class="form-container">
                     <div class="form-group">
                         <label for="phrase-input" data-translate="phrase_label">Фраза:</label>
-                        <textarea id="phrase-input" name="phrase" data-translate="phrase_placeholder" placeholder="Введите фразу для изучения" required></textarea>
+                        <div class="phrase-input-container">
+                            <textarea id="phrase-input" name="phrase" data-translate="phrase_placeholder" placeholder="Введите фразу для изучения" required></textarea>
+                            <button type="button" id="clear-phrase-btn" class="clear-btn" title="Очистить поле">&times;</button>
+                        </div>
+                        <div id="word-tags-container" class="word-tags-container hidden">
+                            <!-- Теги слов будут добавлены динамически -->
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="keyword-input" data-translate="keyword_label">Ключевое слово:</label>
-                        <input type="text" id="keyword-input" name="keyword" data-translate="keyword_placeholder" placeholder="Введите ключевое слово">
+                        <div class="keyword-input-container">
+                            <input type="text" id="keyword-input" name="keyword" data-translate="keyword_placeholder" placeholder="Введите ключевое слово">
+                            <button type="button" id="clear-keyword-btn" class="clear-btn" title="Очистить поле">&times;</button>
+                        </div>
                     </div>
                     <button type="submit" class="form-submit-btn" id="enrich-btn">
                         <span class="loading-spinner hidden"></span>
@@ -147,18 +158,19 @@
                     <span id="total-phrases-count">6</span> <span data-translate="phrases_count">фраз</span> | <span id="selected-phrases-count">0</span> <span data-translate="selected">выбрано</span>
                 </div>
                 
-                <button id="select-all-btn" class="action-btn select-all-btn" data-translate="select_all">
-                    Выделить все
-                </button>
-                
                 <div id="phrases-container" class="phrases-container">
                     <!-- Карточки фраз будут добавлены динамически -->
                 </div>
                 
                 <div class="phrases-actions">
-                    <button id="save-selected-btn" class="action-btn save-btn" disabled>
-                        <span data-translate="save_selected">Сохранить выбранные</span> (<span id="save-count">0</span>)
-                    </button>
+                    <div class="select-save-btns">
+                        <button id="select-all-btn" class="action-btn select-all-btn" data-translate="select_all">
+                            Выделить все
+                        </button>
+                        <button id="save-selected-btn" class="action-btn save-btn" disabled>
+                            <span data-translate="save_selected">Сохранить выбранные</span> (<span id="save-count">0</span>)
+                        </button>
+                    </div>
                     <button id="regenerate-btn" class="action-btn regenerate-btn" data-translate="regenerate">
                         Обогатить заново
                     </button>
@@ -204,6 +216,10 @@
                         <input type="text" id="answer-input" class="answer-input" data-translate="enter_translation" placeholder="Введите перевод...">
                         <div id="correct-answer" class="correct-answer hidden"></div>
                     </div>
+                    
+                    <!-- Кнопка подсказки (только для заполнения пропусков) -->
+                    <button id="hint-btn" class="hint-btn hidden" data-translate="hint">💡 Подсказка</button>
+                    <div id="hint-text" class="hint-text hidden"></div>
                     
                     <!-- Кнопка проверки -->
                     <button id="check-btn" class="check-btn" data-translate="check">Проверить</button>
@@ -258,8 +274,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="save-settings-btn" class="action-btn" data-translate="save">Сохранить</button>
                 <button id="cancel-settings-btn" class="action-btn secondary" data-translate="cancel">Отмена</button>
+                <button id="save-settings-btn" class="action-btn" data-translate="save">Сохранить</button>
             </div>
         </div>
     </div>
@@ -340,13 +356,20 @@
     <template id="deck-card-template">
         <div class="deck-card">
             <div class="deck-info">
+                <div class="deck-leng-stat">
+                    <div class="deck-langs"><span class="lang-from"></span> → <span class="lang-to"></span></div>
+                    <div class="deck-stats"><span data-translate="total">Total</span>: <span class="cards-total">0</span> | <span data-translate="repeat">Repeat</span>: <span class="cards-repeat">0</span></div>
+                </div>
+                
                 <h3 class="deck-name">Название колоды</h3>
                 <p class="deck-description">Описание</p>
-                <div class="deck-langs"><span class="lang-from"></span> → <span class="lang-to"></span></div>
-                <div class="deck-stats"><span data-translate="total">Total</span>: <span class="cards-total">0</span> | <span data-translate="repeat">Repeat</span>: <span class="cards-repeat">0</span></div>
+                
             </div>
             <div class="deck-actions">
                 <button class="action-btn cards-btn" data-translate="cards">Карточки</button>
+                <button class="action-btn add-cards-btn" data-translate="add_cards">Добавить карточки</button>
+            </div>
+            <div class="deck-actions">
                 <button class="action-btn train-btn" data-translate="training">Тренировка</button>
                 <button class="action-btn delete-btn" data-translate="delete">Удалить</button>
             </div>
