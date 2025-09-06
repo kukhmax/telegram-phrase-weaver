@@ -354,9 +354,11 @@ window.deleteCard = async function(cardId) {
 
 // Функция для воспроизведения аудио
 window.playAudio = async function(text, langCode) {
+    console.log('playAudio called with:', { text, langCode });
     try {
         // Очищаем текст от HTML тегов
         const cleanText = text.replace(/<[^>]*>/g, '');
+        console.log('Clean text:', cleanText);
         
         // Всегда используем серверную генерацию аудио для лучшего качества
         if (false) { // Отключаем Web Speech API
@@ -384,11 +386,14 @@ window.playAudio = async function(text, langCode) {
             window.speechSynthesis.speak(utterance);
         } else {
             // Для Telegram WebApp используем серверную генерацию аудио
+            console.log('Using server-side TTS');
             try {
+                console.log('Calling api.generateAudio with:', { text: cleanText, lang_code: langCode });
                 const response = await api.generateAudio({
                     text: cleanText,
                     lang_code: langCode
                 });
+                console.log('API response:', response);
                 
                 if (response && response.audio_url) {
                      const audio = new Audio(response.audio_url);
