@@ -103,11 +103,23 @@ body {
     }
 }
 
+.header-name-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
 /* Очень маленькие экраны (Telegram на телефоне) */
 @media (max-width: 480px) {
     .header-btn {
-        width: 24px;
-        height: 24px;
+        width: 30px;
+        height: 30px;
         font-size: 14px;
         padding: 2px;
     }
@@ -136,10 +148,10 @@ body {
     }
     
     .header-btn img {
-        width: 10px !important;
-        height: 10px !important;
-        max-width: 10px !important;
-        max-height: 10px !important;
+        width: 30px !important;
+        height: 30px !important;
+        max-width: 30px !important;
+        max-height: 30px !important;
     }
     
     .stats-icon,
@@ -180,10 +192,10 @@ body {
     .header-btn img,
     .stats-icon,
     .settings-icon {
-        width: 8px !important;
-        height: 8px !important;
-        max-width: 8px !important;
-        max-height: 8px !important;
+        width: 30px !important;
+        height: 30px !important;
+        max-width: 30px !important;
+        max-height: 30px !important;
     }
 }
 
@@ -195,6 +207,18 @@ body {
 }
 
 .phrase-input-container textarea {
+    flex: 1;
+    padding-right: 40px; /* Место для кнопки очистки */
+}
+
+/* Стили для контейнера поля ввода ключевого слова */
+.keyword-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.keyword-input-container input {
     flex: 1;
     padding-right: 40px; /* Место для кнопки очистки */
 }
@@ -323,26 +347,37 @@ body {
 }
 
 .deck-info .deck-name {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
     color: var(--brand-blue);
     margin: 0 0 4px 0;
 }
+
+.deck-description {
+    margin: 7px auto 10px;
+}
+
 .deck-info .deck-description {
     font-size: 14px;
     color: #6c757d;
     margin: 0 0 8px 0;
 }
 .deck-info .deck-langs {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     margin-bottom: 8px;
-    margin-top: 8px;
 }
+
 .deck-info .deck-stats {
     font-size: 14px;
     color: #343a40;
     padding-bottom: 5px;
+}
+
+.deck-leng-stat {
+    display: flex;
+    flex-direction: row;
+    gap: 100px;
 }
 
 .deck-actions {
@@ -592,8 +627,9 @@ body {
 }
 
 .deck-name {
-    font-weight: 500;
-    color: #333;
+    font-weight: 700;
+    color: #1800ad;
+    margin: auto 5px;
 }
 
 .deck-cards-count {

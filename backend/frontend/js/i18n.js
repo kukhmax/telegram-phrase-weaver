@@ -46,6 +46,7 @@ const translations = {
         phrases_count: 'фраз',
         selected: 'выбрано',
         select_all: 'Выделить все',
+        deselect_all: 'Снять выделение',
         save_selected: 'Сохранить выбранные',
         regenerate: 'Обогатить заново',
         
@@ -176,6 +177,7 @@ const translations = {
         phrases_count: 'phrases',
         selected: 'selected',
         select_all: 'Select All',
+        deselect_all: 'Deselect All',
         save_selected: 'Save Selected',
         regenerate: 'Regenerate',
         

@@ -17,7 +17,9 @@
             <button id="stats-btn" class="header-btn" data-translate="stats_button" title="Statistics">
                 <img src="/static/assets/icons/growth.png" alt="Stats" class="stats-icon">
             </button>
-            <h1>PHRASE WEAVER</h1>
+            <button class="header-name-btn">
+                <img src="/static/assets/icons/PHRASE WEAVER.png" alt="PHRASE WEAVER" class="header-name">
+            </button>
             <div id="user-info" style="display: none; color: #1800ad; font-size: 14px; font-weight: 500;"></div>
             <button id="settings-btn" class="header-btn">
                 <img src="/static/assets/icons/tutorial.png" alt="Settings" class="settings-icon">
@@ -107,7 +109,10 @@
                     </div>
                     <div class="form-group">
                         <label for="keyword-input" data-translate="keyword_label">Ключевое слово:</label>
-                        <input type="text" id="keyword-input" name="keyword" data-translate="keyword_placeholder" placeholder="Введите ключевое слово">
+                        <div class="keyword-input-container">
+                            <input type="text" id="keyword-input" name="keyword" data-translate="keyword_placeholder" placeholder="Введите ключевое слово">
+                            <button type="button" id="clear-keyword-btn" class="clear-btn" title="Очистить поле">&times;</button>
+                        </div>
                     </div>
                     <button type="submit" class="form-submit-btn" id="enrich-btn">
                         <span class="loading-spinner hidden"></span>
@@ -351,10 +356,14 @@
     <template id="deck-card-template">
         <div class="deck-card">
             <div class="deck-info">
-                <div class="deck-langs"><span class="lang-from"></span> → <span class="lang-to"></span></div>
+                <div class="deck-leng-stat">
+                    <div class="deck-langs"><span class="lang-from"></span> → <span class="lang-to"></span></div>
+                    <div class="deck-stats"><span data-translate="total">Total</span>: <span class="cards-total">0</span> | <span data-translate="repeat">Repeat</span>: <span class="cards-repeat">0</span></div>
+                </div>
+                
                 <h3 class="deck-name">Название колоды</h3>
                 <p class="deck-description">Описание</p>
-                <div class="deck-stats" style="margin-bottom: 5px;"><span data-translate="total">Total</span>: <span class="cards-total">0</span> | <span data-translate="repeat">Repeat</span>: <span class="cards-repeat">0</span></div>
+                
             </div>
             <div class="deck-actions">
                 <button class="action-btn cards-btn" data-translate="cards">Карточки</button>

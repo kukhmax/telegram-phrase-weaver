@@ -948,6 +948,12 @@ document.addEventListener('click', (event) => {
         phraseInput.focus();
         updateWordTags('');
     });
+    
+    document.getElementById('clear-keyword-btn').addEventListener('click', () => {
+        const keywordInput = document.getElementById('keyword-input');
+        keywordInput.value = '';
+        keywordInput.focus();
+    });
 
     // Обработчик изменения текста в поле фразы для создания тегов слов
     document.getElementById('phrase-input').addEventListener('input', (event) => {
@@ -1110,7 +1116,7 @@ if (selectAllBtn) {
             selectBtn.textContent = 'Выбрать';
             selectBtn.classList.remove('selected');
         });
-        selectAllBtn.textContent = 'Выделить все';
+        selectAllBtn.textContent = t('select_all');
     } else {
         // Выделяем все
         selectedPhrases.clear();
@@ -1121,7 +1127,7 @@ if (selectAllBtn) {
             selectBtn.textContent = 'Выбрано';
             selectBtn.classList.add('selected');
         });
-        selectAllBtn.textContent = 'Снять выделение';
+        selectAllBtn.textContent = t('deselect_all');
     }
     
     updatePhrasesCounter();
