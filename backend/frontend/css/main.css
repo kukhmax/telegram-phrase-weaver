@@ -111,8 +111,15 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
+    width: auto;
     height: 40px;
+    padding: 0 10px;
+}
+
+.header-name {
+    height: 30px;
+    width: auto;
+    object-fit: contain;
 }
 
 /* Очень маленькие экраны (Telegram на телефоне) */
