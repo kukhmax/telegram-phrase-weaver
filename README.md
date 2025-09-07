@@ -198,6 +198,245 @@ server {
 }
 ```
 
+### Развертывание на Contabo VPS (рекомендуется для экономии)
+
+**Contabo** предоставляет мощные VPS серверы по очень доступным ценам (от €5.36/месяц), что делает его отличным выбором для развертывания PhraseWeaver.
+
+#### Преимущества Contabo:
+- 💰 **Низкая стоимость**: в 3-5 раз дешевле других провайдеров
+- 🚀 **Высокая производительность**: NVMe SSD, мощные CPU
+- 🌍 **Европейские дата-центры**: низкая задержка
+- 🔧 **Полный root доступ**: полный контроль над сервером
+
+#### 1. Регистрация и настройка сервера
+
+1. **Перейдите на** [contabo.com](https://contabo.com)
+2. **Выберите план:**
+   - **Cloud VPS 10** (€5.36/месяц) - 3 CPU, 8GB RAM, 75GB NVMe
+   - **Cloud VPS 20** (€8.33/месяц) - 6 CPU, 12GB RAM, 100GB NVMe
+3. **Настройте сервер:**
+   - **ОС**: Ubuntu 22.04 LTS
+   - **Регион**: Europe (ближайший к вам)
+   - **Период**: 1 месяц (для начала)
+4. **Получите данные доступа** по email
+
+#### 2. Подключение к серверу
+
+```bash
+# Подключение по SSH (замените IP на ваш)
+ssh root@123.45.67.89
+
+# При первом подключении введите пароль из email
+```
+
+#### 3. Настройка сервера
+
+```bash
+# Обновление системы
+apt update && apt upgrade -y
+
+# Установка Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+
+# Установка Docker Compose и Git
+apt install docker-compose-plugin git -y
+
+# Создание пользователя для безопасности
+adduser phraseweaver
+usermod -aG docker phraseweaver
+usermod -aG sudo phraseweaver
+
+# Переключение на нового пользователя
+su - phraseweaver
+```
+
+#### 4. Развертывание приложения
+
+```bash
+# Клонирование репозитория
+git clone https://github.com/your-username/telegram-phrase-weaver.git
+cd telegram-phrase-weaver
+
+# Создание конфигурации
+cp .env.example .env
+nano .env  # Отредактируйте настройки
+```
+
+**Пример конфигурации для Contabo:**
+
+```env
+# База данных (используем Docker контейнеры)
+DATABASE_URL=postgresql://phraseweaver:secure_password_123@db:5432/phraseweaver
+POSTGRES_USER=phraseweaver
+POSTGRES_PASSWORD=secure_password_123
+POSTGRES_DB=phraseweaver
+
+# Redis
+REDIS_URL=redis://redis:6379/0
+
+# Telegram Bot
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+
+# AI Services
+GOOGLE_API_KEY=your_gemini_api_key
+PEXELS_API_KEY=your_pexels_api_key
+
+# Security
+SECRET_KEY=your_very_secure_secret_key
+
+# Domain (используйте IP если нет домена)
+API_BASE_URL=http://123.45.67.89
+# или с доменом:
+# API_BASE_URL=https://your-domain.com
+```
+
+#### 5. Запуск приложения
+
+```bash
+# Запуск в production режиме
+docker compose -f docker-compose.prod.yml up -d --build
+
+# Проверка статуса
+docker compose -f docker-compose.prod.yml ps
+
+# Просмотр логов
+docker compose -f docker-compose.prod.yml logs -f
+```
+
+#### 6. Настройка домена и SSL (опционально)
+
+**Если у вас есть домен:**
+
+1. **Настройте DNS:**
+   - Создайте A-запись: `@` → IP сервера
+   - Создайте CNAME-запись: `www` → ваш домен
+
+2. **Установите SSL сертификат:**
+
+```bash
+# Установка Certbot
+sudo apt install certbot python3-certbot-nginx -y
+
+# Получение бесплатного SSL
+sudo certbot --nginx -d your-domain.com -d www.your-domain.com
+```
+
+#### 7. Настройка автозапуска
+
+```bash
+# Создание systemd сервиса
+sudo nano /etc/systemd/system/phraseweaver.service
+```
+
+**Содержимое файла:**
+
+```ini
+[Unit]
+Description=PhraseWeaver Application
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=phraseweaver
+WorkingDirectory=/home/phraseweaver/telegram-phrase-weaver
+ExecStart=/usr/bin/docker compose -f docker-compose.prod.yml up -d
+ExecStop=/usr/bin/docker compose -f docker-compose.prod.yml down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+# Активация автозапуска
+sudo systemctl daemon-reload
+sudo systemctl enable phraseweaver
+sudo systemctl start phraseweaver
+```
+
+#### 8. Настройка Telegram webhook
+
+```bash
+# Настройка webhook (замените токен и домен/IP)
+curl -X POST "https://api.telegram.org/bot[YOUR_BOT_TOKEN]/setWebhook" \
+     -H "Content-Type: application/json" \
+     -d '{"url": "https://your-domain.com/api/telegram/webhook"}'
+
+# Или с IP адресом:
+# -d '{"url": "http://123.45.67.89/api/telegram/webhook"}'
+```
+
+#### 9. Мониторинг и обслуживание
+
+```bash
+# Полезные команды для управления
+
+# Просмотр статуса
+docker compose -f docker-compose.prod.yml ps
+
+# Перезапуск сервисов
+docker compose -f docker-compose.prod.yml restart
+
+# Обновление приложения
+git pull
+docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml up -d --build
+
+# Резервное копирование БД
+docker compose -f docker-compose.prod.yml exec db pg_dump -U phraseweaver phraseweaver > backup_$(date +%Y%m%d).sql
+
+# Просмотр использования ресурсов
+docker stats
+
+# Очистка неиспользуемых данных
+docker system prune -f
+```
+
+#### 💰 Стоимость Contabo vs другие провайдеры
+
+| Провайдер | Конфигурация | Цена/месяц | Экономия |
+|-----------|--------------|------------|----------|
+| **Contabo Cloud VPS 10** | 3 CPU, 8GB RAM, 75GB NVMe | €5.36 | - |
+| DigitalOcean | 2 CPU, 4GB RAM, 80GB SSD | $24 (~€22) | **€16.64** |
+| AWS Lightsail | 2 CPU, 4GB RAM, 80GB SSD | $20 (~€18) | **€12.64** |
+| Render.com | 1 CPU, 2GB RAM | $25 (~€23) | **€17.64** |
+
+**Годовая экономия с Contabo: €150-200!**
+
+#### 🔧 Решение проблем на Contabo
+
+**Проблема: Контейнер не запускается**
+```bash
+# Проверка логов
+docker compose -f docker-compose.prod.yml logs container_name
+
+# Пересборка контейнера
+docker compose -f docker-compose.prod.yml up -d --build container_name
+```
+
+**Проблема: Нет доступа к сайту**
+```bash
+# Проверка портов в файрволе Contabo
+# Убедитесь что открыты порты 80 и 443 в панели управления
+
+# Проверка статуса Nginx
+docker compose -f docker-compose.prod.yml logs frontend
+```
+
+**Проблема: Бот не отвечает**
+```bash
+# Проверка webhook
+curl "https://api.telegram.org/bot[YOUR_TOKEN]/getWebhookInfo"
+
+# Проверка логов backend
+docker compose -f docker-compose.prod.yml logs backend
+```
+
+> 📖 **Подробное руководство**: Полная инструкция по развертыванию на Contabo доступна в файле [CONTABO_DEPLOYMENT_GUIDE.md](./CONTABO_DEPLOYMENT_GUIDE.md)
+
 ## 💻 Использование
 
 ### Основные команды
