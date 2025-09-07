@@ -6,17 +6,15 @@ import logging
 import os
 from pathlib import Path
 from typing import Optional, Dict, Any
-import torch
-import torchaudio as ta
+# Временно отключаем torch импорты
+# import torch
+# import torchaudio as ta
 from functools import lru_cache
 
-try:
-    from chatterbox.tts import ChatterboxTTS
-    from chatterbox.mtl_tts import ChatterboxMultilingualTTS
-    CHATTERBOX_AVAILABLE = True
-except ImportError:
-    CHATTERBOX_AVAILABLE = False
-    logging.warning("Chatterbox TTS не установлен. Используется fallback на gTTS.")
+# Временно отключаем Chatterbox TTS из-за проблем совместимости с Python 3.11
+# TODO: Исправить установку chatterbox-tts
+CHATTERBOX_AVAILABLE = False
+logging.warning("Chatterbox TTS временно отключен. Используется gTTS.")
 
 from gtts import gTTS
 from ..core.config import get_settings
@@ -60,13 +58,13 @@ class TTSService:
     """Сервис для генерации речи с поддержкой Chatterbox TTS и fallback на gTTS"""
     
     def __init__(self):
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        # Временно отключаем CUDA проверку
+        self.device = "cpu"  # torch.cuda.is_available() if torch else "cpu"
         self.english_model = None
         self.multilingual_model = None
         self._model_loading_lock = asyncio.Lock()
         
-        logging.info(f"TTS Service инициализирован. Device: {self.device}")
-        logging.info(f"Chatterbox доступен: {CHATTERBOX_AVAILABLE}")
+        logging.info(f"TTS Service инициализирован. Device: {self.device}, Chatterbox доступен: {CHATTERBOX_AVAILABLE}")
     
     @lru_cache(maxsize=1)
     def _get_english_model(self):
@@ -148,11 +146,13 @@ class TTSService:
             filename = self._generate_filename(text, language_id, "chatterbox")
             file_path = AUDIO_DIR / filename
             
-            # Сохраняем аудио
-            await asyncio.get_running_loop().run_in_executor(
-                None, 
-                lambda: ta.save(str(file_path), wav, model.sr)
-            )
+            # Сохраняем аудио (временно отключено)
+            # await asyncio.get_running_loop().run_in_executor(
+            #     None, 
+            #     lambda: ta.save(str(file_path), wav, model.sr)
+            # )
+            # Временная заглушка
+            return None
             
             logging.info(f"Chatterbox TTS: '{text[:50]}...' ({language_id}) -> {filename}")
             return f"assets/audio/{filename}"
