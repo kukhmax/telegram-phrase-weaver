@@ -291,14 +291,17 @@ function createSavedCard(card, deck) {
         <div class="card-content">
             <div class="card-side front">
                 <span class="card-flag">${langFromFlag}</span>
-                <span class="card-text">${card.front_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', '${extractLanguageCode(deck.lang_from)}')" title="Прослушать">
+                <span class="card-text">${card.back_text}</span>
+                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', '${extractLanguageCode(deck.lang_from)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="card-side back">
                 <span class="card-flag">${langToFlag}</span>
-                <span class="card-text">${card.back_text}</span>
+                <span class="card-text">${card.front_text}</span>
+                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', '${extractLanguageCode(deck.lang_from)}')" title="Прослушать">
+                    🔊
+                </button>
             </div>
         </div>
         <div class="img-btn-container">
