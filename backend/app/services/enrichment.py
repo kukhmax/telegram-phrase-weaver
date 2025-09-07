@@ -117,7 +117,16 @@ async def enrich_phrase(phrase: str, keyword: str, lang_code: str, target_lang: 
     """
     logging.info(f"--- НАЧАЛО ОБОГАЩЕНИЯ для фразы '{phrase}' с ключевым словом '{keyword}' на '{target_lang}' ---")
     
-    lang_map = {'en': 'English', 'ru': 'Russian', 'es': 'Spanish', 'pt': 'Portuguese', 'pl': 'Polish'}
+    lang_map = {
+        'en': 'English', 
+        'ru': 'Russian', 
+        'es': 'Spanish', 
+        'pt': 'Portuguese', 
+        'pl': 'Polish',
+        'fr': 'French',
+        'de': 'German',
+        'it': 'Italian'
+    }
     target_lang_full = lang_map.get(target_lang, target_lang)
     language_full = lang_map.get(lang_code, lang_code)
     
