@@ -16,7 +16,6 @@ function getLanguageFlag(langCode) {
         'es': '🇪🇸',
         'fr': '🇫🇷',
         'de': '🇩🇪',
-        'it': '🇮🇹',
         'pt': '🇵🇹',
         'ru': '🇷🇺',
     };
@@ -93,7 +92,6 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
     
     card.innerHTML = `
         <div class="phrase-content">
-            
             <div class="phrase-line">
                 <span class="flag-emoji">${langFromFlag}</span>
                 <span class="phrase-text">${phrase.original}</span>
