@@ -28,8 +28,8 @@ pytest-asyncio>=0.21.0
 httpx>=0.24.0  # For TestClient async support
 aiogram==3.13.1
 
-# TTS dependencies
-chatterbox-tts
-torch>=2.0.0
-torchaudio>=2.0.0
-numpy>=1.21.0
+# TTS dependencies (временно отключены)
+# chatterbox-tts
+# torch>=2.0.0
+# torchaudio>=2.0.0
+# numpy>=1.21.0
