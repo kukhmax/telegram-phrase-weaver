@@ -1920,8 +1920,16 @@ document.getElementById('play-audio-btn').addEventListener('click', () => {
             langCode = extractLanguageCode(trainingData.deckInfo.lang_to);
         } else {
             // Заполнение пропусков: аудио должно быть на языке перевода (как подсказка)
+            // Но нужно определить язык по самому тексту, а не по deckInfo
             text = currentCard.back_text;
-            langCode = extractLanguageCode(trainingData.deckInfo.lang_to);
+            // Определяем язык по тексту: если текст содержит кириллицу - русский, иначе - английский
+            const isRussianText = /[а-яё]/i.test(text);
+            if (isRussianText) {
+                langCode = 'ru';
+            } else {
+                // Для английского и других латинских языков
+                langCode = 'en';
+            }
         }
         
         console.log('🔊 Воспроизведение аудио:', {
