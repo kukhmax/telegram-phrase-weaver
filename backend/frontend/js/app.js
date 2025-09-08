@@ -1919,9 +1919,9 @@ document.getElementById('play-audio-btn').addEventListener('click', () => {
             text = currentCard.back_text;
             langCode = extractLanguageCode(trainingData.deckInfo.lang_to);
         } else {
-            // Заполнение пропусков: показана фраза на изучаемом языке, аудио тоже на изучаемом языке
-            text = currentCard.front_text;
-            langCode = extractLanguageCode(trainingData.deckInfo.lang_from);
+            // Заполнение пропусков: аудио должно быть на языке перевода (как подсказка)
+            text = currentCard.back_text;
+            langCode = extractLanguageCode(trainingData.deckInfo.lang_to);
         }
         
         console.log('🔊 Воспроизведение аудио:', {
