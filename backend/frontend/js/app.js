@@ -1321,31 +1321,20 @@ function loadTrainingCard() {
         answerInput.setAttribute('data-reverse', 'true');
         currentCard.expectedAnswer = currentCard.front_text;
     } else {
-        // Заполнение пропусков - используем готовую фразу с пропуском из ИИ или создаем на лету
+        // Заполнение пропусков - всегда используем фразу на изучаемом языке (front_text)
         let phraseWithGap;
         let expectedAnswer;
         
-        if (currentCard.gap_fill) {
-            // Используем готовую фразу с пропуском от ИИ
-            phraseWithGap = currentCard.gap_fill.replace(/_____/g, '<span class="word-gap">_____</span>');
-            
-            // Определяем правильный ответ, сравнивая оригинальную фразу с gap_fill
-            expectedAnswer = findMissingWordFromGapFill(currentCard.front_text, currentCard.gap_fill);
-            if (!expectedAnswer) {
-                expectedAnswer = currentCard.keyword; // Fallback
-            }
-            
-            console.log('✅ Используем готовую gap_fill фразу:', {
-                original: currentCard.front_text,
-                gap_fill: currentCard.gap_fill,
-                expected_answer: expectedAnswer
-            });
-        } else {
-            // Fallback: создаем пропуск на лету
-            phraseWithGap = createPhraseWithGap(currentCard.front_text, currentCard.keyword);
-            expectedAnswer = currentCard.keyword;
-            console.log('⚠️ Создаем пропуск на лету (нет gap_fill):', phraseWithGap);
-        }
+        // Создаем пропуск в оригинальной фразе (на изучаемом языке)
+        phraseWithGap = createPhraseWithGap(currentCard.front_text, currentCard.keyword);
+        expectedAnswer = currentCard.keyword;
+        
+        console.log('🎯 Заполнение пропусков на изучаемом языке:', {
+            original: currentCard.front_text,
+            phrase_with_gap: phraseWithGap,
+            expected_answer: expectedAnswer,
+            hint_translation: currentCard.back_text
+        });
         
         phraseElement.innerHTML = phraseWithGap;
         answerInput.placeholder = t('enter_missing_word');
@@ -1919,10 +1908,28 @@ document.getElementById('answer-input').addEventListener('keypress', (e) => {
 document.getElementById('play-audio-btn').addEventListener('click', () => {
     const currentCard = trainingData.cards[trainingData.currentIndex];
     if (currentCard) {
-        const text = currentCard.isForward ? currentCard.front_text : currentCard.back_text;
-        const langCode = currentCard.isForward ? 
-            extractLanguageCode(trainingData.deckInfo.lang_from) : 
-            extractLanguageCode(trainingData.deckInfo.lang_to);
+        let text, langCode;
+        
+        if (currentCard.exerciseType === 0) {
+            // Перевод: показана фраза на изучаемом языке, аудио тоже на изучаемом языке
+            text = currentCard.front_text;
+            langCode = extractLanguageCode(trainingData.deckInfo.lang_from);
+        } else if (currentCard.exerciseType === 1) {
+            // Обратный перевод: показан перевод, аудио на языке перевода
+            text = currentCard.back_text;
+            langCode = extractLanguageCode(trainingData.deckInfo.lang_to);
+        } else {
+            // Заполнение пропусков: показана фраза на изучаемом языке, аудио тоже на изучаемом языке
+            text = currentCard.front_text;
+            langCode = extractLanguageCode(trainingData.deckInfo.lang_from);
+        }
+        
+        console.log('🔊 Воспроизведение аудио:', {
+            exerciseType: currentCard.exerciseType,
+            text: text,
+            langCode: langCode
+        });
+        
         playAudio(text, langCode);
     }
 });
