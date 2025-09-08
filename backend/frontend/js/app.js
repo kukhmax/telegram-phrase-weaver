@@ -1927,7 +1927,11 @@ document.getElementById('play-audio-btn').addEventListener('click', () => {
         console.log('🔊 Воспроизведение аудио:', {
             exerciseType: currentCard.exerciseType,
             text: text,
-            langCode: langCode
+            langCode: langCode,
+            deckInfo_lang_from: trainingData.deckInfo.lang_from,
+            deckInfo_lang_to: trainingData.deckInfo.lang_to,
+            extracted_lang_from: extractLanguageCode(trainingData.deckInfo.lang_from),
+            extracted_lang_to: extractLanguageCode(trainingData.deckInfo.lang_to)
         });
         
         playAudio(text, langCode);
