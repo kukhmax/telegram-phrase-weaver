@@ -35,6 +35,48 @@ function extractLanguageCode(langText) {
     return match ? match[1].toLowerCase() : 'en';
 }
 
+// Функция для определения языка по содержимому текста
+function detectLanguageByText(text) {
+    if (!text || typeof text !== 'string') {
+        return 'en';
+    }
+    
+    const cleanText = text.toLowerCase().trim();
+    
+    // Кириллица - русский
+    if (/[а-яё]/i.test(cleanText)) {
+        return 'ru';
+    }
+    
+    // Польские специфические символы
+    if (/[ąćęłńóśźż]/i.test(cleanText)) {
+        return 'pl';
+    }
+    
+    // Португальские специфические символы
+    if (/[ãõçáéíóúâêôàü]/i.test(cleanText)) {
+        return 'pt';
+    }
+    
+    // Испанские специфические символы
+    if (/[ñáéíóúü¿¡]/i.test(cleanText)) {
+        return 'es';
+    }
+    
+    // Французские специфические символы
+    if (/[àâäéèêëïîôöùûüÿç]/i.test(cleanText)) {
+        return 'fr';
+    }
+    
+    // Немецкие специфические символы
+    if (/[äöüß]/i.test(cleanText)) {
+        return 'de';
+    }
+    
+    // По умолчанию английский для латинских текстов
+    return 'en';
+}
+
 
 
 // Функция для отображения сгенерированных фраз
@@ -96,14 +138,14 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
             <div class="phrase-line">
                 <span class="flag-emoji">${langFromFlag}</span>
                 <span class="phrase-text">${phrase.original}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}', '${extractLanguageCode(langFrom)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}', detectLanguageByText('${phrase.original.replace(/'/g, "\\'")}')')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="phrase-line">
                 <span class="flag-emoji">${langToFlag}</span>
                 <span class="phrase-text">${phrase.translation}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', '${extractLanguageCode(langTo)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', detectLanguageByText('${phrase.translation.replace(/'/g, "\\'")}')')" title="Прослушать">
                     🔊
                 </button>
             </div>
@@ -293,14 +335,14 @@ function createSavedCard(card, deck) {
             <div class="card-side front">
                 <span class="card-flag">${langFromFlag}</span>
                 <span class="card-text">${card.back_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', '${extractLanguageCode(deck.lang_from)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', detectLanguageByText('${card.back_text.replace(/'/g, "\\'")}')')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="card-side back">
                 <span class="card-flag">${langToFlag}</span>
                 <span class="card-text">${card.front_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', '${extractLanguageCode(deck.lang_to)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', detectLanguageByText('${card.front_text.replace(/'/g, "\\'")}')')" title="Прослушать">
                     🔊
                 </button>
             </div>
@@ -1910,18 +1952,19 @@ document.getElementById('play-audio-btn').addEventListener('click', () => {
     if (currentCard) {
         let text, langCode;
         
+        // Определяем язык по содержимому текста для всех типов упражнений
         if (currentCard.exerciseType === 0) {
             // Перевод: показана фраза на изучаемом языке, аудио тоже на изучаемом языке
             text = currentCard.front_text;
-            langCode = extractLanguageCode(trainingData.deckInfo.lang_to);
+            langCode = detectLanguageByText(text);
         } else if (currentCard.exerciseType === 1) {
             // Обратный перевод: показан перевод, аудио на языке перевода
             text = currentCard.back_text;
-            langCode = extractLanguageCode(trainingData.deckInfo.lang_from);
+            langCode = detectLanguageByText(text);
         } else {
             // Заполнение пропусков: аудио должно быть на языке перевода (как подсказка)
             text = currentCard.back_text;
-            langCode = extractLanguageCode(trainingData.deckInfo.lang_from);
+            langCode = detectLanguageByText(text);
         }
         
         console.log('🔊 Воспроизведение аудио:', {
