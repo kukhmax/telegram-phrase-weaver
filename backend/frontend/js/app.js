@@ -36,7 +36,7 @@ function extractLanguageCode(langText) {
 }
 
 // Функция для определения языка по содержимому текста
-function detectLanguageByText(text) {
+window.detectLanguageByText = function detectLanguageByText(text) {
     if (!text || typeof text !== 'string') {
         return 'en';
     }
