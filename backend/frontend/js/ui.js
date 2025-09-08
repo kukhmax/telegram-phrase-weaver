@@ -75,6 +75,17 @@ export function renderDecks(decks) {
             cardNode.querySelector('.cards-total').textContent = deck.cards_count;
             cardNode.querySelector('.cards-repeat').textContent = deck.due_count;
             DOMElements.decksContainer.appendChild(cardNode);
+            
+            // Применяем локализацию к только что добавленным элементам
+            const addedCard = DOMElements.decksContainer.lastElementChild;
+            const translatableElements = addedCard.querySelectorAll('[data-translate]');
+            translatableElements.forEach(element => {
+                const key = element.getAttribute('data-translate');
+                const translation = t(key);
+                if (translation) {
+                    element.textContent = translation;
+                }
+            });
         });
     }
 }
