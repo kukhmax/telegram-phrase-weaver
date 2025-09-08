@@ -1913,15 +1913,15 @@ document.getElementById('play-audio-btn').addEventListener('click', () => {
         if (currentCard.exerciseType === 0) {
             // Перевод: показана фраза на изучаемом языке, аудио тоже на изучаемом языке
             text = currentCard.front_text;
-            langCode = extractLanguageCode(trainingData.deckInfo.lang_from);
+            langCode = extractLanguageCode(trainingData.deckInfo.lang_to);
         } else if (currentCard.exerciseType === 1) {
             // Обратный перевод: показан перевод, аудио на языке перевода
             text = currentCard.back_text;
-            langCode = extractLanguageCode(trainingData.deckInfo.lang_to);
+            langCode = extractLanguageCode(trainingData.deckInfo.lang_from);
         } else {
             // Заполнение пропусков: аудио должно быть на языке перевода (как подсказка)
             text = currentCard.back_text;
-            langCode = extractLanguageCode(trainingData.deckInfo.lang_to);
+            langCode = extractLanguageCode(trainingData.deckInfo.lang_from);
         }
         
         console.log('🔊 Воспроизведение аудио:', {
