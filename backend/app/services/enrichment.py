@@ -31,22 +31,20 @@ async def get_translation(text: str, from_lang: str, to_lang: str) -> Optional[s
         logging.error(f"Ошибка перевода: {e}")
         return None
 
-async def generate_audio(text: str, lang: str, prefix: str, use_chatterbox: bool = True):
+async def generate_audio(text: str, lang: str, prefix: str):
     """
-    Генерирует аудио с использованием нового TTS сервиса
+    Генерирует аудио с использованием TTS сервиса
     
     Args:
         text: Текст для озвучки
         lang: Код языка
         prefix: Префикс для имени файла
-        use_chatterbox: Использовать Chatterbox TTS (по умолчанию True)
     """
     try:
-        # Используем новый TTS сервис
+        # Используем TTS сервис
         audio_path = await tts_service.generate_audio(
             text=text,
             language_id=lang,
-            use_chatterbox=use_chatterbox,
             prefix=prefix
         )
         

@@ -20,16 +20,9 @@ logger = logging.getLogger(__name__)
 class TTSRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=1000, description="Текст для озвучки")
     language_id: str = Field(..., description="Код языка (ISO 639-1)")
-    use_chatterbox: bool = Field(True, description="Использовать Chatterbox TTS")
-    exaggeration: float = Field(0.5, ge=0.0, le=1.0, description="Уровень выразительности")
-    cfg_weight: float = Field(0.5, ge=0.0, le=1.0, description="Вес конфигурации")
-    audio_prompt_path: Optional[str] = Field(None, description="Путь к аудио-промпту для клонирования голоса")
 
 class BatchTTSRequest(BaseModel):
     texts_and_langs: List[tuple[str, str]] = Field(..., description="Список кортежей (text, language_id)")
-    use_chatterbox: bool = Field(True, description="Использовать Chatterbox TTS")
-    exaggeration: float = Field(0.5, ge=0.0, le=1.0, description="Уровень выразительности")
-    cfg_weight: float = Field(0.5, ge=0.0, le=1.0, description="Вес конфигурации")
 
 class TTSResponse(BaseModel):
     success: bool
@@ -47,7 +40,6 @@ class BatchTTSResponse(BaseModel):
 
 class SupportedLanguagesResponse(BaseModel):
     languages: Dict[str, str]
-    chatterbox_available: bool
     total_languages: int
 
 
@@ -57,14 +49,11 @@ async def generate_tts(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Генерирует аудиофайл для заданного текста
+    Генерирует аудиофайл для заданного текста с использованием gTTS
     
+    **Параметры:**
     - **text**: Текст для озвучки (1-1000 символов)
     - **language_id**: Код языка (например: 'en', 'ru', 'es')
-    - **use_chatterbox**: Использовать Chatterbox TTS (по умолчанию True)
-    - **exaggeration**: Уровень выразительности (0.0-1.0)
-    - **cfg_weight**: Вес конфигурации (0.0-1.0)
-    - **audio_prompt_path**: Путь к аудио для клонирования голоса (опционально)
     """
     try:
         logger.info(f"TTS запрос от пользователя {current_user.id}: '{request.text[:50]}...' ({request.language_id})")
@@ -80,11 +69,7 @@ async def generate_tts(
         # Генерируем аудио
         audio_path = await tts_service.generate_audio(
             text=request.text,
-            language_id=request.language_id,
-            use_chatterbox=request.use_chatterbox,
-            audio_prompt_path=request.audio_prompt_path,
-            exaggeration=request.exaggeration,
-            cfg_weight=request.cfg_weight
+            language_id=request.language_id
         )
         
         if not audio_path:
@@ -119,12 +104,9 @@ async def generate_batch_tts(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Генерирует аудиофайлы для нескольких текстов параллельно
+    Генерирует аудиофайлы для нескольких текстов параллельно с использованием gTTS
     
     - **texts_and_langs**: Список кортежей (text, language_id)
-    - **use_chatterbox**: Использовать Chatterbox TTS
-    - **exaggeration**: Уровень выразительности
-    - **cfg_weight**: Вес конфигурации
     """
     try:
         logger.info(f"Batch TTS запрос от пользователя {current_user.id}: {len(request.texts_and_langs)} элементов")
@@ -146,10 +128,7 @@ async def generate_batch_tts(
         
         # Генерируем аудио параллельно
         results = await tts_service.generate_batch_audio(
-            request.texts_and_langs,
-            use_chatterbox=request.use_chatterbox,
-            exaggeration=request.exaggeration,
-            cfg_weight=request.cfg_weight
+            request.texts_and_langs
         )
         
         successful_count = sum(1 for path in results.values() if path is not None)
@@ -177,14 +156,13 @@ async def generate_batch_tts(
 @router.get("/languages", response_model=SupportedLanguagesResponse)
 async def get_supported_languages():
     """
-    Возвращает список поддерживаемых языков
+    Возвращает список поддерживаемых языков gTTS
     """
     try:
         languages = tts_service.get_supported_languages()
         
         return SupportedLanguagesResponse(
             languages=languages,
-            chatterbox_available=hasattr(tts_service, 'english_model') or hasattr(tts_service, 'multilingual_model'),
             total_languages=len(languages)
         )
         
@@ -279,17 +257,15 @@ async def cleanup_old_audio_files(
 @router.get("/health")
 async def tts_health_check():
     """
-    Проверка состояния TTS сервиса
+    Проверка состояния TTS сервиса (gTTS)
     """
     try:
         supported_languages = tts_service.get_supported_languages()
         
         return {
             "status": "healthy",
-            "device": tts_service.device,
-            "chatterbox_available": len(supported_languages) > 12,  # Chatterbox поддерживает 23 языка
             "supported_languages_count": len(supported_languages),
-            "service": "TTS Service"
+            "service": "gTTS Service"
         }
         
     except Exception as e:
