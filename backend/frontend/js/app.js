@@ -96,14 +96,14 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
             <div class="phrase-line">
                 <span class="flag-emoji">${langFromFlag}</span>
                 <span class="phrase-text">${phrase.original}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}'', '${extractLanguageCode(langFrom)}'')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}', '${extractLanguageCode(langFrom)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="phrase-line">
                 <span class="flag-emoji">${langToFlag}</span>
                 <span class="phrase-text">${phrase.translation}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}'', '${extractLanguageCode(langTo)}'')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', '${extractLanguageCode(langTo)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
