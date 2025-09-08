@@ -107,6 +107,15 @@ async def generate_examples_with_ai(phrase: str, keyword: str, language: str, ta
         
         logging.info(f"AI успешно сгенерировал данные для '{phrase}'.")
         
+        # Логируем структуру ответа для отладки
+        if 'original_phrase' in data:
+            orig = data['original_phrase']
+            logging.info(f"Original phrase: '{orig.get('original', 'N/A')}' -> '{orig.get('translation', 'N/A')}'")
+        
+        if 'additional_examples' in data and len(data['additional_examples']) > 0:
+            first_example = data['additional_examples'][0]
+            logging.info(f"First example: '{first_example.get('original', 'N/A')}' -> '{first_example.get('translation', 'N/A')}'")
+        
         # Сохраняем в кэш (async set, TTL 7 дней = 604800 сек)
         cache_saved = await redis_client.set(cache_key, json.dumps(data), ex=604800)
         if cache_saved:
