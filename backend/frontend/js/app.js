@@ -892,8 +892,8 @@ document.addEventListener('click', (event) => {
             const langTo = langToElement.textContent;
             
             // Отображаем языки с флагами в окне генерации карточек
-            const langFromCode = extractLanguageCode(langFrom);
-            const langToCode = extractLanguageCode(langTo);
+            const langFromCode = deck.lang_from.toLowerCase();
+            const langToCode = deck.lang_to.toLowerCase();
             const langFromFlag = getLanguageFlag(langFromCode);
             const langToFlag = getLanguageFlag(langToCode);
             
