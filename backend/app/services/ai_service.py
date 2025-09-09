@@ -159,3 +159,6 @@ async def generate_examples_with_ai(phrase: str, keyword: str, language: str, ta
     except Exception as e:
         logging.error(f"Ошибка при работе с AI для фразы '{phrase}': {e}")
         return {"error": f"Ошибка AI сервиса: {str(e)}"}
+
+if __name__ == "__main__":
+    asyncio.run(generate_examples_with_ai('my dog', 'dog', 'en', 'pt'))
