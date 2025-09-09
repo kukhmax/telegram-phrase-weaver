@@ -78,7 +78,6 @@ window.detectLanguageByText = function detectLanguageByText(text) {
 }
 
 
-
 // Функция для отображения сгенерированных фраз
 function displayGeneratedPhrases(data, langFrom, langTo) {
     currentGeneratedData = data;
@@ -1081,8 +1080,8 @@ document.addEventListener('click', (event) => {
                 const card = allCards[index];
                 if (card) {
                     // После изменения порядка отображения: первая строка - перевод, вторая - оригинал
-                    const translationText = card.querySelector('.phrase-line:first-child .phrase-text').textContent;
-                    const originalText = card.querySelector('.phrase-line:last-child .phrase-text').textContent;
+                    const originalText = card.querySelector('.phrase-line:first-child .phrase-text').textContent;
+                    const translationText = card.querySelector('.phrase-line:last-child .phrase-text').textContent;
                     
                     // Автоматически определяем ключевое слово
                     let keyword = '';
