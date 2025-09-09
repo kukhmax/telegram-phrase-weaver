@@ -137,14 +137,14 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
             <div class="phrase-line">
                 <span class="flag-emoji">${langFromFlag}</span>
                 <span class="phrase-text">${phrase.original}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}', detectLanguageByText('${phrase.original.replace(/'/g, "\\'")}'))" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}', '${extractLanguageCode(langFrom)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="phrase-line">
                 <span class="flag-emoji">${langToFlag}</span>
                 <span class="phrase-text">${phrase.translation}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', detectLanguageByText('${phrase.translation.replace(/'/g, "\\'")}'))" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', '${extractLanguageCode(langTo)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
@@ -333,15 +333,15 @@ function createSavedCard(card, deck) {
         <div class="card-content">
             <div class="card-side front">
                 <span class="card-flag">${langFromFlag}</span>
-                <span class="card-text">${card.back_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', detectLanguageByText('${card.back_text.replace(/'/g, "\\'")}'))" title="Прослушать">
+                <span class="card-text">${card.front_text}</span>
+                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', '${langFromCode}')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="card-side back">
                 <span class="card-flag">${langToFlag}</span>
-                <span class="card-text">${card.front_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', detectLanguageByText('${card.front_text.replace(/'/g, "\\'")}'))" title="Прослушать">
+                <span class="card-text">${card.back_text}</span>
+                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', '${langToCode}')" title="Прослушать">
                     🔊
                 </button>
             </div>
