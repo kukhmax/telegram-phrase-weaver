@@ -8,6 +8,20 @@ let currentGeneratedData = null;
 let selectedPhrases = new Set();
 let currentDeckId = null;
 
+// Маппинг ISO-кодов языков на коды TTS движка
+function getTTSLangCode(lang) {
+    const map = {
+        'en': 'en-US',
+        'pl': 'pl-PL',
+        'es': 'es-ES',
+        'fr': 'fr-FR',
+        'de': 'de-DE',
+        'pt': 'pt-PT',
+        'ru': 'ru-RU',
+    };
+    return map[lang.toLowerCase()] || lang;
+}
+
 // Функция для получения флага языка
 function getLanguageFlag(langCode) {
     const flags = {
@@ -137,14 +151,14 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
             <div class="phrase-line">
                 <span class="flag-emoji">${langFromFlag}</span>
                 <span class="phrase-text">${phrase.original}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}', '${extractLanguageCode(langFrom)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}', getTTSLangCode('${langFrom}'))" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="phrase-line">
                 <span class="flag-emoji">${langToFlag}</span>
                 <span class="phrase-text">${phrase.translation}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', '${extractLanguageCode(langTo)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', getTTSLangCode('${langTo}'))" title="Прослушать">
                     🔊
                 </button>
             </div>
@@ -334,14 +348,14 @@ function createSavedCard(card, deck) {
             <div class="card-side front">
                 <span class="card-flag">${langFromFlag}</span>
                 <span class="card-text">${card.front_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', '${langFromCode}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', getTTSLangCode('${langFromCode}'))" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="card-side back">
                 <span class="card-flag">${langToFlag}</span>
                 <span class="card-text">${card.back_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', '${langToCode}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', getTTSLangCode('${langToCode}'))" title="Прослушать">
                     🔊
                 </button>
             </div>
