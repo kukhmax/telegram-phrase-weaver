@@ -141,6 +141,9 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
     const card = document.createElement('div');
     card.className = 'phrase-card';
     card.dataset.index = index;
+
+    const langFromCode = extractLanguageCode(langFrom);
+    const langToCode = extractLanguageCode(langTo);
     
     const langFromFlag = getLanguageFlag(extractLanguageCode(langFrom));
     const langToFlag = getLanguageFlag(extractLanguageCode(langTo));
@@ -151,14 +154,14 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
             <div class="phrase-line">
                 <span class="flag-emoji">${langFromFlag}</span>
                 <span class="phrase-text">${phrase.original}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}', getTTSLangCode('${langFrom}'))" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}', '${getTTSLangCode(langFromCode)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="phrase-line">
                 <span class="flag-emoji">${langToFlag}</span>
                 <span class="phrase-text">${phrase.translation}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', getTTSLangCode('${langTo}'))" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', '${getTTSLangCode(langToCode)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
@@ -348,14 +351,14 @@ function createSavedCard(card, deck) {
             <div class="card-side front">
                 <span class="card-flag">${langFromFlag}</span>
                 <span class="card-text">${card.front_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', getTTSLangCode('${langFromCode}'))" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', '${getTTSLangCode(langFromCode)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="card-side back">
                 <span class="card-flag">${langToFlag}</span>
                 <span class="card-text">${card.back_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', getTTSLangCode('${langToCode}'))" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', '${getTTSLangCode(langToCode)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
