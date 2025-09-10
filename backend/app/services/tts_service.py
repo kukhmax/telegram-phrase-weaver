@@ -23,12 +23,9 @@ GTTS_LANGUAGES = {
     'en': 'en',  # English
     'es': 'es',  # Spanish
     'fr': 'fr',  # French
-    'hi': 'hi',  # Hindi
-
     'pl': 'pl',  # Polish
     'pt': 'pt',  # Portuguese
     'ru': 'ru',  # Russian
-    'zh': 'zh'   # Chinese
 }
 
 class TTSService:
@@ -50,16 +47,27 @@ class TTSService:
             filename = self._generate_filename(text, language_id, "gtts")
             file_path = AUDIO_DIR / filename
             
-            # Маппинг языков для gTTS
-            gtts_lang_map = {
-                'pt': 'pt', 'en': 'en', 'es': 'es', 'fr': 'fr', 
-                'de': 'de', 'it': 'it', 'ru': 'ru', 'ja': 'ja',
-                'ko': 'ko', 'zh': 'zh', 'ar': 'ar', 'hi': 'hi'
-            }
+            # Используем GTTS_LANGUAGES для корректного маппинга
+            gtts_lang = GTTS_LANGUAGES.get(language_id, 'en')
             
-            gtts_lang = gtts_lang_map.get(language_id, 'en')
-            tld_map = {'pt': 'pt'}
+            # TLD маппинг для улучшенного произношения
+            tld_map = {
+                'pt': 'pt',  # Португальский с португальским TLD
+                'pl': 'pl',  # Польский с польским TLD
+                'de': 'de',  # Немецкий с немецким TLD
+                'fr': 'fr',  # Французский с французским TLD
+                'es': 'es',  # Испанский с испанским TLD
+                'ru': 'ru'   # Русский с русским TLD
+            }
             tld = tld_map.get(gtts_lang, 'com')
+            
+            # ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ ДЛЯ ОТЛАДКИ
+            logging.info(f"🔊 TTS ГЕНЕРАЦИЯ:")
+            logging.info(f"   📝 Текст: '{text[:50]}{'...' if len(text) > 50 else ''}'")
+            logging.info(f"   🌍 Входной language_id: '{language_id}'")
+            logging.info(f"   🎯 Маппинг на gTTS язык: '{gtts_lang}'")
+            logging.info(f"   🌐 TLD для произношения: '{tld}'")
+            logging.info(f"   📁 Файл: {filename}")
             
             def tts_sync():
                 tts = gTTS(text=text, lang=gtts_lang, tld=tld, slow=False)
