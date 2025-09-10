@@ -60,28 +60,36 @@ async def generate_audio(text: str, lang: str, prefix: str):
         # Fallback на старый метод
         return await generate_audio_legacy(text, lang, prefix)
 
-
+# В enrichment.py
 async def generate_audio_legacy(text: str, lang: str, prefix: str):
-    """
-    Старый метод генерации аудио с gTTS (fallback)
-    """
     try:
+        # Приводим lang к поддерживаемому gTTS виду
+        lang_map = {
+            "pl-PL": "pl",
+            "pt-PT": "pt",
+            "es-ES": "es",
+            "fr-FR": "fr",
+            "de-DE": "de",
+            "ru-RU": "ru",
+            "en-US": "en",
+        }
+        gtts_lang = lang_map.get(lang, lang)
+
         filename = f"{prefix}_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
         file_path = AUDIO_DIR / filename
-        
-        # Если файл уже существует, возвращаем относительный путь
-        if file_path.exists(): 
+
+        if file_path.exists():
             return f"assets/audio/{filename}"
-        
-        tld_map = {'pt': 'pt'}
-        tld = tld_map.get(lang, 'com')
+
+        tld_map = {"pt": "pt"}  # Португальский может использовать tld="pt"
+        tld = tld_map.get(gtts_lang, "com")
 
         def tts_sync():
-            tts = gTTS(text=text, lang=lang, tld=tld, slow=False)
+            tts = gTTS(text=text, lang=gtts_lang, tld=tld, slow=False)
             tts.save(str(file_path))
-        
+
         await asyncio.get_running_loop().run_in_executor(None, tts_sync)
-        logging.info(f"Аудио '{text}' ({lang} / {tld}) сохранено (legacy): {file_path}")
+        logging.info(f"Аудио '{text}' ({gtts_lang}/{tld}) сохранено (legacy): {file_path}")
         return f"assets/audio/{filename}"
     except Exception as e:
         logging.error(f"Ошибка генерации аудио (legacy): {e}")
