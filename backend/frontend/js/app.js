@@ -161,7 +161,7 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
             <div class="phrase-line">
                 <span class="flag-emoji">${langToFlag}</span>
                 <span class="phrase-text">${phrase.translation}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', '${langToCode}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudioWithDetection('${phrase.translation.replace(/'/g, "\\'")}')" title="Прослушать">
                     🔊
                 </button>
             </div>
@@ -415,6 +415,12 @@ window.deleteCard = async function(cardId) {
 };
 
 // Функция для воспроизведения аудио
+// Функция-обертка для аудио с автоопределением языка
+window.playAudioWithDetection = async function(text) {
+    const detectedLang = detectLanguageByText(text);
+    return playAudio(text, detectedLang);
+};
+
 window.playAudio = async function(text, langCode) {
     console.log('playAudio called with:', { text, langCode });
     try {
