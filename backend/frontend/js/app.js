@@ -1958,34 +1958,12 @@ document.getElementById('answer-input').addEventListener('keypress', (e) => {
 document.getElementById('play-audio-btn').addEventListener('click', () => {
     const currentCard = trainingData.cards[trainingData.currentIndex];
     if (currentCard) {
-        let text, langCode;
-        
-        // Определяем язык по содержимому текста для всех типов упражнений
-        if (currentCard.exerciseType === 0) {
-            // Перевод: показана фраза на изучаемом языке, аудио тоже на изучаемом языке
-            text = currentCard.front_text;
-            langCode = detectLanguageByText(text);
-        } else if (currentCard.exerciseType === 1) {
-            // Обратный перевод: показан перевод, аудио на языке перевода
-            text = currentCard.back_text;
-            langCode = detectLanguageByText(text);
-        } else {
-            // Заполнение пропусков: аудио должно быть на языке перевода (как подсказка)
-            text = currentCard.back_text;
-            langCode = detectLanguageByText(text);
-        }
-        
-        console.log('🔊 Воспроизведение аудио:', {
-            exerciseType: currentCard.exerciseType,
-            text: text,
-            langCode: langCode,
-            deckInfo_lang_from: trainingData.deckInfo.lang_from,
-            deckInfo_lang_to: trainingData.deckInfo.lang_to,
-            extracted_lang_from: extractLanguageCode(trainingData.deckInfo.lang_from),
-            extracted_lang_to: extractLanguageCode(trainingData.deckInfo.lang_to)
-        });
-        
+        const text = currentCard.isForward ? currentCard.front_text : currentCard.back_text;
+        const langCode = currentCard.isForward ? 
+            extractLanguageCode(trainingData.deckInfo.lang_from) :
+            extractLanguageCode(trainingData.deckInfo.lang_to);
         playAudio(text, langCode);
+
     }
 });
 
