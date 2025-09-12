@@ -147,7 +147,7 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
             <div class="phrase-line">
                 <span class="flag-emoji">${langToFlag}</span>
                 <span class="phrase-text">${phrase.translation}</span>
-                <button class="audio-btn" onclick="playAudioWithDetection('${phrase.translation.replace(/'/g, "\\'")}', '${langToCode}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', '${langToCode}')" title="Прослушать">
                     🔊
                 </button>
             </div>
