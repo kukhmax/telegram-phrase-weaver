@@ -47,15 +47,32 @@ async def generate_audio(text: str, lang: str, prefix: str):
         if file_path.exists():
             return f"assets/audio/{filename}"
 
-        tld_map = {"pt": "pt"}  # Португальский может использовать tld="pt"
-        tld = tld_map.get(lang, "com")
+        # TLD маппинг для улучшенного произношения
+        # Исключаем проблемные TLD, которые недоступны с сервера
+        tld_map = {
+            'pt': 'pt',  # Португальский с португальским TLD
+            # 'pl': 'pl',  # Польский TLD недоступен - используем com
+            'de': 'de',  # Немецкий с немецким TLD
+            'fr': 'fr',  # Французский с французским TLD
+            'es': 'es',  # Испанский с испанским TLD
+            # 'ru': 'ru'   # Русский TLD может быть недоступен - используем com
+        }
+        tld = tld_map.get(lang, 'com')
+
+        # ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ ДЛЯ ОТЛАДКИ
+        logging.info(f"🔊 TTS ГЕНЕРАЦИЯ:")
+        logging.info(f"   📝 Текст: '{text[:50]}{'...' if len(text) > 50 else ''}'")
+        logging.info(f"   🌍 Входной language_id: '{lang}'")
+        logging.info(f"   🎯 Маппинг на gTTS язык: '{lang}'")
+        logging.info(f"   🌐 TLD для произношения: '{tld}'")
+        logging.info(f"   📁 Файл: {filename}")
 
         def tts_sync():
             tts = gTTS(text=text, lang=lang, tld=tld, slow=False)
             tts.save(str(file_path))
 
         await asyncio.get_running_loop().run_in_executor(None, tts_sync)
-        logging.info(f"Аудио '{text}' ({lang}/{tld}) сохранено (legacy): {file_path}")
+        logging.info(f"✅ Аудио успешно создано: '{text[:30]}...' ({lang}/{tld}) -> {filename}")
         return f"assets/audio/{filename}"
     except Exception as e:
         logging.error(f"Ошибка генерации аудио: {e}")
