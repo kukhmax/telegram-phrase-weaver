@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Optional
 import aiohttp
 from gtts import gTTS
-from .tts_service import tts_service
 from deep_translator import GoogleTranslator
 
 from .ai_service import generate_examples_with_ai  # Импорт AI
@@ -40,41 +39,8 @@ async def generate_audio(text: str, lang: str, prefix: str):
         lang: Код языка
         prefix: Префикс для имени файла
     """
-    try:
-        # Используем TTS сервис
-        audio_path = await tts_service.generate_audio(
-            text=text,
-            language_id=lang,
-            prefix=prefix
-        )
-        
-        if audio_path:
-            logging.info(f"Аудио '{text}' ({lang}) сохранено через TTS сервис: {audio_path}")
-            return audio_path
-        else:
-            logging.warning(f"TTS сервис не смог сгенерировать аудио для '{text}' ({lang})")
-            return None
-            
-    except Exception as e:
-        logging.error(f"Ошибка генерации аудио через TTS сервис: {e}")
-        # Fallback на старый метод
-        return await generate_audio_legacy(text, lang, prefix)
 
-# В enrichment.py
-async def generate_audio_legacy(text: str, lang: str, prefix: str):
     try:
-        # Приводим lang к поддерживаемому gTTS виду
-        lang_map = {
-            "pl-PL": "pl",
-            "pt-PT": "pt",
-            "es-ES": "es",
-            "fr-FR": "fr",
-            "de-DE": "de",
-            "ru-RU": "ru",
-            "en-US": "en",
-        }
-        gtts_lang = lang_map.get(lang, lang)
-
         filename = f"{prefix}_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
         file_path = AUDIO_DIR / filename
 
@@ -82,17 +48,17 @@ async def generate_audio_legacy(text: str, lang: str, prefix: str):
             return f"assets/audio/{filename}"
 
         tld_map = {"pt": "pt"}  # Португальский может использовать tld="pt"
-        tld = tld_map.get(gtts_lang, "com")
+        tld = tld_map.get(lang, "com")
 
         def tts_sync():
-            tts = gTTS(text=text, lang=gtts_lang, tld=tld, slow=False)
+            tts = gTTS(text=text, lang=lang, tld=tld, slow=False)
             tts.save(str(file_path))
 
         await asyncio.get_running_loop().run_in_executor(None, tts_sync)
-        logging.info(f"Аудио '{text}' ({gtts_lang}/{tld}) сохранено (legacy): {file_path}")
+        logging.info(f"Аудио '{text}' ({lang}/{tld}) сохранено (legacy): {file_path}")
         return f"assets/audio/{filename}"
     except Exception as e:
-        logging.error(f"Ошибка генерации аудио (legacy): {e}")
+        logging.error(f"Ошибка генерации аудио: {e}")
         return None
 
 async def download_and_save_image(image_url: str, query: str) -> Optional[str]:

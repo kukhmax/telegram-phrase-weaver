@@ -8,20 +8,6 @@ let currentGeneratedData = null;
 let selectedPhrases = new Set();
 let currentDeckId = null;
 
-// Маппинг ISO-кодов языков на коды TTS движка
-function getTTSLangCode(lang) {
-    const map = {
-        'en': 'en-US',
-        'pl': 'pl-PL',
-        'es': 'es-ES',
-        'fr': 'fr-FR',
-        'de': 'de-DE',
-        'pt': 'pt-PT',
-        'ru': 'ru-RU',
-    };
-    return map[lang.toLowerCase()] || lang;
-}
-
 // Функция для получения флага языка
 function getLanguageFlag(langCode) {
     const flags = {
@@ -50,46 +36,46 @@ function extractLanguageCode(langText) {
 }
 
 // Функция для определения языка по содержимому текста
-window.detectLanguageByText = function detectLanguageByText(text) {
-    if (!text || typeof text !== 'string') {
-        return 'en';
-    }
+// window.detectLanguageByText = function detectLanguageByText(text) {
+//     if (!text || typeof text !== 'string') {
+//         return 'en';
+//     }
     
-    const cleanText = text.toLowerCase().trim();
+//     const cleanText = text.toLowerCase().trim();
     
-    // Кириллица - русский
-    if (/[а-яё]/i.test(cleanText)) {
-        return 'ru';
-    }
+//     // Кириллица - русский
+//     if (/[а-яё]/i.test(cleanText)) {
+//         return 'ru';
+//     }
     
-    // Польские специфические символы
-    if (/[ąćęłńóśźż]/i.test(cleanText)) {
-        return 'pl';
-    }
+//     // Польские специфические символы
+//     if (/[ąćęłńóśźż]/i.test(cleanText)) {
+//         return 'pl';
+//     }
     
-    // Португальские специфические символы
-    if (/[ãõçáéíóúâêôàü]/i.test(cleanText)) {
-        return 'pt';
-    }
+//     // Португальские специфические символы
+//     if (/[ãõçáéíóúâêôàü]/i.test(cleanText)) {
+//         return 'pt';
+//     }
     
-    // Испанские специфические символы
-    if (/[ñáéíóúü¿¡]/i.test(cleanText)) {
-        return 'es';
-    }
+//     // Испанские специфические символы
+//     if (/[ñáéíóúü¿¡]/i.test(cleanText)) {
+//         return 'es';
+//     }
     
-    // Французские специфические символы
-    if (/[àâäéèêëïîôöùûüÿç]/i.test(cleanText)) {
-        return 'fr';
-    }
+//     // Французские специфические символы
+//     if (/[àâäéèêëïîôöùûüÿç]/i.test(cleanText)) {
+//         return 'fr';
+//     }
     
-    // Немецкие специфические символы
-    if (/[äöüß]/i.test(cleanText)) {
-        return 'de';
-    }
+//     // Немецкие специфические символы
+//     if (/[äöüß]/i.test(cleanText)) {
+//         return 'de';
+//     }
     
-    // По умолчанию английский для латинских текстов
-    return 'en';
-}
+//     // По умолчанию английский для латинских текстов
+//     return 'en';
+// }
 
 
 // Функция для отображения сгенерированных фраз
@@ -161,7 +147,7 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
             <div class="phrase-line">
                 <span class="flag-emoji">${langToFlag}</span>
                 <span class="phrase-text">${phrase.translation}</span>
-                <button class="audio-btn" onclick="playAudioWithDetection('${phrase.translation.replace(/'/g, "\\'")}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudioWithDetection('${phrase.translation.replace(/'/g, "\\'")}', '${langToCode}')" title="Прослушать">
                     🔊
                 </button>
             </div>
@@ -351,14 +337,14 @@ function createSavedCard(card, deck) {
             <div class="card-side front">
                 <span class="card-flag">${langFromFlag}</span>
                 <span class="card-text">${card.front_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', '${detectLanguageByText(card.front_text)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', '${extractLanguageCode(card.front_text)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="card-side back">
                 <span class="card-flag">${langToFlag}</span>
                 <span class="card-text">${card.back_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', '${detectLanguageByText(card.back_text)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', '${extractLanguageCode(card.back_text)}')" title="Прослушать">
                     🔊
                 </button>
             </div>
@@ -416,10 +402,10 @@ window.deleteCard = async function(cardId) {
 
 // Функция для воспроизведения аудио
 // Функция-обертка для аудио с автоопределением языка
-window.playAudioWithDetection = async function(text) {
-    const detectedLang = detectLanguageByText(text);
-    return playAudio(text, detectedLang);
-};
+// window.playAudioWithDetection = async function(text) {
+//     const detectedLang = detectLanguageByText(text);
+//     return playAudio(text, detectedLang);
+// };
 
 window.playAudio = async function(text, langCode) {
     console.log('playAudio called with:', { text, langCode });
