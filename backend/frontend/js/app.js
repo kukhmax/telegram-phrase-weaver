@@ -35,48 +35,6 @@ function extractLanguageCode(langText) {
     return match ? match[1].toLowerCase() : 'en';
 }
 
-// Функция для определения языка по содержимому текста
-// window.detectLanguageByText = function detectLanguageByText(text) {
-//     if (!text || typeof text !== 'string') {
-//         return 'en';
-//     }
-    
-//     const cleanText = text.toLowerCase().trim();
-    
-//     // Кириллица - русский
-//     if (/[а-яё]/i.test(cleanText)) {
-//         return 'ru';
-//     }
-    
-//     // Польские специфические символы
-//     if (/[ąćęłńóśźż]/i.test(cleanText)) {
-//         return 'pl';
-//     }
-    
-//     // Португальские специфические символы
-//     if (/[ãõçáéíóúâêôàü]/i.test(cleanText)) {
-//         return 'pt';
-//     }
-    
-//     // Испанские специфические символы
-//     if (/[ñáéíóúü¿¡]/i.test(cleanText)) {
-//         return 'es';
-//     }
-    
-//     // Французские специфические символы
-//     if (/[àâäéèêëïîôöùûüÿç]/i.test(cleanText)) {
-//         return 'fr';
-//     }
-    
-//     // Немецкие специфические символы
-//     if (/[äöüß]/i.test(cleanText)) {
-//         return 'de';
-//     }
-    
-//     // По умолчанию английский для латинских текстов
-//     return 'en';
-// }
-
 
 // Функция для отображения сгенерированных фраз
 function displayGeneratedPhrases(data, langFrom, langTo) {
