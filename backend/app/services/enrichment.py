@@ -10,7 +10,23 @@ from deep_translator import GoogleTranslator
 
 from .ai_service import generate_examples_with_ai  # Импорт AI
 from .image_finder import find_image_via_api  # Импорт image
-from .edge_tts_service import edge_tts_service  # Импорт Edge TTS
+
+# Импорт TTS сервисов
+try:
+    from .edge_tts_service import edge_tts_service
+    EDGE_TTS_AVAILABLE = True
+except ImportError:
+    EDGE_TTS_AVAILABLE = False
+    edge_tts_service = None
+    logging.warning("Edge TTS недоступен")
+
+try:
+    from .azure_tts_service import azure_tts_service
+    AZURE_TTS_AVAILABLE = True
+except ImportError:
+    AZURE_TTS_AVAILABLE = False
+    azure_tts_service = None
+    logging.warning("Azure TTS недоступен")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - ENRICH - %(levelname)s - %(message)s')
 
@@ -31,6 +47,28 @@ async def get_translation(text: str, from_lang: str, to_lang: str) -> Optional[s
         logging.error(f"Ошибка перевода: {e}")
         return None
 
+async def generate_audio_gtts_fallback(text: str, lang: str, prefix: str):
+    """
+    Генерирует аудио с использованием gTTS (fallback)
+    """
+    try:
+        path = AUDIO_DIR / f"{prefix}_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
+        if path.exists(): return str(path)
+        
+        tld_map = {'pt': 'pt'}
+        tld = tld_map.get(lang, 'com')
+
+        def tts_sync():
+            tts = gTTS(text=text, lang=lang, tld=tld, slow=False)
+            tts.save(str(path))
+        
+        await asyncio.get_running_loop().run_in_executor(None, tts_sync)
+        logging.info(f"Аудио '{text}' ({lang} / {tld}) сохранено: {path}")
+        return str(path)
+    except Exception as e:
+        logging.error(f"Ошибка генерации аудио: {e}")
+        return None
+
 async def generate_audio(text: str, lang: str, prefix: str):
     """
     Генерирует аудио с использованием TTS сервиса
@@ -42,8 +80,11 @@ async def generate_audio(text: str, lang: str, prefix: str):
     """
 
     try:
+        path = AUDIO_DIR / f"{prefix}_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
+        if path.exists(): return str(path)
+        
         # Специальная обработка для польского языка - используем Edge TTS
-        if lang == 'pl' and edge_tts_service.is_available:
+        if lang == 'pl' and EDGE_TTS_AVAILABLE and edge_tts_service:
             logging.info(f"🇵🇱 Используем Edge TTS для польского языка: '{text[:30]}...'")
             edge_result = await edge_tts_service.generate_audio(text, lang, prefix)
             
@@ -51,10 +92,10 @@ async def generate_audio(text: str, lang: str, prefix: str):
                 logging.info(f"✅ Edge TTS успешно для польского: '{text[:30]}...'")
                 return edge_result
             else:
-                logging.warning(f"⚠️ Edge TTS не удался для польского, переходим к Azure/gTTS")
+                logging.warning(f"⚠️ Edge TTS не удался для польского, переходим к gTTS")
         
-        # Пробуем Azure TTS для других языков
-        if azure_tts_service.is_available():
+        # Пробуем Azure TTS для других языков (если доступен)
+        if AZURE_TTS_AVAILABLE and azure_tts_service and azure_tts_service.is_available():
             logging.info(f"🎯 Попытка генерации через Azure TTS для языка '{lang}'")
             azure_result = await azure_tts_service.generate_audio(text, lang, prefix)
             
@@ -70,9 +111,8 @@ async def generate_audio(text: str, lang: str, prefix: str):
         return await generate_audio_gtts_fallback(text, lang, prefix)
         
     except Exception as e:
-        logging.error(f"❌ Критическая ошибка в generate_audio: {e}")
-        # Последняя попытка с gTTS
-        return await generate_audio_gtts_fallback(text, lang, prefix)
+        logging.error(f"Ошибка генерации аудио: {e}")
+        return None
 
 async def download_and_save_image(image_url: str, query: str) -> Optional[str]:
     if not image_url: return None
