@@ -65,6 +65,15 @@ logging.info(f"Загружено роутеров: {len(routers_to_include)}")
 async def lifespan(app: FastAPI):
     # Startup
     logging.info("🚀 Запуск PhraseWeaver API")
+    
+    # Инициализация Telegram webhook
+    try:
+        from app.services.telegram_bot import set_webhook
+        await set_webhook()
+        logging.info("✅ Telegram webhook установлен")
+    except Exception as e:
+        logging.error(f"❌ Ошибка установки Telegram webhook: {e}")
+    
     yield
     # Shutdown
     logging.info("🛑 Остановка PhraseWeaver API")
