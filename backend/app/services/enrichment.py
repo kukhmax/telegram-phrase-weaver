@@ -49,24 +49,53 @@ async def get_translation(text: str, from_lang: str, to_lang: str) -> Optional[s
 
 async def generate_audio_gtts_fallback(text: str, lang: str, prefix: str):
     """
-    Генерирует аудио с использованием gTTS (fallback)
+    Генерирует аудио с использованием gTTS (улучшенная версия для польского)
     """
     try:
-        path = AUDIO_DIR / f"{prefix}_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
-        if path.exists(): return str(path)
+        filename = f"{prefix}_gtts_{lang}_{hashlib.md5(text.encode()).hexdigest()[:12]}.mp3"
+        file_path = AUDIO_DIR / filename
         
-        tld_map = {'pt': 'pt'}
-        tld = tld_map.get(lang, 'com')
-
+        # Проверяем кэш
+        if file_path.exists():
+            logging.info(f"🎵 gTTS аудио найдено в кэше: {filename}")
+            return f"assets/audio/{filename}"
+        
+        # Специальные настройки для польского языка
+        if lang == 'pl':
+            # Используем медленную речь для лучшего произношения польского
+            slow_speech = True
+            tld = 'com'  # Стабильный домен
+            logging.info(f"🇵🇱 Специальные настройки для польского: slow={slow_speech}, tld={tld}")
+        else:
+            slow_speech = False
+            tld_map = {
+                'pt': 'pt',  # Португальский с португальским TLD
+                'de': 'de',  # Немецкий с немецким TLD
+                'fr': 'fr',  # Французский с французским TLD
+                'es': 'es',  # Испанский с испанским TLD
+            }
+            tld = tld_map.get(lang, 'com')
+        
+        # ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ
+        logging.info(f"🔊 gTTS ГЕНЕРАЦИЯ:")
+        logging.info(f"   📝 Текст: '{text[:50]}{'...' if len(text) > 50 else ''}'")
+        logging.info(f"   🌍 Язык: '{lang}'")
+        logging.info(f"   🌐 TLD: '{tld}'")
+        logging.info(f"   🐌 Медленная речь: {slow_speech}")
+        logging.info(f"   📁 Файл: {filename}")
+        
         def tts_sync():
-            tts = gTTS(text=text, lang=lang, tld=tld, slow=False)
-            tts.save(str(path))
+            tts = gTTS(text=text, lang=lang, tld=tld, slow=slow_speech)
+            tts.save(str(file_path))
         
         await asyncio.get_running_loop().run_in_executor(None, tts_sync)
-        logging.info(f"Аудио '{text}' ({lang} / {tld}) сохранено: {path}")
-        return str(path)
+        
+        file_size = file_path.stat().st_size
+        logging.info(f"✅ gTTS аудио создано: '{text[:30]}...' ({lang}/{tld}) -> {filename} ({file_size} байт)")
+        return f"assets/audio/{filename}"
+        
     except Exception as e:
-        logging.error(f"Ошибка генерации аудио: {e}")
+        logging.error(f"❌ gTTS ошибка: {e}")
         return None
 
 async def generate_audio(text: str, lang: str, prefix: str):
