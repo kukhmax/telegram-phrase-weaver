@@ -495,19 +495,14 @@ body[data-telegram="true"] .header-name-btn,
     transition: all 0.2s ease;
 }
 
-/* Временно показываем FAB кнопку всегда для отладки */
+/* Показываем FAB кнопку по умолчанию */
 #add-deck-btn.fab {
     display: flex !important;
 }
 
-/* Скрываем FAB кнопку на всех окнах кроме главного */
-.app-container:not(.main-active) #add-deck-btn.fab {
+/* Скрываем FAB кнопку на окнах создания и редактирования */
+.app-window:not(#main-window):not(.hidden) ~ #add-deck-btn.fab {
     display: none !important;
-}
-
-/* Показываем FAB кнопку только на главном окне */
-.app-container.main-active #add-deck-btn.fab {
-    display: flex !important;
 }
 
 .fab .tooltip {
