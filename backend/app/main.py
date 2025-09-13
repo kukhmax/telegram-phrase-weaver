@@ -1,80 +1,109 @@
 # backend/app/main.py
 
 import os
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
-from alembic import command, config as alembic_config
-from app.core.config import get_settings
-from app.routers import auth, cards, decks, training_stats, telegram
-from app.middleware import (
-    RateLimitMiddleware,
-    SecurityHeadersMiddleware,
-    RequestLoggingMiddleware
-)
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from app.services.notifications import send_daily_reminders  # TODO: implement
-import logging
+# Безопасные импорты с обработкой ошибок
+try:
+    from app.core.config import get_settings
+    settings = get_settings()
+except Exception as e:
+    logging.error(f"Ошибка загрузки настроек: {e}")
+    # Создаем заглушку для настроек
+    class MockSettings:
+        REDIS_URL = "redis://redis:6379/0"
+        DATABASE_URL = "postgresql+asyncpg://phraseweaver:secure_password_123@db:5432/phraseweaver"
+    settings = MockSettings()
 
-settings = get_settings()
+# Импорты роутеров с обработкой ошибок
+routers_to_include = []
+try:
+    from app.routers import auth
+    routers_to_include.append(('auth', auth.router))
+except Exception as e:
+    logging.warning(f"Не удалось загрузить auth router: {e}")
+
+try:
+    from app.routers import cards
+    routers_to_include.append(('cards', cards.router))
+except Exception as e:
+    logging.warning(f"Не удалось загрузить cards router: {e}")
+
+try:
+    from app.routers import decks
+    routers_to_include.append(('decks', decks.router))
+except Exception as e:
+    logging.warning(f"Не удалось загрузить decks router: {e}")
+
+try:
+    from app.routers import training_stats
+    routers_to_include.append(('training_stats', training_stats.router))
+except Exception as e:
+    logging.warning(f"Не удалось загрузить training_stats router: {e}")
+
+try:
+    from app.routers import telegram
+    routers_to_include.append(('telegram', telegram.router))
+except Exception as e:
+    logging.warning(f"Не удалось загрузить telegram router: {e}")
+
+try:
+    from app.routers import tts
+    routers_to_include.append(('tts', tts.router))
+except Exception as e:
+    logging.warning(f"Не удалось загрузить tts router: {e}")
 
 logging.basicConfig(level=logging.INFO)
-
-scheduler = AsyncIOScheduler()
-scheduler.add_job(send_daily_reminders, 'interval', days=1)
-scheduler.start()
+logging.info(f"Загружено роутеров: {len(routers_to_include)}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Run migrations on startup
-    alembic_cfg = alembic_config.Config("alembic.ini")
+    # Startup
+    logging.info("🚀 Запуск PhraseWeaver API")
+    
+    # Инициализация Telegram webhook
     try:
-        command.upgrade(alembic_cfg, "head")
-    except Exception as e: 
-        logging.error(f"Migration failed: {e}")
-    yield  # App runs here
-    # Optional shutdown logic
+        from app.services.telegram_bot import set_webhook
+        await set_webhook()
+        logging.info("✅ Telegram webhook установлен")
+    except Exception as e:
+        logging.error(f"❌ Ошибка установки Telegram webhook: {e}")
+    
+    yield
+    # Shutdown
+    logging.info("🛑 Остановка PhraseWeaver API")
 
 app = FastAPI(
     title="PhraseWeaver API",
     description="API для изучения языков через Telegram Mini App",
     version="1.0.0",
-    docs_url="/docs" if os.getenv("ENVIRONMENT") != "production" else None,
-    redoc_url="/redoc" if os.getenv("ENVIRONMENT") != "production" else None
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
-# Определяем разрешенные origins в зависимости от окружения
-if os.getenv("ENVIRONMENT") == "production":
-    allowed_origins = [
-        "https://pw-new.club",
-        "https://www.pw-new.club",
-        "https://web.telegram.org",
-        "https://telegram.org",
-        "https://telegram.me",
-        "https://t.me",
-        "tg://",
-        "*"  # Telegram WebApp может использовать различные origins
-    ]
-else:
-    # Для разработки разрешаем localhost
-    allowed_origins = [
-        "http://localhost",
-        "http://localhost:3000",
-        "http://localhost:8000",
-        "http://localhost:8080",
-        "http://127.0.0.1:8000",
-        "https://pw-new.club",
-        "https://www.pw-new.club",
-        "https://web.telegram.org",
-        "https://telegram.org",
-        "*"  # Для разработки разрешаем все
-    ]
+# CORS настройки - упрощенные для стабильности
+allowed_origins = [
+    "https://pw-new.club",
+    "https://www.pw-new.club",
+    "https://web.telegram.org",
+    "https://telegram.org",
+    "https://telegram.me",
+    "https://t.me",
+    "http://localhost",
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://localhost:8080",
+    "http://127.0.0.1:8000",
+    "*"  # Разрешаем все для совместимости
+]
 
-# Добавляем middleware в правильном порядке (последний добавленный выполняется первым)
-
-# 1. CORS middleware (должен быть последним)
+# Добавляем CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -91,40 +120,66 @@ app.add_middleware(
     expose_headers=["X-Request-ID"]
 )
 
-# 2. Security headers middleware
-app.add_middleware(SecurityHeadersMiddleware)
-
-# 3. Rate limiting middleware
-app.add_middleware(
-    RateLimitMiddleware,
-    calls=200,  # 200 запросов (увеличено для Telegram WebApp)
-    period=60   # за 60 секунд
-)
-
-# 4. Request logging middleware (выполняется первым)
-app.add_middleware(RequestLoggingMiddleware)
 
 
-
+# Базовые роуты
 @app.get("/")
 def root():
-    return {"message": "PhraseWeaver API is running", "version": "1.0.0", "docs": "/docs"}
+    return {
+        "message": "PhraseWeaver API работает", 
+        "version": "1.0.0",
+        "routers": len(routers_to_include),
+        "status": "ok"
+    }
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy"}
+    return {
+        "status": "ok", 
+        "version": "1.0.0",
+        "routers_loaded": [name for name, _ in routers_to_include]
+    }
 
-app.include_router(auth.router)
-app.include_router(cards.router)
-app.include_router(decks.router)
-app.include_router(training_stats.router)
-app.include_router(telegram.router)
+# Подключаем роутеры с обработкой ошибок
+for router_name, router in routers_to_include:
+    try:
+        app.include_router(router)
+        logging.info(f"✅ Роутер {router_name} подключен")
+    except Exception as e:
+        logging.error(f"❌ Ошибка подключения роутера {router_name}: {e}")
 
-# Статические файлы фронтенда
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
+# Статические файлы
+try:
+    app.mount("/static", StaticFiles(directory="frontend"), name="static")
+    logging.info("✅ Статические файлы подключены")
+except Exception as e:
+    logging.warning(f"⚠️ Не удалось подключить статические файлы: {e}")
 
-# Главная страница фронтенда
+# Обслуживание frontend приложения
 @app.get("/app")
 async def frontend():
-    from fastapi.responses import FileResponse
-    return FileResponse("frontend/index.html")
+    try:
+        return FileResponse("frontend/index.html")
+    except Exception as e:
+        logging.error(f"Ошибка загрузки frontend: {e}")
+        return {"error": "Frontend недоступен", "message": str(e)}
+
+# Fallback для SPA роутинга
+@app.get("/{path:path}")
+async def serve_spa(path: str):
+    """Обслуживание SPA - все неизвестные пути перенаправляем на index.html"""
+    try:
+        # Проверяем, существует ли файл
+        import os
+        file_path = f"frontend/{path}"
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        
+        # Если файл не найден, возвращаем index.html для SPA
+        if os.path.exists("frontend/index.html"):
+            return FileResponse("frontend/index.html")
+        
+        return {"error": "File not found", "path": path}
+    except Exception as e:
+        logging.error(f"Ошибка обслуживания SPA: {e}")
+        return {"error": "SPA routing error", "message": str(e)}

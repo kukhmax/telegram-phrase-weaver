@@ -98,21 +98,67 @@ async def generate_examples_with_ai(phrase: str, keyword: str, language: str, ta
         
         raw_text = response.text.strip().replace("```json", "").replace("```", "").strip()
         
+        # ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ ДЛЯ ОТЛАДКИ
+        logging.info(f"🔍 ПОЛНЫЙ СЫРОЙ ОТВЕТ GEMINI для '{phrase}':")
+        logging.info(f"📄 RAW JSON: {raw_text}")
+        logging.info(f"📏 Длина ответа: {len(raw_text)} символов")
+        
         try:
             data = json.loads(raw_text)
+            logging.info(f"✅ JSON успешно распарсен для '{phrase}'")
+            logging.info(f"🔑 Ключи в JSON: {list(data.keys())}")
         except json.JSONDecodeError as e:
-            logging.error(f"Ошибка парсинга JSON ответа AI для '{phrase}': {e}")
-            logging.error(f"Сырой ответ AI: {raw_text[:200]}...")
+            logging.error(f"❌ Ошибка парсинга JSON ответа AI для '{phrase}': {e}")
+            logging.error(f"🔍 Сырой ответ AI (первые 500 символов): {raw_text[:500]}")
+            logging.error(f"🔍 Сырой ответ AI (последние 200 символов): {raw_text[-200:]}")
             return {"error": "AI сервис вернул некорректный формат данных"}
         
-        logging.info(f"AI успешно сгенерировал данные для '{phrase}'.")
+        logging.info(f"🎉 AI успешно сгенерировал данные для '{phrase}'.")
+        
+        # ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ СТРУКТУРЫ ДАННЫХ
+        logging.info(f"📊 АНАЛИЗ СТРУКТУРЫ JSON для '{phrase}':")
+        
+        if 'image_query' in data:
+            logging.info(f"🖼️ Image query: '{data['image_query']}'")
+        
+        if 'original_phrase' in data:
+            orig = data['original_phrase']
+            logging.info(f"📝 Original phrase:")
+            logging.info(f"   - original: '{orig.get('original', 'N/A')}'")
+            logging.info(f"   - translation: '{orig.get('translation', 'N/A')}'")
+            logging.info(f"   - gap_fill: '{orig.get('gap_fill', 'N/A')}'")
+        
+        if 'additional_examples' in data:
+            examples = data['additional_examples']
+            logging.info(f"📚 Additional examples ({len(examples)} штук):")
+            for i, example in enumerate(examples[:3]):  # Показываем первые 3
+                logging.info(f"   [{i+1}] original: '{example.get('original', 'N/A')}'")
+                logging.info(f"   [{i+1}] translation: '{example.get('translation', 'N/A')}'")
+                logging.info(f"   [{i+1}] gap_fill: '{example.get('gap_fill', 'N/A')}'")
+        
+        # Проверяем на наличие ошибок в структуре
+        missing_fields = []
+        if 'image_query' not in data: missing_fields.append('image_query')
+        if 'original_phrase' not in data: missing_fields.append('original_phrase')
+        if 'additional_examples' not in data: missing_fields.append('additional_examples')
+        
+        if missing_fields:
+            logging.warning(f"⚠️ Отсутствуют поля в JSON: {missing_fields}")
+        else:
+            logging.info(f"✅ Все обязательные поля присутствуют в JSON")
         
         # Сохраняем в кэш (async set, TTL 7 дней = 604800 сек)
-        cache_saved = await redis_client.set(cache_key, json.dumps(data), ex=604800)
-        if cache_saved:
-            logging.info(f"Данные для '{phrase}' сохранены в кэш")
+        try:
+            cache_saved = await redis_client.set(cache_key, json.dumps(data), ex=604800)
+            if cache_saved:
+                logging.info(f"💾 Данные для '{phrase}' сохранены в кэш")
+        except Exception as cache_error:
+            logging.warning(f"⚠️ Не удалось сохранить в кэш: {cache_error}")
         
         return data
     except Exception as e:
         logging.error(f"Ошибка при работе с AI для фразы '{phrase}': {e}")
         return {"error": f"Ошибка AI сервиса: {str(e)}"}
+
+if __name__ == "__main__":
+    asyncio.run(generate_examples_with_ai('my dog', 'dog', 'en', 'pt'))

@@ -1,0 +1,82 @@
+# Docker Compose конфигурация с поддержкой GPU для TTS
+version: '3.9'
+
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: ./backend/Dockerfile.gpu
+    ports:
+      - "8000:8080"
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - shared_assets:/app/frontend/assets
+      - tts_models_cache:/root/.cache  # Кэш для моделей Chatterbox
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    networks:
+      - app-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    # Увеличиваем лимиты памяти для TTS моделей
+    mem_limit: 8g
+    shm_size: 2g
+
+  db:
+    image: postgres:17.5
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  redis:
+    image: redis:8.0
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./backend/frontend:/usr/share/nginx/html:ro
+      - shared_assets:/usr/share/nginx/html/assets:rw
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/ssl:ro  # SSL сертификаты
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+    driver: local
+  shared_assets:
+    driver: local
+  tts_models_cache:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

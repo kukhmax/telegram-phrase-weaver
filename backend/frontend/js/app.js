@@ -2,6 +2,7 @@
 import { api, setAuthToken, getUserData } from '/static/js/api.js';
 import { DOMElements, showWindow, renderDecks, showLoading, showError } from '/static/js/ui.js';
 import { t, setLanguage, getCurrentLanguage, updateInterface, initializeI18n } from '/static/js/i18n.js';
+// CSS подключен в HTML, не нужно импортировать здесь
 
 // Глобальные переменные для хранения данных
 let currentGeneratedData = null;
@@ -16,7 +17,6 @@ function getLanguageFlag(langCode) {
         'es': '🇪🇸',
         'fr': '🇫🇷',
         'de': '🇩🇪',
-        'it': '🇮🇹',
         'pt': '🇵🇹',
         'ru': '🇷🇺',
     };
@@ -25,16 +25,23 @@ function getLanguageFlag(langCode) {
 
 // Функция для извлечения кода языка из строки
 function extractLanguageCode(langText) {
-    // Извлекаем код языка из строки типа "🇵🇹 Portuguese" или "pl" -> "pl"
+    // Извлекаем код языка из строки типа "🇵🇹 PT" или "🇺🇸EN" -> "pt", "en"
     if (langText.length === 2) {
         return langText.toLowerCase();
     }
     
-    // Для строк с флагами и названиями языков
-    const match = langText.match(/([a-z]{2})/i);
-    return match ? match[1].toLowerCase() : 'en';
+    // Для строк с флагами и кодами языков (например "🇵🇹 PT" или "🇺🇸EN")
+    // Ищем 2 буквы после пробела или в конце строки
+    const match = langText.match(/\s([A-Z]{2})$|([A-Z]{2})$/i);
+    if (match) {
+        const code = (match[1] || match[2]).toLowerCase();
+        console.log(`Extracted language code: '${code}' from '${langText}'`);
+        return code;
+    }
+    
+    console.warn(`Could not extract language code from '${langText}', defaulting to 'en'`);
+    return 'en';
 }
-
 
 
 // Функция для отображения сгенерированных фраз
@@ -86,23 +93,27 @@ function createPhraseCard(phrase, index, langFrom, langTo) {
     const card = document.createElement('div');
     card.className = 'phrase-card';
     card.dataset.index = index;
+
+    const langFromCode = extractLanguageCode(langFrom);
+    const langToCode = extractLanguageCode(langTo);
     
     const langFromFlag = getLanguageFlag(extractLanguageCode(langFrom));
     const langToFlag = getLanguageFlag(extractLanguageCode(langTo));
     
     card.innerHTML = `
         <div class="phrase-content">
+            
             <div class="phrase-line">
                 <span class="flag-emoji">${langFromFlag}</span>
                 <span class="phrase-text">${phrase.original}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}', '${extractLanguageCode(langFrom)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.original.replace(/'/g, "\\'")}', '${langFromCode}')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="phrase-line">
                 <span class="flag-emoji">${langToFlag}</span>
                 <span class="phrase-text">${phrase.translation}</span>
-                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', '${extractLanguageCode(langTo)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${phrase.translation.replace(/'/g, "\\'")}', '${langToCode}')" title="Прослушать">
                     🔊
                 </button>
             </div>
@@ -292,13 +303,16 @@ function createSavedCard(card, deck) {
             <div class="card-side front">
                 <span class="card-flag">${langFromFlag}</span>
                 <span class="card-text">${card.front_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', '${extractLanguageCode(deck.lang_from)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', '${langFromCode}')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="card-side back">
                 <span class="card-flag">${langToFlag}</span>
                 <span class="card-text">${card.back_text}</span>
+                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', '${langToCode}')" title="Прослушать">
+                    🔊
+                </button>
             </div>
         </div>
         <div class="img-btn-container">
@@ -353,13 +367,21 @@ window.deleteCard = async function(cardId) {
 };
 
 // Функция для воспроизведения аудио
+// Функция-обертка для аудио с автоопределением языка
+// window.playAudioWithDetection = async function(text) {
+//     const detectedLang = detectLanguageByText(text);
+//     return playAudio(text, detectedLang);
+// };
+
 window.playAudio = async function(text, langCode) {
+    console.log('playAudio called with:', { text, langCode });
     try {
         // Очищаем текст от HTML тегов
         const cleanText = text.replace(/<[^>]*>/g, '');
+        console.log('Clean text:', cleanText);
         
-        // Сначала пробуем Web Speech API (для десктопа)
-        if ('speechSynthesis' in window && !window.Telegram?.WebApp) {
+        // Всегда используем серверную генерацию аудио для лучшего качества
+        if (false) { // Отключаем Web Speech API
             // Останавливаем предыдущее воспроизведение
             window.speechSynthesis.cancel();
             
@@ -384,11 +406,14 @@ window.playAudio = async function(text, langCode) {
             window.speechSynthesis.speak(utterance);
         } else {
             // Для Telegram WebApp используем серверную генерацию аудио
+            console.log('Using server-side TTS');
             try {
+                console.log('Calling api.generateAudio with:', { text: cleanText, lang_code: langCode });
                 const response = await api.generateAudio({
                     text: cleanText,
                     lang_code: langCode
                 });
+                console.log('API response:', response);
                 
                 if (response && response.audio_url) {
                      const audio = new Audio(response.audio_url);
@@ -544,8 +569,23 @@ async function refreshDecks() {
 //             ОБРАБОТЧИКИ СОБЫТИЙ
 // ============================================
 
-// Нажатие на "+" на главном экране
-document.getElementById('add-deck-btn').addEventListener('click', () => {
+// Обработчики событий после загрузки DOM
+document.addEventListener('DOMContentLoaded', () => {
+    // Нажатие на "+" на главном экране
+    const addDeckBtn = document.getElementById('add-deck-btn');
+    if (addDeckBtn) {
+        addDeckBtn.addEventListener('click', () => {
+            console.log('Add deck button clicked');
+            showWindow('create-deck-window');
+        });
+    } else {
+        console.error('add-deck-btn not found');
+    }
+});
+
+// Дублируем обработчик для совместимости
+document.getElementById('add-deck-btn')?.addEventListener('click', () => {
+    console.log('Add deck button clicked (fallback)');
     showWindow('create-deck-window');
 });
 
@@ -842,8 +882,8 @@ document.addEventListener('click', (event) => {
             const langTo = langToElement.textContent;
             
             // Отображаем языки с флагами в окне генерации карточек
-            const langFromCode = extractLanguageCode(langFrom);
-            const langToCode = extractLanguageCode(langTo);
+            const langFromCode = deck.lang_from.toLowerCase();
+            const langToCode = deck.lang_to.toLowerCase();
             const langFromFlag = getLanguageFlag(langFromCode);
             const langToFlag = getLanguageFlag(langToCode);
             
@@ -942,26 +982,39 @@ document.addEventListener('click', (event) => {
     });
 
     // Обработчик кнопки очистки поля фразы
-    document.getElementById('clear-phrase-btn').addEventListener('click', () => {
+    // Обработчики для формы генерации карточек
+    document.addEventListener('DOMContentLoaded', () => {
+        const clearPhraseBtn = document.getElementById('clear-phrase-btn');
+        if (clearPhraseBtn) {
+            clearPhraseBtn.addEventListener('click', () => {
+                const phraseInput = document.getElementById('phrase-input');
+                phraseInput.value = '';
+                phraseInput.focus();
+                updateWordTags('');
+            });
+        }
+        
+        const clearKeywordBtn = document.getElementById('clear-keyword-btn');
+        if (clearKeywordBtn) {
+            clearKeywordBtn.addEventListener('click', () => {
+                const keywordInput = document.getElementById('keyword-input');
+                keywordInput.value = '';
+                keywordInput.focus();
+            });
+        }
+
+        // Обработчик изменения текста в поле фразы для создания тегов слов
         const phraseInput = document.getElementById('phrase-input');
-        phraseInput.value = '';
-        phraseInput.focus();
-        updateWordTags('');
-    });
-    
-    document.getElementById('clear-keyword-btn').addEventListener('click', () => {
-        const keywordInput = document.getElementById('keyword-input');
-        keywordInput.value = '';
-        keywordInput.focus();
-    });
+        if (phraseInput) {
+            phraseInput.addEventListener('input', (event) => {
+                updateWordTags(event.target.value);
+            });
+        }
 
-    // Обработчик изменения текста в поле фразы для создания тегов слов
-    document.getElementById('phrase-input').addEventListener('input', (event) => {
-        updateWordTags(event.target.value);
-    });
-
-    // Обработчик формы генерации фраз
-    document.getElementById('generate-cards-form').addEventListener('submit', async (event) => {
+        // Обработчик формы генерации фраз
+        const generateForm = document.getElementById('generate-cards-form');
+        if (generateForm) {
+            generateForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         
         const phrase = document.getElementById('phrase-input').value.trim();
@@ -1005,10 +1058,15 @@ document.addEventListener('click', (event) => {
             // Скрываем спиннер в любом случае
             showButtonLoading(false);
         }
-     });
+            });
+        }
+    });
 
     // Обработчики для окна сгенерированных фраз
-    document.getElementById('save-selected-btn').addEventListener('click', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
+        const saveSelectedBtn = document.getElementById('save-selected-btn');
+        if (saveSelectedBtn) {
+            saveSelectedBtn.addEventListener('click', async () => {
         if (selectedPhrases.size === 0) return;
         
         try {
@@ -1029,6 +1087,7 @@ document.addEventListener('click', (event) => {
             selectedPhrases.forEach(index => {
                 const card = allCards[index];
                 if (card) {
+                    // После изменения порядка отображения: первая строка - перевод, вторая - оригинал
                     const originalText = card.querySelector('.phrase-line:first-child .phrase-text').textContent;
                     const translationText = card.querySelector('.phrase-line:last-child .phrase-text').textContent;
                     
@@ -1083,6 +1142,8 @@ document.addEventListener('click', (event) => {
         } catch (error) {
             console.error('Error saving cards:', error);
             showError(`Ошибка сохранения: ${error.message}`);
+        }
+            });
         }
     });
     
@@ -1311,31 +1372,20 @@ function loadTrainingCard() {
         answerInput.setAttribute('data-reverse', 'true');
         currentCard.expectedAnswer = currentCard.front_text;
     } else {
-        // Заполнение пропусков - используем готовую фразу с пропуском из ИИ или создаем на лету
+        // Заполнение пропусков - всегда используем фразу на изучаемом языке (front_text)
         let phraseWithGap;
         let expectedAnswer;
         
-        if (currentCard.gap_fill) {
-            // Используем готовую фразу с пропуском от ИИ
-            phraseWithGap = currentCard.gap_fill.replace(/_____/g, '<span class="word-gap">_____</span>');
-            
-            // Определяем правильный ответ, сравнивая оригинальную фразу с gap_fill
-            expectedAnswer = findMissingWordFromGapFill(currentCard.front_text, currentCard.gap_fill);
-            if (!expectedAnswer) {
-                expectedAnswer = currentCard.keyword; // Fallback
-            }
-            
-            console.log('✅ Используем готовую gap_fill фразу:', {
-                original: currentCard.front_text,
-                gap_fill: currentCard.gap_fill,
-                expected_answer: expectedAnswer
-            });
-        } else {
-            // Fallback: создаем пропуск на лету
-            phraseWithGap = createPhraseWithGap(currentCard.front_text, currentCard.keyword);
-            expectedAnswer = currentCard.keyword;
-            console.log('⚠️ Создаем пропуск на лету (нет gap_fill):', phraseWithGap);
-        }
+        // Создаем пропуск в оригинальной фразе (на изучаемом языке)
+        phraseWithGap = createPhraseWithGap(currentCard.front_text, currentCard.keyword);
+        expectedAnswer = currentCard.keyword;
+        
+        console.log('🎯 Заполнение пропусков на изучаемом языке:', {
+            original: currentCard.front_text,
+            phrase_with_gap: phraseWithGap,
+            expected_answer: expectedAnswer,
+            hint_translation: currentCard.back_text
+        });
         
         phraseElement.innerHTML = phraseWithGap;
         answerInput.placeholder = t('enter_missing_word');
@@ -1911,9 +1961,10 @@ document.getElementById('play-audio-btn').addEventListener('click', () => {
     if (currentCard) {
         const text = currentCard.isForward ? currentCard.front_text : currentCard.back_text;
         const langCode = currentCard.isForward ? 
-            extractLanguageCode(trainingData.deckInfo.lang_from) : 
+            extractLanguageCode(trainingData.deckInfo.lang_from) :
             extractLanguageCode(trainingData.deckInfo.lang_to);
         playAudio(text, langCode);
+
     }
 });
 
@@ -1975,7 +2026,22 @@ document.getElementById('settings-modal').addEventListener('click', (e) => {
 });
 
 // Обработчики для модального окна статистики
-document.getElementById('stats-btn').addEventListener('click', () => {
+// Обработчик для кнопки статистики в header
+document.addEventListener('DOMContentLoaded', () => {
+    const statsBtn = document.getElementById('stats-btn');
+    if (statsBtn) {
+        statsBtn.addEventListener('click', () => {
+            console.log('Stats button clicked');
+            showStatsModal();
+        });
+    } else {
+        console.error('stats-btn not found');
+    }
+});
+
+// Дублируем для совместимости
+document.getElementById('stats-btn')?.addEventListener('click', () => {
+    console.log('Stats button clicked (fallback)');
     showStatsModal();
 });
 
@@ -2040,3 +2106,53 @@ function updateWordTags(phrase) {
         }
     });
 }
+
+// Инициализация для Telegram Mini App
+function initTelegram() {
+  // Проверяем, запущено ли в Telegram
+  const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
+  const isTelegramClient = navigator.userAgent.includes('Telegram');
+  
+  if (isTelegramWebApp || isTelegramClient) {
+    // Добавляем атрибут для применения специальных стилей
+    document.body.setAttribute('data-telegram', 'true');
+    document.body.classList.add('telegram-webapp');
+    
+    console.log('Telegram WebApp detected, applying special styles');
+    
+    // Принудительно перезагружаем стили для обхода кэша Telegram
+    const cssLink = document.querySelector('link[rel="stylesheet"]');
+    if (cssLink) {
+      const newLink = cssLink.cloneNode();
+      newLink.href = cssLink.href.split('?')[0] + '?v=' + Date.now();
+      cssLink.parentNode.replaceChild(newLink, cssLink);
+      console.log('CSS reloaded to bypass Telegram cache');
+    }
+    
+    if (isTelegramWebApp) {
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();  // Полноэкранный режим как в вебе
+
+      // Фиксированные цвета, чтобы игнорировать тему Telegram и матчиться с веб
+      const themeParams = {
+        bg_color: '#ffffff',  // Белый фон
+        text_color: '#1800ad', // Наш фирменный синий
+        hint_color: '#4258bb',
+        link_color: '#1800ad',
+        button_color: '#f4c300', // Наш фирменный желтый
+        button_text_color: '#1800ad'
+      };
+      Telegram.WebApp.setHeaderColor(themeParams.bg_color);
+      Telegram.WebApp.setBackgroundColor(themeParams.bg_color);
+
+      // Переопределение CSS переменных Telegram
+      document.documentElement.style.setProperty('--tg-theme-bg-color', '#ffffff');
+      document.documentElement.style.setProperty('--tg-theme-text-color', '#1800ad');
+      document.documentElement.style.setProperty('--tg-theme-button-color', '#f4c300');
+      document.documentElement.style.setProperty('--tg-theme-button-text-color', '#1800ad');
+    }
+  }
+}
+
+// Вызовите при запуске
+initTelegram();

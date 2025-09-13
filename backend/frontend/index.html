@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhraseWeaver</title>
-    <link rel="stylesheet" href="/static/css/main.css">
+    <!-- Мета-теги для предотвращения кэширования -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <link rel="stylesheet" href="/static/css/main.css?v=1.7">
     <!-- Скрипт для интеграции с Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -18,7 +23,7 @@
                 <img src="/static/assets/icons/growth.png" alt="Stats" class="stats-icon">
             </button>
             <button class="header-name-btn">
-                <img src="/static/assets/icons/PHRASE WEAVER.png" alt="PHRASE WEAVER" class="header-name">
+                <span class="header-name">PHRASE WEAVER</span>
             </button>
             <div id="user-info" style="display: none; color: #1800ad; font-size: 14px; font-weight: 500;"></div>
             <button id="settings-btn" class="header-btn">
@@ -238,7 +243,7 @@
         </div>
 
         <footer class="app-footer">
-            PhraseWeaver v0.1.0
+            PhraseWeaver v0.1.1
         </footer>
 
         <!-- FAB кнопка + -->
@@ -366,20 +371,19 @@
                 
             </div>
             <div class="deck-actions">
-                <button class="action-btn cards-btn" data-translate="cards">Карточки</button>
-                <button class="action-btn add-cards-btn" data-translate="add_cards">Добавить карточки</button>
+                <button class="action-btn cards-btn" data-translate="cards">Cards</button>
+                <button class="action-btn add-cards-btn" data-translate="add_cards">Add Cards</button>
             </div>
             <div class="deck-actions">
-                <button class="action-btn train-btn" data-translate="training">Тренировка</button>
-                <button class="action-btn delete-btn" data-translate="delete">Удалить</button>
+                <button class="action-btn train-btn" data-translate="training">Training</button>
+                <button class="action-btn delete-btn" data-translate="delete">Delete</button>
             </div>
         </div>
     </template>
     
     <!-- Подключаем скрипты (было config.js, но мы его удалим позже) -->
-    <script src="/static/js/app.js" type="module" defer></script>
+    <script src="/static/js/app.js?v=1.5" type="module" defer></script>
 </body>
 </html>
-
 
 

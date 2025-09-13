@@ -11,6 +11,23 @@ from deep_translator import GoogleTranslator
 from .ai_service import generate_examples_with_ai  # Импорт AI
 from .image_finder import find_image_via_api  # Импорт image
 
+# Импорт TTS сервисов
+try:
+    from .edge_tts_service import edge_tts_service
+    EDGE_TTS_AVAILABLE = True
+except ImportError:
+    EDGE_TTS_AVAILABLE = False
+    edge_tts_service = None
+    logging.warning("Edge TTS недоступен")
+
+try:
+    from .azure_tts_service import azure_tts_service
+    AZURE_TTS_AVAILABLE = True
+except ImportError:
+    AZURE_TTS_AVAILABLE = False
+    azure_tts_service = None
+    logging.warning("Azure TTS недоступен")
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - ENRICH - %(levelname)s - %(message)s')
 
 # Получаем абсолютные пути к директориям
@@ -30,25 +47,98 @@ async def get_translation(text: str, from_lang: str, to_lang: str) -> Optional[s
         logging.error(f"Ошибка перевода: {e}")
         return None
 
-async def generate_audio(text: str, lang: str, prefix: str):
+async def generate_audio_gtts_fallback(text: str, lang: str, prefix: str):
+    """
+    Генерирует аудио с использованием gTTS (улучшенная версия для польского)
+    """
     try:
-        filename = f"{prefix}_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
+        filename = f"{prefix}_gtts_{lang}_{hashlib.md5(text.encode()).hexdigest()[:12]}.mp3"
         file_path = AUDIO_DIR / filename
         
-        # Если файл уже существует, возвращаем относительный путь
-        if file_path.exists(): 
+        # Проверяем кэш
+        if file_path.exists():
+            logging.info(f"🎵 gTTS аудио найдено в кэше: {filename}")
             return f"assets/audio/{filename}"
         
-        tld_map = {'pt': 'pt'}
-        tld = tld_map.get(lang, 'com')
-
+        # Специальные настройки для польского языка
+        if lang == 'pl':
+            # Используем медленную речь для лучшего произношения польского
+            slow_speech = True
+            tld = 'com'  # Стабильный домен
+            logging.info(f"🇵🇱 Специальные настройки для польского: slow={slow_speech}, tld={tld}")
+        else:
+            slow_speech = False
+            tld_map = {
+                'pt': 'pt',  # Португальский с португальским TLD
+                'de': 'de',  # Немецкий с немецким TLD
+                'fr': 'fr',  # Французский с французским TLD
+                'es': 'es',  # Испанский с испанским TLD
+            }
+            tld = tld_map.get(lang, 'com')
+        
+        # ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ
+        logging.info(f"🔊 gTTS ГЕНЕРАЦИЯ:")
+        logging.info(f"   📝 Текст: '{text[:50]}{'...' if len(text) > 50 else ''}'")
+        logging.info(f"   🌍 Язык: '{lang}'")
+        logging.info(f"   🌐 TLD: '{tld}'")
+        logging.info(f"   🐌 Медленная речь: {slow_speech}")
+        logging.info(f"   📁 Файл: {filename}")
+        
         def tts_sync():
-            tts = gTTS(text=text, lang=lang, tld=tld, slow=False)
+            tts = gTTS(text=text, lang=lang, tld=tld, slow=slow_speech)
             tts.save(str(file_path))
         
         await asyncio.get_running_loop().run_in_executor(None, tts_sync)
-        logging.info(f"Аудио '{text}' ({lang} / {tld}) сохранено: {file_path}")
+        
+        file_size = file_path.stat().st_size
+        logging.info(f"✅ gTTS аудио создано: '{text[:30]}...' ({lang}/{tld}) -> {filename} ({file_size} байт)")
         return f"assets/audio/{filename}"
+        
+    except Exception as e:
+        logging.error(f"❌ gTTS ошибка: {e}")
+        return None
+
+async def generate_audio(text: str, lang: str, prefix: str):
+    """
+    Генерирует аудио с использованием TTS сервиса
+    
+    Args:
+        text: Текст для озвучки
+        lang: Код языка
+        prefix: Префикс для имени файла
+    """
+
+    try:
+        path = AUDIO_DIR / f"{prefix}_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
+        if path.exists(): return str(path)
+        
+        # Специальная обработка для польского языка - используем Edge TTS
+        if lang == 'pl' and EDGE_TTS_AVAILABLE and edge_tts_service:
+            logging.info(f"🇵🇱 Используем Edge TTS для польского языка: '{text[:30]}...'")
+            edge_result = await edge_tts_service.generate_audio(text, lang, prefix)
+            
+            if edge_result:
+                logging.info(f"✅ Edge TTS успешно для польского: '{text[:30]}...'")
+                return edge_result
+            else:
+                logging.warning(f"⚠️ Edge TTS не удался для польского, переходим к gTTS")
+        
+        # Пробуем Azure TTS для других языков (если доступен)
+        if AZURE_TTS_AVAILABLE and azure_tts_service and azure_tts_service.is_available():
+            logging.info(f"🎯 Попытка генерации через Azure TTS для языка '{lang}'")
+            azure_result = await azure_tts_service.generate_audio(text, lang, prefix)
+            
+            if azure_result:
+                logging.info(f"✅ Azure TTS успешно: '{text[:30]}...' ({lang})")
+                return azure_result
+            else:
+                logging.warning(f"⚠️ Azure TTS не удался, переходим к gTTS fallback")
+        else:
+            logging.info(f"ℹ️ Azure TTS недоступен, используем gTTS для языка '{lang}'")
+        
+        # Fallback на gTTS
+        return await generate_audio_gtts_fallback(text, lang, prefix)
+        
     except Exception as e:
         logging.error(f"Ошибка генерации аудио: {e}")
         return None
@@ -81,7 +171,15 @@ async def enrich_phrase(phrase: str, keyword: str, lang_code: str, target_lang: 
     """
     logging.info(f"--- НАЧАЛО ОБОГАЩЕНИЯ для фразы '{phrase}' с ключевым словом '{keyword}' на '{target_lang}' ---")
     
-    lang_map = {'en': 'English', 'ru': 'Russian', 'es': 'Spanish', 'pt': 'Portuguese', 'pl': 'Polish'}
+    lang_map = {
+        'en': 'English', 
+        'ru': 'Russian', 
+        'es': 'Spanish', 
+        'pt': 'Portuguese', 
+        'pl': 'Polish',
+        'fr': 'French',
+        'de': 'German',
+    }
     target_lang_full = lang_map.get(target_lang, target_lang)
     language_full = lang_map.get(lang_code, lang_code)
     

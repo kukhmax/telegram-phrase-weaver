@@ -23,6 +23,12 @@ export function showWindow(windowId) {
         win.classList.add('hidden');
     });
     document.getElementById(windowId).classList.remove('hidden');
+
+    // Применяем фиксированные стили при переключении окон
+    if (window.Telegram && window.Telegram.WebApp) {
+    document.body.classList.add('web-style-override');  // Добавьте этот класс в main.css для переопределений
+    }
+    updateInterface();  // Уже есть, но убедитесь, что оно обновляет стили
     
     // Обновляем переводы при переключении окон
     if (typeof updateInterface === 'function') {
@@ -75,6 +81,18 @@ export function renderDecks(decks) {
             cardNode.querySelector('.cards-total').textContent = deck.cards_count;
             cardNode.querySelector('.cards-repeat').textContent = deck.due_count;
             DOMElements.decksContainer.appendChild(cardNode);
+            
+            // Применяем локализацию к только что добавленным элементам
+            const addedCard = DOMElements.decksContainer.lastElementChild;
+            addedCard.style.backgroundColor = '#ffffff';  // Пример, если нужно override
+            const translatableElements = addedCard.querySelectorAll('[data-translate]');
+            translatableElements.forEach(element => {
+                const key = element.getAttribute('data-translate');
+                const translation = t(key);
+                if (translation) {
+                    element.textContent = translation;
+                }
+            });
         });
     }
 }

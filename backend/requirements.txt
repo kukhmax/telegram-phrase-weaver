@@ -8,6 +8,7 @@ greenlet  # Required for async SQLAlchemy
 redis  # Latest for redis-py
 aiohttp==3.10.5
 gtts==2.5.3
+edge-tts==6.1.12
 deep-translator==1.11.4
 google-generativeai==0.8.2
 pexels-api  # For Pexels API
@@ -27,3 +28,9 @@ pytest>=7.0.0
 pytest-asyncio>=0.21.0
 httpx>=0.24.0  # For TestClient async support
 aiogram==3.13.1
+
+# TTS dependencies (временно отключены)
+# chatterbox-tts
+# torch>=2.0.0
+# torchaudio>=2.0.0
+# numpy>=1.21.0

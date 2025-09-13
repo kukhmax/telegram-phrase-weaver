@@ -1,0 +1,49 @@
+# Dockerfile с поддержкой GPU для Chatterbox TTS
+FROM nvidia/cuda:12.1-devel-ubuntu22.04
+
+# Установка Python и системных зависимостей
+RUN apt-get update && apt-get install -y \
+    python3.11 \
+    python3.11-pip \
+    python3.11-dev \
+    build-essential \
+    git \
+    wget \
+    curl \
+    ffmpeg \
+    libsndfile1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Создаем символическую ссылку для python
+RUN ln -s /usr/bin/python3.11 /usr/bin/python
+RUN ln -s /usr/bin/pip3 /usr/bin/pip
+
+WORKDIR /app
+
+# Обновляем pip
+RUN python -m pip install --upgrade pip
+
+# Устанавливаем PyTorch с поддержкой CUDA
+RUN pip install torch==2.1.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu121
+
+# Копируем requirements.txt и устанавливаем зависимости
+COPY ./backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Копируем код бэкенда
+COPY ./backend/ .
+
+# Создаем директории для аудио и изображений
+RUN mkdir -p frontend/assets/audio frontend/assets/images
+
+# Устанавливаем переменные окружения для CUDA
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+ENV CUDA_VISIBLE_DEVICES=0
+
+# Переменные для оптимизации PyTorch
+ENV TORCH_CUDA_ARCH_LIST="6.0 6.1 7.0 7.5 8.0 8.6+PTX"
+ENV FORCE_CUDA="1"
+
+# Команда запуска с увеличенным timeout для загрузки моделей
+CMD ["gunicorn", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:8080", "--timeout", "300", "--worker-connections", "1000"]

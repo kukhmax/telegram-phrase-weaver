@@ -265,8 +265,14 @@ const translations = {
     }
 };
 
-// Текущий язык (по умолчанию английский)
-let currentLanguage = localStorage.getItem('interface_language') || 'en';
+// Текущий язык интерфейса (по умолчанию английский)
+let currentLanguage = 'en';
+
+// Проверяем сохраненный язык только если он есть в localStorage
+const savedLanguage = localStorage.getItem('interface_language');
+if (savedLanguage && translations[savedLanguage]) {
+    currentLanguage = savedLanguage;
+}
 
 // Функция для получения перевода
 function t(key, params = {}) {
@@ -421,13 +427,7 @@ function updateValidationMessages() {
 
 // Инициализация i18n при загрузке страницы
 function initializeI18n() {
-    // Устанавливаем сохраненный язык
-    const savedLanguage = localStorage.getItem('interface_language');
-    if (savedLanguage && translations[savedLanguage]) {
-        currentLanguage = savedLanguage;
-    }
-    
-    // Обновляем интерфейс
+    // Обновляем интерфейс (currentLanguage уже установлен)
     updateInterface();
     
     // Устанавливаем правильный radio button в настройках
