@@ -302,14 +302,14 @@ function createSavedCard(card, deck) {
             <div class="card-side front">
                 <span class="card-flag">${langFromFlag}</span>
                 <span class="card-text">${card.front_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', '${extractLanguageCode(card.front_text)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${card.front_text.replace(/'/g, "\\'")}', '${langFromCode}')" title="Прослушать">
                     🔊
                 </button>
             </div>
             <div class="card-side back">
                 <span class="card-flag">${langToFlag}</span>
                 <span class="card-text">${card.back_text}</span>
-                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', '${extractLanguageCode(card.back_text)}')" title="Прослушать">
+                <button class="audio-btn" onclick="playAudio('${card.back_text.replace(/'/g, "\\'")}', '${langToCode}')" title="Прослушать">
                     🔊
                 </button>
             </div>
