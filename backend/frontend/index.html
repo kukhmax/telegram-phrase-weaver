@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhraseWeaver</title>
+    <!-- Мета-теги для предотвращения кэширования -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <link rel="stylesheet" href="/static/css/main.css?v=1.7">
     <!-- Скрипт для интеграции с Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -17,7 +22,9 @@
             <button id="stats-btn" class="header-btn" data-translate="stats_button" title="Statistics">
                 <img src="/static/assets/icons/growth.png" alt="Stats" class="stats-icon">
             </button>
-            <button class="header-name-btn">PHRASE WEAVER</button>
+            <button class="header-name-btn">
+                <span class="header-name">PHRASE WEAVER</span>
+            </button>
             <div id="user-info" style="display: none; color: #1800ad; font-size: 14px; font-weight: 500;"></div>
             <button id="settings-btn" class="header-btn">
                 <img src="/static/assets/icons/tutorial.png" alt="Settings" class="settings-icon">
