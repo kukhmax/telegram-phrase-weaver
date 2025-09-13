@@ -852,7 +852,18 @@ window.generateDailyTrainingData = async function() {
 
 window.createDailyChart = function(data) {
     const canvas = document.getElementById('daily-chart');
+    
+    // Проверяем существование canvas элемента
+    if (!canvas) {
+        console.warn('daily-chart canvas element not found in DOM');
+        return;
+    }
+    
     const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.warn('Failed to get 2d context from daily-chart canvas');
+        return;
+    }
     
     // Очищаем canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
