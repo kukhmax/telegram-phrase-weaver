@@ -1945,9 +1945,11 @@ async function handleCardRating(rating) {
     nextCard();
 }
 
-document.getElementById('back-from-training-btn').addEventListener('click', () => {
+document.getElementById('back-from-training-btn').addEventListener('click', async () => {
     if (confirm(t('training_interruption'))) {
         showWindow('main-window');
+        // Обновляем колоды при возврате на главное окно
+        await refreshDecks();
     }
 });
 
