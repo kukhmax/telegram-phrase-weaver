@@ -110,14 +110,14 @@ body {
     }
     
     .header-name {
-        font-size: px;
+        font-size: 31px;
     }
 }
 
 .header-name-btn {
     background: none;
     border: none;
-    font-size: 24px;
+    font-size: 31px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -205,6 +205,30 @@ body {
     height: 8px !important;
     max-width: 8px !important;
     max-height: 8px !important;
+}
+
+/* Специальные стили для заголовка в Telegram WebApp */
+.tg-viewport .header-name,
+body[data-telegram="true"] .header-name,
+.telegram-webapp .header-name {
+    font-family: 'Leckerli One', cursive !important;
+    font-size: 28px !important;
+    color: var(--brand-blue) !important;
+    font-weight: normal !important;
+    text-decoration: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    display: inline-block !important;
+}
+
+/* Убираем рамку в Telegram */
+body[data-telegram="true"] .header-name-btn,
+.telegram-webapp .header-name-btn {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* Дополнительные стили для мобильных устройств */

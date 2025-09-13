@@ -2059,26 +2059,39 @@ function updateWordTags(phrase) {
 
 // Инициализация для Telegram Mini App
 function initTelegram() {
-  if (window.Telegram && window.Telegram.WebApp) {
-    Telegram.WebApp.ready();
-    Telegram.WebApp.expand();  // Полноэкранный режим как в вебе
+  // Проверяем, запущено ли в Telegram
+  const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
+  const isTelegramClient = navigator.userAgent.includes('Telegram');
+  
+  if (isTelegramWebApp || isTelegramClient) {
+    // Добавляем атрибут для применения специальных стилей
+    document.body.setAttribute('data-telegram', 'true');
+    document.body.classList.add('telegram-webapp');
+    
+    console.log('Telegram WebApp detected, applying special styles');
+    
+    if (isTelegramWebApp) {
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();  // Полноэкранный режим как в вебе
 
-    // Фиксированные цвета, чтобы игнорировать тему Telegram и матчиться с веб (адаптируйте под цвета из main.css)
-    const themeParams = {
-      bg_color: '#ffffff',  // Белый фон
-      text_color: '#000000',
-      hint_color: '#999999',
-      link_color: '#0066cc',
-      button_color: '#0066cc',
-      button_text_color: '#ffffff'
-    };
-    Telegram.WebApp.setHeaderColor(themeParams.bg_color);
-    Telegram.WebApp.setBackgroundColor(themeParams.bg_color);
+      // Фиксированные цвета, чтобы игнорировать тему Telegram и матчиться с веб
+      const themeParams = {
+        bg_color: '#ffffff',  // Белый фон
+        text_color: '#1800ad', // Наш фирменный синий
+        hint_color: '#4258bb',
+        link_color: '#1800ad',
+        button_color: '#f4c300', // Наш фирменный желтый
+        button_text_color: '#1800ad'
+      };
+      Telegram.WebApp.setHeaderColor(themeParams.bg_color);
+      Telegram.WebApp.setBackgroundColor(themeParams.bg_color);
 
-    // Переопределение CSS переменных Telegram
-    document.documentElement.style.setProperty('--tg-theme-bg-color', '#ffffff');
-    document.documentElement.style.setProperty('--tg-theme-text-color', '#000000');
-    // Добавьте другие --tg-theme-* если нужно, из https://core.telegram.org/bots/webapps#themeparams
+      // Переопределение CSS переменных Telegram
+      document.documentElement.style.setProperty('--tg-theme-bg-color', '#ffffff');
+      document.documentElement.style.setProperty('--tg-theme-text-color', '#1800ad');
+      document.documentElement.style.setProperty('--tg-theme-button-color', '#f4c300');
+      document.documentElement.style.setProperty('--tg-theme-button-text-color', '#1800ad');
+    }
   }
 }
 
