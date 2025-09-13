@@ -495,6 +495,11 @@ body[data-telegram="true"] .header-name-btn,
     transition: all 0.2s ease;
 }
 
+/* Временно показываем FAB кнопку всегда для отладки */
+#add-deck-btn.fab {
+    display: flex !important;
+}
+
 /* Скрываем FAB кнопку на всех окнах кроме главного */
 .app-container:not(.main-active) #add-deck-btn.fab {
     display: none !important;
