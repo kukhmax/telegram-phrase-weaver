@@ -1,5 +1,5 @@
-/* Импорт шрифта Blueberry */
-@import url('https://fonts.googleapis.com/css2?family=Blueberry&display=swap');
+/* Импорт шрифта Leckerli One */
+@import url('https://fonts.googleapis.com/css2?family=Leckerli+One&display=swap');
 
 /* Используем переменные Telegram для плавности интеграции */
 :root {
@@ -124,10 +124,10 @@ body {
 }
 
 .header-name {
-    font-family: 'Blueberry', cursive;
+    font-family: 'Leckerli One', cursive;
     font-size: 28px;
     color: var(--brand-blue);
-    font-weight: bold;
+    font-weight: normal;
     text-decoration: none;
     margin: 0;
     padding: 0;
