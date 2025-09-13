@@ -1528,6 +1528,17 @@ function findKeywordInPhrase(phrase) {
     
     console.log('🔍 Анализ фразы для поиска ключевого слова:', phrase);
     
+    // Сначала пытаемся извлечь слово из тегов <b>
+    const boldMatch = phrase.match(/<b>(.*?)<\/b>/);
+    if (boldMatch && boldMatch[1]) {
+        const keywordFromBold = boldMatch[1].trim();
+        console.log('✅ Ключевое слово найдено в тегах <b>:', keywordFromBold);
+        return keywordFromBold;
+    }
+    
+    // Fallback: используем старый алгоритм поиска
+    console.log('⚠️ Теги <b> не найдены, используем алгоритм поиска');
+    
     // Разбиваем фразу на слова с поддержкой Unicode
     const words = phrase.toLowerCase().split(/\s+/).map(word => 
         word.replace(/[^\p{L}]/gu, '') // Поддержка всех Unicode букв
@@ -1631,113 +1642,26 @@ function getUniversalWordStem(word) {
 
 // Универсальная функция создания фразы с пропуском (мультиязычная)
 function createPhraseWithGap(phrase, keyword) {
-    if (!phrase || !keyword) return phrase;
+    if (!phrase) return phrase;
     
     console.log('🔍 Создание пропуска для:', { phrase, keyword });
     
-    const words = phrase.split(/\s+/);
-    const keywordLower = keyword.toLowerCase().trim();
-    
-    // Ищем слово для замены по разным критериям
-    let foundWordIndex = -1;
-    let foundWord = '';
-    
-    // 1. Точное совпадение (приоритет)
-    for (let i = 0; i < words.length; i++) {
-        const cleanWord = words[i].replace(/[^\p{L}]/gu, '').toLowerCase();
-        if (cleanWord === keywordLower) {
-            foundWordIndex = i;
-            foundWord = words[i];
-            console.log('✅ Точное совпадение найдено:', foundWord);
-            break;
-        }
-    }
-    
-    // 1.5. Точное совпадение с учетом регистра и знаков препинания
-    if (foundWordIndex === -1) {
-        for (let i = 0; i < words.length; i++) {
-            if (words[i].toLowerCase() === keywordLower) {
-                foundWordIndex = i;
-                foundWord = words[i];
-                console.log('✅ Точное совпадение с препинанием найдено:', foundWord);
-                break;
-            }
-        }
-    }
-    
-    // 2. Совпадение по корню
-    if (foundWordIndex === -1) {
-        const keywordStem = getUniversalWordStem(keyword);
-        if (keywordStem.length > 2) {
-            for (let i = 0; i < words.length; i++) {
-                const cleanWord = words[i].replace(/[^\p{L}]/gu, '');
-                const wordStem = getUniversalWordStem(cleanWord);
-                
-                if (wordStem === keywordStem && wordStem.length > 2) {
-                    foundWordIndex = i;
-                    foundWord = words[i];
-                    console.log('✅ Совпадение по корню:', { foundWord, wordStem, keywordStem });
-                    break;
-                }
-            }
-        }
-    }
-    
-    // 3. Частичное совпадение (только если слова достаточно длинные)
-    if (foundWordIndex === -1) {
-        for (let i = 0; i < words.length; i++) {
-            const cleanWord = words[i].replace(/[^\p{L}]/gu, '').toLowerCase();
-            
-            // Проверяем только если оба слова достаточно длинные
-            if (cleanWord.length >= 4 && keywordLower.length >= 4) {
-                if ((cleanWord.includes(keywordLower) && cleanWord.length > keywordLower.length) ||
-                    (keywordLower.includes(cleanWord) && keywordLower.length > cleanWord.length)) {
-                    foundWordIndex = i;
-                    foundWord = words[i];
-                    console.log('✅ Частичное совпадение:', foundWord);
-                    break;
-                }
-            }
-        }
-    }
-    
-    // 4. Схожесть по Левенштейну
-    if (foundWordIndex === -1) {
-        let bestMatch = -1;
-        let bestSimilarity = 0;
-        
-        for (let i = 0; i < words.length; i++) {
-            const cleanWord = words[i].replace(/[^\p{L}]/gu, '').toLowerCase();
-            if (cleanWord.length > 2) {
-                const similarity = calculateSimilarity(cleanWord, keyword.toLowerCase());
-                if (similarity > 0.7 && similarity > bestSimilarity) {
-                    bestSimilarity = similarity;
-                    bestMatch = i;
-                }
-            }
-        }
-        
-        if (bestMatch !== -1) {
-            foundWordIndex = bestMatch;
-            foundWord = words[bestMatch];
-            console.log('✅ Схожесть по Левенштейну:', { foundWord, similarity: bestSimilarity });
-        }
-    }
-    
-    // Если нашли слово для замены
-    if (foundWordIndex !== -1) {
-        const modifiedWords = [...words];
-        modifiedWords[foundWordIndex] = '<span class="word-gap">_____</span>';
-        
-        const result = modifiedWords.join(' ');
-        console.log('✅ Создан пропуск:', result);
+    // Проверяем, есть ли теги <b> в фразе
+    if (phrase.includes('<b>') && phrase.includes('</b>')) {
+        // Заменяем содержимое тегов <b> на пропуск
+        const result = phrase.replace(/<b>(.*?)<\/b>/g, '<span class="word-gap">_____</span>');
+        console.log('✅ Создан пропуск на основе тегов <b>:', result);
         return result;
     }
     
-    // Fallback: простая замена по регулярному выражению
-    console.log('⚠️ Используем простую замену для:', keyword);
+    // Fallback: если нет тегов <b>, используем старую логику с ключевым словом
+    if (!keyword) return phrase;
+    
+    console.log('⚠️ Нет тегов <b>, используем поиск по ключевому слову:', keyword);
     const keywordRegex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
-    return phrase.replace(keywordRegex, '<span class="word-gap">_____</span>');
+    const result = phrase.replace(keywordRegex, '<span class="word-gap">_____</span>');
+    console.log('✅ Создан пропуск через регулярное выражение:', result);
+    return result;
 }
 
 // Универсальная функция проверки ответа (мультиязычная)
