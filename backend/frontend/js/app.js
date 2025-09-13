@@ -982,26 +982,39 @@ document.addEventListener('click', (event) => {
     });
 
     // Обработчик кнопки очистки поля фразы
-    document.getElementById('clear-phrase-btn').addEventListener('click', () => {
+    // Обработчики для формы генерации карточек
+    document.addEventListener('DOMContentLoaded', () => {
+        const clearPhraseBtn = document.getElementById('clear-phrase-btn');
+        if (clearPhraseBtn) {
+            clearPhraseBtn.addEventListener('click', () => {
+                const phraseInput = document.getElementById('phrase-input');
+                phraseInput.value = '';
+                phraseInput.focus();
+                updateWordTags('');
+            });
+        }
+        
+        const clearKeywordBtn = document.getElementById('clear-keyword-btn');
+        if (clearKeywordBtn) {
+            clearKeywordBtn.addEventListener('click', () => {
+                const keywordInput = document.getElementById('keyword-input');
+                keywordInput.value = '';
+                keywordInput.focus();
+            });
+        }
+
+        // Обработчик изменения текста в поле фразы для создания тегов слов
         const phraseInput = document.getElementById('phrase-input');
-        phraseInput.value = '';
-        phraseInput.focus();
-        updateWordTags('');
-    });
-    
-    document.getElementById('clear-keyword-btn').addEventListener('click', () => {
-        const keywordInput = document.getElementById('keyword-input');
-        keywordInput.value = '';
-        keywordInput.focus();
-    });
+        if (phraseInput) {
+            phraseInput.addEventListener('input', (event) => {
+                updateWordTags(event.target.value);
+            });
+        }
 
-    // Обработчик изменения текста в поле фразы для создания тегов слов
-    document.getElementById('phrase-input').addEventListener('input', (event) => {
-        updateWordTags(event.target.value);
-    });
-
-    // Обработчик формы генерации фраз
-    document.getElementById('generate-cards-form').addEventListener('submit', async (event) => {
+        // Обработчик формы генерации фраз
+        const generateForm = document.getElementById('generate-cards-form');
+        if (generateForm) {
+            generateForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         
         const phrase = document.getElementById('phrase-input').value.trim();
@@ -1045,10 +1058,15 @@ document.addEventListener('click', (event) => {
             // Скрываем спиннер в любом случае
             showButtonLoading(false);
         }
-     });
+            });
+        }
+    });
 
     // Обработчики для окна сгенерированных фраз
-    document.getElementById('save-selected-btn').addEventListener('click', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
+        const saveSelectedBtn = document.getElementById('save-selected-btn');
+        if (saveSelectedBtn) {
+            saveSelectedBtn.addEventListener('click', async () => {
         if (selectedPhrases.size === 0) return;
         
         try {
@@ -1124,6 +1142,8 @@ document.addEventListener('click', (event) => {
         } catch (error) {
             console.error('Error saving cards:', error);
             showError(`Ошибка сохранения: ${error.message}`);
+        }
+            });
         }
     });
     
