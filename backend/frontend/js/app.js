@@ -2,6 +2,7 @@
 import { api, setAuthToken, getUserData } from '/static/js/api.js';
 import { DOMElements, showWindow, renderDecks, showLoading, showError } from '/static/js/ui.js';
 import { t, setLanguage, getCurrentLanguage, updateInterface, initializeI18n } from '/static/js/i18n.js';
+import './css/main.css';
 
 // Глобальные переменные для хранения данных
 let currentGeneratedData = null;
@@ -2055,3 +2056,31 @@ function updateWordTags(phrase) {
         }
     });
 }
+
+// Инициализация для Telegram Mini App
+function initTelegram() {
+  if (window.Telegram && window.Telegram.WebApp) {
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();  // Полноэкранный режим как в вебе
+
+    // Фиксированные цвета, чтобы игнорировать тему Telegram и матчиться с веб (адаптируйте под цвета из main.css)
+    const themeParams = {
+      bg_color: '#ffffff',  // Белый фон
+      text_color: '#000000',
+      hint_color: '#999999',
+      link_color: '#0066cc',
+      button_color: '#0066cc',
+      button_text_color: '#ffffff'
+    };
+    Telegram.WebApp.setHeaderColor(themeParams.bg_color);
+    Telegram.WebApp.setBackgroundColor(themeParams.bg_color);
+
+    // Переопределение CSS переменных Telegram
+    document.documentElement.style.setProperty('--tg-theme-bg-color', '#ffffff');
+    document.documentElement.style.setProperty('--tg-theme-text-color', '#000000');
+    // Добавьте другие --tg-theme-* если нужно, из https://core.telegram.org/bots/webapps#themeparams
+  }
+}
+
+// Вызовите при запуске
+initTelegram();
