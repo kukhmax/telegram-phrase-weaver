@@ -30,9 +30,16 @@ function extractLanguageCode(langText) {
     }
     
     // Для строк с флагами и кодами языков (например "🇵🇹 PT" или "🇺🇸EN")
-    // Ищем последние 2 буквы в строке
-    const match = langText.match(/([a-z]{2})$/i);
-    return match ? match[1].toLowerCase() : 'en';
+    // Ищем 2 буквы после пробела или в конце строки
+    const match = langText.match(/\s([A-Z]{2})$|([A-Z]{2})$/i);
+    if (match) {
+        const code = (match[1] || match[2]).toLowerCase();
+        console.log(`Extracted language code: '${code}' from '${langText}'`);
+        return code;
+    }
+    
+    console.warn(`Could not extract language code from '${langText}', defaulting to 'en'`);
+    return 'en';
 }
 
 
