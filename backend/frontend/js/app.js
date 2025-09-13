@@ -2167,9 +2167,11 @@ initTelegram();
 document.addEventListener('DOMContentLoaded', () => {
     const headerNameBtn = document.querySelector('.header-name-btn');
     if (headerNameBtn) {
-        headerNameBtn.addEventListener('click', () => {
+        headerNameBtn.addEventListener('click', async () => {
             console.log('Header clicked, navigating to main window');
             showWindow('main-window');
+            // Обновляем колоды при переходе на главное окно
+            await refreshDecks();
         });
     }
 });
