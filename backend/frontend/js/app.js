@@ -2,7 +2,7 @@
 import { api, setAuthToken, getUserData } from '/static/js/api.js';
 import { DOMElements, showWindow, renderDecks, showLoading, showError } from '/static/js/ui.js';
 import { t, setLanguage, getCurrentLanguage, updateInterface, initializeI18n } from '/static/js/i18n.js';
-import './css/main.css';
+// CSS подключен в HTML, не нужно импортировать здесь
 
 // Глобальные переменные для хранения данных
 let currentGeneratedData = null;
