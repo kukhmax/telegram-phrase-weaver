@@ -106,7 +106,7 @@ body {
     }
     
     .header-name {
-        font-size: 24px;
+        font-size: 31px;
     }
 }
 
@@ -125,7 +125,7 @@ body {
 
 .header-name {
     font-family: 'Leckerli One', cursive;
-    font-size: 28px;
+    font-size: 31px;
     color: var(--brand-blue);
     font-weight: normal;
     text-decoration: none;
@@ -155,7 +155,7 @@ body {
     }
     
     .header-name {
-        font-size: 20px;
+        font-size: 31px;
     }
 }
 
