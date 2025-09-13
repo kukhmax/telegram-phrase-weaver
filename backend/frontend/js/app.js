@@ -644,9 +644,19 @@ DOMElements.createDeckForm.addEventListener('submit', async (event) => {
 
 // Функции для работы со статистикой
 window.showStatsModal = async function() {
+    console.log('showStatsModal called');
+    
     try {
+        // Проверяем существование модального окна
+        const statsModal = document.getElementById('stats-modal');
+        if (!statsModal) {
+            console.error('stats-modal element not found');
+            return;
+        }
+        
+        console.log('Showing stats modal...');
         // Показываем модальное окно сразу с индикатором загрузки
-        document.getElementById('stats-modal').classList.remove('hidden');
+        statsModal.classList.remove('hidden');
         
         // Показываем загрузку внутри модального окна
         const modalBody = document.querySelector('.stats-modal-body');
@@ -659,7 +669,9 @@ window.showStatsModal = async function() {
         `;
         
         // Получаем статистику
+        console.log('Calling getStatistics...');
         const stats = await getStatistics();
+        console.log('Statistics received:', stats);
         
         // Добавляем статистику текущей сессии к общей статистике
         stats.againCards += sessionRepeatStats.againCards;
