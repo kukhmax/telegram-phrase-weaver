@@ -783,30 +783,46 @@ window.getStatistics = async function() {
 }
 
 window.displayStatistics = function(stats) {
-    // Общая статистика
-    document.getElementById('total-decks-stat').textContent = stats.totalDecks;
-    document.getElementById('total-cards-stat').textContent = stats.totalCards;
-    document.getElementById('learned-cards-stat').textContent = stats.learnedCards;
-    document.getElementById('repeat-cards-stat').textContent = stats.repeatCards;
+    // Общая статистика - с проверками на существование элементов
+    const totalDecksEl = document.getElementById('total-decks-stat');
+    if (totalDecksEl) totalDecksEl.textContent = stats.totalDecks;
     
-    // Статистика повторений
-    document.getElementById('again-cards-stat').textContent = stats.againCards;
-    document.getElementById('good-cards-stat').textContent = stats.goodCards;
-    document.getElementById('easy-cards-stat').textContent = stats.easyCards;
+    const totalCardsEl = document.getElementById('total-cards-stat');
+    if (totalCardsEl) totalCardsEl.textContent = stats.totalCards;
     
-    // Распределение по колодам
+    const learnedCardsEl = document.getElementById('learned-cards-stat');
+    if (learnedCardsEl) learnedCardsEl.textContent = stats.learnedCards;
+    
+    const repeatCardsEl = document.getElementById('repeat-cards-stat');
+    if (repeatCardsEl) repeatCardsEl.textContent = stats.repeatCards;
+    
+    // Статистика повторений - с проверками на существование элементов
+    const againCardsEl = document.getElementById('again-cards-stat');
+    if (againCardsEl) againCardsEl.textContent = stats.againCards;
+    
+    const goodCardsEl = document.getElementById('good-cards-stat');
+    if (goodCardsEl) goodCardsEl.textContent = stats.goodCards;
+    
+    const easyCardsEl = document.getElementById('easy-cards-stat');
+    if (easyCardsEl) easyCardsEl.textContent = stats.easyCards;
+    
+    // Распределение по колодам - с проверкой на существование контейнера
     const distributionContainer = document.getElementById('deck-distribution-list');
-    distributionContainer.innerHTML = '';
-    
-    stats.deckDistribution.forEach(deck => {
-        const deckItem = document.createElement('div');
-        deckItem.className = 'deck-item';
-        deckItem.innerHTML = `
-            <span class="deck-name">${deck.name}</span>
-            <span class="deck-cards-count">${deck.totalCards} ${t('total').toLowerCase()}, ${deck.learnedCards} ${t('learned_cards').toLowerCase()}</span>
-        `;
-        distributionContainer.appendChild(deckItem);
-    });
+    if (distributionContainer) {
+        distributionContainer.innerHTML = '';
+        
+        stats.deckDistribution.forEach(deck => {
+            const deckItem = document.createElement('div');
+            deckItem.className = 'deck-item';
+            deckItem.innerHTML = `
+                <span class="deck-name">${deck.name}</span>
+                <span class="deck-cards-count">${deck.totalCards} ${t('total').toLowerCase()}, ${deck.learnedCards} ${t('learned_cards').toLowerCase()}</span>
+            `;
+            distributionContainer.appendChild(deckItem);
+        });
+    } else {
+        console.warn('deck-distribution-list element not found in DOM');
+    }
 }
 
 window.generateDailyTrainingData = async function() {
