@@ -2070,6 +2070,15 @@ function initTelegram() {
     
     console.log('Telegram WebApp detected, applying special styles');
     
+    // Принудительно перезагружаем стили для обхода кэша Telegram
+    const cssLink = document.querySelector('link[rel="stylesheet"]');
+    if (cssLink) {
+      const newLink = cssLink.cloneNode();
+      newLink.href = cssLink.href.split('?')[0] + '?v=' + Date.now();
+      cssLink.parentNode.replaceChild(newLink, cssLink);
+      console.log('CSS reloaded to bypass Telegram cache');
+    }
+    
     if (isTelegramWebApp) {
       Telegram.WebApp.ready();
       Telegram.WebApp.expand();  // Полноэкранный режим как в вебе
