@@ -1,3 +1,6 @@
+/* Импорт шрифта Blueberry */
+@import url('https://fonts.googleapis.com/css2?family=Blueberry&display=swap');
+
 /* Используем переменные Telegram для плавности интеграции */
 :root {
     --bg-color: #fff;
@@ -101,6 +104,10 @@ body {
         width: 30px !important;
         height: 30px !important;
     }
+    
+    .header-name {
+        font-size: 24px;
+    }
 }
 
 .header-name-btn {
@@ -117,9 +124,14 @@ body {
 }
 
 .header-name {
-    height: 140px;
-    width: auto;
-    object-fit: contain;
+    font-family: 'Blueberry', cursive;
+    font-size: 28px;
+    color: var(--brand-blue);
+    font-weight: bold;
+    text-decoration: none;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
 }
 
 /* Очень маленькие экраны (Telegram на телефоне) */
@@ -140,6 +152,10 @@ body {
     .settings-icon {
         width: 30px !important;
         height: 30px !important;
+    }
+    
+    .header-name {
+        font-size: 20px;
     }
 }
 
