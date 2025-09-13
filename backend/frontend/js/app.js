@@ -569,8 +569,23 @@ async function refreshDecks() {
 //             ОБРАБОТЧИКИ СОБЫТИЙ
 // ============================================
 
-// Нажатие на "+" на главном экране
-document.getElementById('add-deck-btn').addEventListener('click', () => {
+// Обработчики событий после загрузки DOM
+document.addEventListener('DOMContentLoaded', () => {
+    // Нажатие на "+" на главном экране
+    const addDeckBtn = document.getElementById('add-deck-btn');
+    if (addDeckBtn) {
+        addDeckBtn.addEventListener('click', () => {
+            console.log('Add deck button clicked');
+            showWindow('create-deck-window');
+        });
+    } else {
+        console.error('add-deck-btn not found');
+    }
+});
+
+// Дублируем обработчик для совместимости
+document.getElementById('add-deck-btn')?.addEventListener('click', () => {
+    console.log('Add deck button clicked (fallback)');
     showWindow('create-deck-window');
 });
 
@@ -1991,7 +2006,22 @@ document.getElementById('settings-modal').addEventListener('click', (e) => {
 });
 
 // Обработчики для модального окна статистики
-document.getElementById('stats-btn').addEventListener('click', () => {
+// Обработчик для кнопки статистики в header
+document.addEventListener('DOMContentLoaded', () => {
+    const statsBtn = document.getElementById('stats-btn');
+    if (statsBtn) {
+        statsBtn.addEventListener('click', () => {
+            console.log('Stats button clicked');
+            showStatsModal();
+        });
+    } else {
+        console.error('stats-btn not found');
+    }
+});
+
+// Дублируем для совместимости
+document.getElementById('stats-btn')?.addEventListener('click', () => {
+    console.log('Stats button clicked (fallback)');
     showStatsModal();
 });
 
