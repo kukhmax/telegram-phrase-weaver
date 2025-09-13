@@ -10,4 +10,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY ./backend/ .
 
 # Команда запуска
-CMD gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8080
+# Временно используем минимальную версию для диагностики
+CMD ["python", "-m", "uvicorn", "app.main_minimal:app", "--host", "0.0.0.0", "--port", "8080"]
