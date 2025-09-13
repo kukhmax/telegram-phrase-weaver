@@ -10,6 +10,7 @@ from deep_translator import GoogleTranslator
 
 from .ai_service import generate_examples_with_ai  # Импорт AI
 from .image_finder import find_image_via_api  # Импорт image
+from .edge_tts_service import edge_tts_service  # Импорт Edge TTS
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - ENRICH - %(levelname)s - %(message)s')
 
@@ -41,42 +42,37 @@ async def generate_audio(text: str, lang: str, prefix: str):
     """
 
     try:
-        filename = f"{prefix}_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
-        file_path = AUDIO_DIR / filename
-
-        if file_path.exists():
-            return f"assets/audio/{filename}"
-
-        # TLD маппинг для улучшенного произношения
-        # Исключаем проблемные TLD, которые недоступны с сервера
-        tld_map = {
-            'pt': 'pt',  # Португальский с португальским TLD
-            # 'pl': 'pl',  # Польский TLD недоступен - используем com
-            'de': 'de',  # Немецкий с немецким TLD
-            'fr': 'fr',  # Французский с французским TLD
-            'es': 'es',  # Испанский с испанским TLD
-            # 'ru': 'ru'   # Русский TLD может быть недоступен - используем com
-        }
-        tld = tld_map.get(lang, 'com')
-
-        # ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ ДЛЯ ОТЛАДКИ
-        logging.info(f"🔊 TTS ГЕНЕРАЦИЯ:")
-        logging.info(f"   📝 Текст: '{text[:50]}{'...' if len(text) > 50 else ''}'")
-        logging.info(f"   🌍 Входной language_id: '{lang}'")
-        logging.info(f"   🎯 Маппинг на gTTS язык: '{lang}'")
-        logging.info(f"   🌐 TLD для произношения: '{tld}'")
-        logging.info(f"   📁 Файл: {filename}")
-
-        def tts_sync():
-            tts = gTTS(text=text, lang=lang, tld=tld, slow=False)
-            tts.save(str(file_path))
-
-        await asyncio.get_running_loop().run_in_executor(None, tts_sync)
-        logging.info(f"✅ Аудио успешно создано: '{text[:30]}...' ({lang}/{tld}) -> {filename}")
-        return f"assets/audio/{filename}"
+        # Специальная обработка для польского языка - используем Edge TTS
+        if lang == 'pl' and edge_tts_service.is_available:
+            logging.info(f"🇵🇱 Используем Edge TTS для польского языка: '{text[:30]}...'")
+            edge_result = await edge_tts_service.generate_audio(text, lang, prefix)
+            
+            if edge_result:
+                logging.info(f"✅ Edge TTS успешно для польского: '{text[:30]}...'")
+                return edge_result
+            else:
+                logging.warning(f"⚠️ Edge TTS не удался для польского, переходим к Azure/gTTS")
+        
+        # Пробуем Azure TTS для других языков
+        if azure_tts_service.is_available():
+            logging.info(f"🎯 Попытка генерации через Azure TTS для языка '{lang}'")
+            azure_result = await azure_tts_service.generate_audio(text, lang, prefix)
+            
+            if azure_result:
+                logging.info(f"✅ Azure TTS успешно: '{text[:30]}...' ({lang})")
+                return azure_result
+            else:
+                logging.warning(f"⚠️ Azure TTS не удался, переходим к gTTS fallback")
+        else:
+            logging.info(f"ℹ️ Azure TTS недоступен, используем gTTS для языка '{lang}'")
+        
+        # Fallback на gTTS
+        return await generate_audio_gtts_fallback(text, lang, prefix)
+        
     except Exception as e:
-        logging.error(f"Ошибка генерации аудио: {e}")
-        return None
+        logging.error(f"❌ Критическая ошибка в generate_audio: {e}")
+        # Последняя попытка с gTTS
+        return await generate_audio_gtts_fallback(text, lang, prefix)
 
 async def download_and_save_image(image_url: str, query: str) -> Optional[str]:
     if not image_url: return None
