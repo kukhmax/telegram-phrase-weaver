@@ -2162,3 +2162,14 @@ function initTelegram() {
 
 // Вызовите при запуске
 initTelegram();
+
+// Обработчик клика на заголовок PHRASE WEAVER для перехода на главное окно
+document.addEventListener('DOMContentLoaded', () => {
+    const headerNameBtn = document.querySelector('.header-name-btn');
+    if (headerNameBtn) {
+        headerNameBtn.addEventListener('click', () => {
+            console.log('Header clicked, navigating to main window');
+            showWindow('main-window');
+        });
+    }
+});
