@@ -22,23 +22,21 @@ Given:
 Please:
 1. Create an English search query (1-2 words) for finding an image that best visually represents the keyword "{keyword}". Call this field "image_query".
 2. Take the original phrase "{phrase}" and provide its accurate translation to {target_language}. In the original phrase, wrap the keyword "{keyword}" (in any of its forms) with HTML tags <b> and </b>.
-3. Create a gap-fill version of the original phrase by replacing EXACTLY the keyword "{keyword}" (or its grammatical form that appears in the phrase) with "_____" (5 underscores). IMPORTANT: Replace only the specific word that corresponds to "{keyword}", not any other words. Call this "gap_fill".
-4. Generate 5 additional realistic example sentences using the keyword "{keyword}" in different grammatical forms (conjugations, declensions, etc.).
-5. For each of the 5 additional examples, provide accurate translations to {target_language}.
-6. In each of the 5 additional examples, find and wrap the keyword "{keyword}" (in any of its forms) with HTML tags <b> and </b>.
-7. For each of the 5 additional examples, create a gap-fill version by replacing EXACTLY the keyword "{keyword}" (or its grammatical form) with "_____" (5 underscores). IMPORTANT: Replace only the specific word that corresponds to "{keyword}", not any other words. Call this "gap_fill".
+3. Generate 5 additional realistic example sentences using the keyword "{keyword}" in different grammatical forms (conjugations, declensions, etc.).
+4. For each of the 5 additional examples, provide accurate translations to {target_language}.
+5. In each of the 5 additional examples, find and wrap the keyword "{keyword}" (in any of its forms) with HTML tags <b> and </b>.
 
 Return ONLY a valid JSON object without any other words or formatting.
 Format example:
 {{
   "image_query": "walking home sunset",
-  "original_phrase": {{"original": "Eu estou <b>indo</b> para casa.", "translation": "Я иду домой.", "gap_fill": "Eu estou _____ para casa."}},
+  "original_phrase": {{"original": "Eu estou <b>indo</b> para casa.", "translation": "Я иду домой."}},
   "additional_examples": [
-    {{"original": "Eles <b>vão</b> para a praia.", "translation": "Они идут на пляж.", "gap_fill": "Eles _____ para a praia."}},
-    {{"original": "Nós <b>fomos</b> ao cinema.", "translation": "Мы пошли в кино.", "gap_fill": "Nós _____ ao cinema."}},
-    {{"original": "Ela <b>vai</b> trabalhar.", "translation": "Она идет работать.", "gap_fill": "Ela _____ trabalhar."}},
-    {{"original": "Vocês <b>foram</b> embora.", "translation": "Вы ушли.", "gap_fill": "Vocês _____ embora."}},
-    {{"original": "Eu <b>irei</b> amanhã.", "translation": "Я пойду завтра.", "gap_fill": "Eu _____ amanhã."}}
+    {{"original": "Eles <b>vão</b> para a praia.", "translation": "Они идут на пляж."}},
+    {{"original": "Nós <b>fomos</b> ao cinema.", "translation": "Мы пошли в кино."}},
+    {{"original": "Ela <b>vai</b> trabalhar.", "translation": "Она идет работать."}},
+    {{"original": "Vocês <b>foram</b> embora.", "translation": "Вы ушли."}},
+    {{"original": "Eu <b>irei</b> amanhã.", "translation": "Я пойду завтра."}}
   ]
 }}
 """

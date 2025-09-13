@@ -644,9 +644,19 @@ DOMElements.createDeckForm.addEventListener('submit', async (event) => {
 
 // Функции для работы со статистикой
 window.showStatsModal = async function() {
+    console.log('showStatsModal called');
+    
     try {
+        // Проверяем существование модального окна
+        const statsModal = document.getElementById('stats-modal');
+        if (!statsModal) {
+            console.error('stats-modal element not found');
+            return;
+        }
+        
+        console.log('Showing stats modal...');
         // Показываем модальное окно сразу с индикатором загрузки
-        document.getElementById('stats-modal').classList.remove('hidden');
+        statsModal.classList.remove('hidden');
         
         // Показываем загрузку внутри модального окна
         const modalBody = document.querySelector('.stats-modal-body');
@@ -659,7 +669,9 @@ window.showStatsModal = async function() {
         `;
         
         // Получаем статистику
+        console.log('Calling getStatistics...');
         const stats = await getStatistics();
+        console.log('Statistics received:', stats);
         
         // Добавляем статистику текущей сессии к общей статистике
         stats.againCards += sessionRepeatStats.againCards;
@@ -677,13 +689,35 @@ window.showStatsModal = async function() {
         
     } catch (error) {
         console.error('Error loading statistics:', error);
+        
+        // Определяем тип ошибки для более информативного сообщения
+        let errorMessage = t('stats_load_error') || 'Error loading statistics';
+        let errorDetails = '';
+        
+        if (error.message) {
+            errorDetails = error.message;
+        } else if (error.status === 401) {
+            errorMessage = 'Authentication required';
+            errorDetails = 'Please log in again';
+        } else if (error.status === 403) {
+            errorMessage = 'Access denied';
+            errorDetails = 'You don\'t have permission to view statistics';
+        } else if (error.status === 500) {
+            errorMessage = 'Server error';
+            errorDetails = 'Please try again later';
+        } else if (!navigator.onLine) {
+            errorMessage = 'No internet connection';
+            errorDetails = 'Please check your connection';
+        }
+        
         // Показываем ошибку внутри модального окна
         const modalBody = document.querySelector('.stats-modal-body');
         modalBody.innerHTML = `
             <div style="text-align: center; padding: 40px; color: #ff4757;">
                 <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
-                <p>${t('stats_load_error') || 'Error loading statistics'}</p>
-                <button onclick="window.showStatsModal()" style="margin-top: 20px; padding: 10px 20px; background: #f4c300; border: none; border-radius: 10px; cursor: pointer;">${t('try_again')}</button>
+                <p style="font-weight: bold; margin-bottom: 10px;">${errorMessage}</p>
+                ${errorDetails ? `<p style="font-size: 14px; color: #666; margin-bottom: 20px;">${errorDetails}</p>` : ''}
+                <button onclick="window.showStatsModal()" style="margin-top: 20px; padding: 10px 20px; background: #f4c300; border: none; border-radius: 10px; cursor: pointer;">${t('try_again') || 'Try Again'}</button>
             </div>
         `;
     }
@@ -691,8 +725,12 @@ window.showStatsModal = async function() {
 
 window.getStatistics = async function() {
     try {
+        console.log('Starting statistics collection...');
+        
         // Получаем все колоды
+        console.log('Fetching decks...');
         const decks = await api.getDecks();
+        console.log('Decks received:', decks.length, 'decks');
         
         let totalCards = 0;
         let learnedCards = 0;
@@ -757,30 +795,46 @@ window.getStatistics = async function() {
 }
 
 window.displayStatistics = function(stats) {
-    // Общая статистика
-    document.getElementById('total-decks-stat').textContent = stats.totalDecks;
-    document.getElementById('total-cards-stat').textContent = stats.totalCards;
-    document.getElementById('learned-cards-stat').textContent = stats.learnedCards;
-    document.getElementById('repeat-cards-stat').textContent = stats.repeatCards;
+    // Общая статистика - с проверками на существование элементов
+    const totalDecksEl = document.getElementById('total-decks-stat');
+    if (totalDecksEl) totalDecksEl.textContent = stats.totalDecks;
     
-    // Статистика повторений
-    document.getElementById('again-cards-stat').textContent = stats.againCards;
-    document.getElementById('good-cards-stat').textContent = stats.goodCards;
-    document.getElementById('easy-cards-stat').textContent = stats.easyCards;
+    const totalCardsEl = document.getElementById('total-cards-stat');
+    if (totalCardsEl) totalCardsEl.textContent = stats.totalCards;
     
-    // Распределение по колодам
+    const learnedCardsEl = document.getElementById('learned-cards-stat');
+    if (learnedCardsEl) learnedCardsEl.textContent = stats.learnedCards;
+    
+    const repeatCardsEl = document.getElementById('repeat-cards-stat');
+    if (repeatCardsEl) repeatCardsEl.textContent = stats.repeatCards;
+    
+    // Статистика повторений - с проверками на существование элементов
+    const againCardsEl = document.getElementById('again-cards-stat');
+    if (againCardsEl) againCardsEl.textContent = stats.againCards;
+    
+    const goodCardsEl = document.getElementById('good-cards-stat');
+    if (goodCardsEl) goodCardsEl.textContent = stats.goodCards;
+    
+    const easyCardsEl = document.getElementById('easy-cards-stat');
+    if (easyCardsEl) easyCardsEl.textContent = stats.easyCards;
+    
+    // Распределение по колодам - с проверкой на существование контейнера
     const distributionContainer = document.getElementById('deck-distribution-list');
-    distributionContainer.innerHTML = '';
-    
-    stats.deckDistribution.forEach(deck => {
-        const deckItem = document.createElement('div');
-        deckItem.className = 'deck-item';
-        deckItem.innerHTML = `
-            <span class="deck-name">${deck.name}</span>
-            <span class="deck-cards-count">${deck.totalCards} ${t('total').toLowerCase()}, ${deck.learnedCards} ${t('learned_cards').toLowerCase()}</span>
-        `;
-        distributionContainer.appendChild(deckItem);
-    });
+    if (distributionContainer) {
+        distributionContainer.innerHTML = '';
+        
+        stats.deckDistribution.forEach(deck => {
+            const deckItem = document.createElement('div');
+            deckItem.className = 'deck-item';
+            deckItem.innerHTML = `
+                <span class="deck-name">${deck.name}</span>
+                <span class="deck-cards-count">${deck.totalCards} ${t('total').toLowerCase()}, ${deck.learnedCards} ${t('learned_cards').toLowerCase()}</span>
+            `;
+            distributionContainer.appendChild(deckItem);
+        });
+    } else {
+        console.warn('deck-distribution-list element not found in DOM');
+    }
 }
 
 window.generateDailyTrainingData = async function() {
@@ -810,7 +864,18 @@ window.generateDailyTrainingData = async function() {
 
 window.createDailyChart = function(data) {
     const canvas = document.getElementById('daily-chart');
+    
+    // Проверяем существование canvas элемента
+    if (!canvas) {
+        console.warn('daily-chart canvas element not found in DOM');
+        return;
+    }
+    
     const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.warn('Failed to get 2d context from daily-chart canvas');
+        return;
+    }
     
     // Очищаем canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1463,6 +1528,17 @@ function findKeywordInPhrase(phrase) {
     
     console.log('🔍 Анализ фразы для поиска ключевого слова:', phrase);
     
+    // Сначала пытаемся извлечь слово из тегов <b>
+    const boldMatch = phrase.match(/<b>(.*?)<\/b>/);
+    if (boldMatch && boldMatch[1]) {
+        const keywordFromBold = boldMatch[1].trim();
+        console.log('✅ Ключевое слово найдено в тегах <b>:', keywordFromBold);
+        return keywordFromBold;
+    }
+    
+    // Fallback: используем старый алгоритм поиска
+    console.log('⚠️ Теги <b> не найдены, используем алгоритм поиска');
+    
     // Разбиваем фразу на слова с поддержкой Unicode
     const words = phrase.toLowerCase().split(/\s+/).map(word => 
         word.replace(/[^\p{L}]/gu, '') // Поддержка всех Unicode букв
@@ -1566,96 +1642,26 @@ function getUniversalWordStem(word) {
 
 // Универсальная функция создания фразы с пропуском (мультиязычная)
 function createPhraseWithGap(phrase, keyword) {
-    if (!phrase || !keyword) return phrase;
+    if (!phrase) return phrase;
     
     console.log('🔍 Создание пропуска для:', { phrase, keyword });
     
-    const words = phrase.split(/\s+/);
-    const keywordStem = getUniversalWordStem(keyword);
-    
-    // Ищем слово для замены по разным критериям
-    let foundWordIndex = -1;
-    let foundWord = '';
-    
-    // 1. Точное совпадение
-    for (let i = 0; i < words.length; i++) {
-        const cleanWord = words[i].replace(/[^\p{L}]/gu, '');
-        if (cleanWord.toLowerCase() === keyword.toLowerCase()) {
-            foundWordIndex = i;
-            foundWord = words[i];
-            console.log('✅ Точное совпадение найдено:', foundWord);
-            break;
-        }
-    }
-    
-    // 2. Совпадение по корню
-    if (foundWordIndex === -1 && keywordStem.length > 2) {
-        for (let i = 0; i < words.length; i++) {
-            const cleanWord = words[i].replace(/[^\p{L}]/gu, '');
-            const wordStem = getUniversalWordStem(cleanWord);
-            
-            if (wordStem === keywordStem) {
-                foundWordIndex = i;
-                foundWord = words[i];
-                console.log('✅ Совпадение по корню:', { foundWord, wordStem, keywordStem });
-                break;
-            }
-        }
-    }
-    
-    // 3. Частичное совпадение (содержит или содержится)
-    if (foundWordIndex === -1) {
-        for (let i = 0; i < words.length; i++) {
-            const cleanWord = words[i].replace(/[^\p{L}]/gu, '').toLowerCase();
-            const keywordLower = keyword.toLowerCase();
-            
-            if ((cleanWord.includes(keywordLower) && cleanWord.length > keywordLower.length) ||
-                (keywordLower.includes(cleanWord) && keywordLower.length > cleanWord.length)) {
-                foundWordIndex = i;
-                foundWord = words[i];
-                console.log('✅ Частичное совпадение:', foundWord);
-                break;
-            }
-        }
-    }
-    
-    // 4. Схожесть по Левенштейну
-    if (foundWordIndex === -1) {
-        let bestMatch = -1;
-        let bestSimilarity = 0;
-        
-        for (let i = 0; i < words.length; i++) {
-            const cleanWord = words[i].replace(/[^\p{L}]/gu, '').toLowerCase();
-            if (cleanWord.length > 2) {
-                const similarity = calculateSimilarity(cleanWord, keyword.toLowerCase());
-                if (similarity > 0.7 && similarity > bestSimilarity) {
-                    bestSimilarity = similarity;
-                    bestMatch = i;
-                }
-            }
-        }
-        
-        if (bestMatch !== -1) {
-            foundWordIndex = bestMatch;
-            foundWord = words[bestMatch];
-            console.log('✅ Схожесть по Левенштейну:', { foundWord, similarity: bestSimilarity });
-        }
-    }
-    
-    // Если нашли слово для замены
-    if (foundWordIndex !== -1) {
-        const modifiedWords = [...words];
-        modifiedWords[foundWordIndex] = '<span class="word-gap">_____</span>';
-        
-        const result = modifiedWords.join(' ');
-        console.log('✅ Создан пропуск:', result);
+    // Проверяем, есть ли теги <b> в фразе
+    if (phrase.includes('<b>') && phrase.includes('</b>')) {
+        // Заменяем содержимое тегов <b> на пропуск
+        const result = phrase.replace(/<b>(.*?)<\/b>/g, '<span class="word-gap">_____</span>');
+        console.log('✅ Создан пропуск на основе тегов <b>:', result);
         return result;
     }
     
-    // Fallback: простая замена по регулярному выражению
-    console.log('⚠️ Используем простую замену для:', keyword);
+    // Fallback: если нет тегов <b>, используем старую логику с ключевым словом
+    if (!keyword) return phrase;
+    
+    console.log('⚠️ Нет тегов <b>, используем поиск по ключевому слову:', keyword);
     const keywordRegex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
-    return phrase.replace(keywordRegex, '<span class="word-gap">_____</span>');
+    const result = phrase.replace(keywordRegex, '<span class="word-gap">_____</span>');
+    console.log('✅ Создан пропуск через регулярное выражение:', result);
+    return result;
 }
 
 // Универсальная функция проверки ответа (мультиязычная)
