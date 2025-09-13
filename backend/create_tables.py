@@ -52,9 +52,10 @@ def create_tables():
             lang_from VARCHAR,
             lang_to VARCHAR,
             cards_count INTEGER DEFAULT 0,
-            due_count INTEGER DEFAULT 0
+            due_count INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        """,
+        """
         """
         CREATE TABLE IF NOT EXISTS cards (
             id SERIAL PRIMARY KEY,
