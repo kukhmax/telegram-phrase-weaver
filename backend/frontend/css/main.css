@@ -480,7 +480,7 @@ body[data-telegram="true"] .header-name-btn,
     color: #1800ad;
     border: none;
     font-size: 36px;
-    display: none; /* Управляется JavaScript */
+    display: flex; /* Показываем кнопку по умолчанию */
     justify-content: center;
     align-items: center;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -493,6 +493,16 @@ body[data-telegram="true"] .header-name-btn,
     background: #f5eb63;
     transform: scale(1.1);
     transition: all 0.2s ease;
+}
+
+/* Скрываем FAB кнопку на всех окнах кроме главного */
+.app-container:not(.main-active) #add-deck-btn.fab {
+    display: none !important;
+}
+
+/* Показываем FAB кнопку только на главном окне */
+.app-container.main-active #add-deck-btn.fab {
+    display: flex !important;
 }
 
 .fab .tooltip {
@@ -1571,11 +1581,6 @@ body[data-telegram="true"] .header-name-btn,
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
-button, .btn {
-  background-color: #0066cc !important;  /* Пример цвета кнопок из веб */
-  border: none !important;
-  border-radius: 4px !important;
-}
 
 /* Мобильные фиксы для Telegram */
 .telegram-webapp {
