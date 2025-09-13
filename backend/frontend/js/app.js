@@ -677,13 +677,35 @@ window.showStatsModal = async function() {
         
     } catch (error) {
         console.error('Error loading statistics:', error);
+        
+        // Определяем тип ошибки для более информативного сообщения
+        let errorMessage = t('stats_load_error') || 'Error loading statistics';
+        let errorDetails = '';
+        
+        if (error.message) {
+            errorDetails = error.message;
+        } else if (error.status === 401) {
+            errorMessage = 'Authentication required';
+            errorDetails = 'Please log in again';
+        } else if (error.status === 403) {
+            errorMessage = 'Access denied';
+            errorDetails = 'You don\'t have permission to view statistics';
+        } else if (error.status === 500) {
+            errorMessage = 'Server error';
+            errorDetails = 'Please try again later';
+        } else if (!navigator.onLine) {
+            errorMessage = 'No internet connection';
+            errorDetails = 'Please check your connection';
+        }
+        
         // Показываем ошибку внутри модального окна
         const modalBody = document.querySelector('.stats-modal-body');
         modalBody.innerHTML = `
             <div style="text-align: center; padding: 40px; color: #ff4757;">
                 <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
-                <p>${t('stats_load_error') || 'Error loading statistics'}</p>
-                <button onclick="window.showStatsModal()" style="margin-top: 20px; padding: 10px 20px; background: #f4c300; border: none; border-radius: 10px; cursor: pointer;">${t('try_again')}</button>
+                <p style="font-weight: bold; margin-bottom: 10px;">${errorMessage}</p>
+                ${errorDetails ? `<p style="font-size: 14px; color: #666; margin-bottom: 20px;">${errorDetails}</p>` : ''}
+                <button onclick="window.showStatsModal()" style="margin-top: 20px; padding: 10px 20px; background: #f4c300; border: none; border-radius: 10px; cursor: pointer;">${t('try_again') || 'Try Again'}</button>
             </div>
         `;
     }
@@ -691,8 +713,12 @@ window.showStatsModal = async function() {
 
 window.getStatistics = async function() {
     try {
+        console.log('Starting statistics collection...');
+        
         // Получаем все колоды
+        console.log('Fetching decks...');
         const decks = await api.getDecks();
+        console.log('Decks received:', decks.length, 'decks');
         
         let totalCards = 0;
         let learnedCards = 0;
