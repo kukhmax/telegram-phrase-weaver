@@ -1636,16 +1636,16 @@ function createPhraseWithGap(phrase, keyword) {
     console.log('🔍 Создание пропуска для:', { phrase, keyword });
     
     const words = phrase.split(/\s+/);
-    const keywordStem = getUniversalWordStem(keyword);
+    const keywordLower = keyword.toLowerCase().trim();
     
     // Ищем слово для замены по разным критериям
     let foundWordIndex = -1;
     let foundWord = '';
     
-    // 1. Точное совпадение
+    // 1. Точное совпадение (приоритет)
     for (let i = 0; i < words.length; i++) {
-        const cleanWord = words[i].replace(/[^\p{L}]/gu, '');
-        if (cleanWord.toLowerCase() === keyword.toLowerCase()) {
+        const cleanWord = words[i].replace(/[^\p{L}]/gu, '').toLowerCase();
+        if (cleanWord === keywordLower) {
             foundWordIndex = i;
             foundWord = words[i];
             console.log('✅ Точное совпадение найдено:', foundWord);
@@ -1653,33 +1653,50 @@ function createPhraseWithGap(phrase, keyword) {
         }
     }
     
-    // 2. Совпадение по корню
-    if (foundWordIndex === -1 && keywordStem.length > 2) {
+    // 1.5. Точное совпадение с учетом регистра и знаков препинания
+    if (foundWordIndex === -1) {
         for (let i = 0; i < words.length; i++) {
-            const cleanWord = words[i].replace(/[^\p{L}]/gu, '');
-            const wordStem = getUniversalWordStem(cleanWord);
-            
-            if (wordStem === keywordStem) {
+            if (words[i].toLowerCase() === keywordLower) {
                 foundWordIndex = i;
                 foundWord = words[i];
-                console.log('✅ Совпадение по корню:', { foundWord, wordStem, keywordStem });
+                console.log('✅ Точное совпадение с препинанием найдено:', foundWord);
                 break;
             }
         }
     }
     
-    // 3. Частичное совпадение (содержит или содержится)
+    // 2. Совпадение по корню
+    if (foundWordIndex === -1) {
+        const keywordStem = getUniversalWordStem(keyword);
+        if (keywordStem.length > 2) {
+            for (let i = 0; i < words.length; i++) {
+                const cleanWord = words[i].replace(/[^\p{L}]/gu, '');
+                const wordStem = getUniversalWordStem(cleanWord);
+                
+                if (wordStem === keywordStem && wordStem.length > 2) {
+                    foundWordIndex = i;
+                    foundWord = words[i];
+                    console.log('✅ Совпадение по корню:', { foundWord, wordStem, keywordStem });
+                    break;
+                }
+            }
+        }
+    }
+    
+    // 3. Частичное совпадение (только если слова достаточно длинные)
     if (foundWordIndex === -1) {
         for (let i = 0; i < words.length; i++) {
             const cleanWord = words[i].replace(/[^\p{L}]/gu, '').toLowerCase();
-            const keywordLower = keyword.toLowerCase();
             
-            if ((cleanWord.includes(keywordLower) && cleanWord.length > keywordLower.length) ||
-                (keywordLower.includes(cleanWord) && keywordLower.length > cleanWord.length)) {
-                foundWordIndex = i;
-                foundWord = words[i];
-                console.log('✅ Частичное совпадение:', foundWord);
-                break;
+            // Проверяем только если оба слова достаточно длинные
+            if (cleanWord.length >= 4 && keywordLower.length >= 4) {
+                if ((cleanWord.includes(keywordLower) && cleanWord.length > keywordLower.length) ||
+                    (keywordLower.includes(cleanWord) && keywordLower.length > cleanWord.length)) {
+                    foundWordIndex = i;
+                    foundWord = words[i];
+                    console.log('✅ Частичное совпадение:', foundWord);
+                    break;
+                }
             }
         }
     }
