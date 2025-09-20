@@ -859,6 +859,28 @@ body {
     margin-top: 10px;
 }
 
+/* Button group for multiple buttons */
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.button-group .form-submit-btn {
+    margin-top: 0;
+    flex: 1;
+}
+
+/* Secondary button style */
+.secondary-btn {
+    background-color: var(--hint-color) !important;
+    color: white !important;
+}
+
+.secondary-btn:hover {
+    background-color: #666 !important;
+}
+
 .back-btn {
     background: none;
     border: 1px solid var(--hint-color);

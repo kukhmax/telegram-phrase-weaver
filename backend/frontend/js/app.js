@@ -1125,6 +1125,66 @@ document.addEventListener('click', (event) => {
         }
             });
         }
+
+        // Обработчик кнопки "Add phrase"
+        const addPhraseBtn = document.getElementById('add-phrase-btn');
+        if (addPhraseBtn) {
+            addPhraseBtn.addEventListener('click', async (event) => {
+                event.preventDefault();
+                
+                const phrase = document.getElementById('phrase-input').value.trim();
+                const keyword = document.getElementById('keyword-input').value.trim();
+                
+                if (!phrase || !keyword) {
+                    alert(t('fill_all_fields'));
+                    return;
+                }
+                
+                // Получаем языки из текущей колоды
+                const langFrom = document.getElementById('lang-from-display').textContent;
+                const langTo = document.getElementById('lang-to-display').textContent;
+                
+                // Извлекаем коды языков из текста (например, "🇵🇹 PT" -> "pt")
+                const langFromCode = extractLanguageCode(langFrom);
+                const langToCode = extractLanguageCode(langTo);
+                
+                try {
+                    // Показываем спиннер в кнопке Add phrase
+                    showButtonLoading(true, 'add-phrase-btn');
+                    showLoading('Добавляем фразу...');
+                    
+                    const response = await api.addPhrase({
+                        phrase: phrase,
+                        keyword: keyword,
+                        lang_code: langFromCode,
+                        target_lang: langToCode
+                    });
+                    
+                    if (response && response.phrase) {
+                        // Создаем структуру данных для отображения простой фразы
+                        const simpleData = {
+                            original_phrase: {
+                                original: response.phrase.original,
+                                translation: response.phrase.translation
+                            },
+                            additional_examples: [], // Пустой массив для простой фразы
+                            image_path: response.image_query ? `/static/assets/images/${response.image_query}.jpg` : null
+                        };
+                        
+                        displayGeneratedPhrases(simpleData, langFrom, langTo);
+                        showWindow('generated-phrases-window');
+                    } else {
+                        showError('Не удалось добавить фразу');
+                    }
+                } catch (error) {
+                    console.error('Error adding phrase:', error);
+                    showError(`Ошибка добавления фразы: ${error.message}`);
+                } finally {
+                    // Скрываем спиннер в любом случае
+                    showButtonLoading(false, 'add-phrase-btn');
+                }
+            });
+        }
     });
 
     // Обработчики для окна сгенерированных фраз
@@ -1263,18 +1323,26 @@ if (selectAllBtn) {
 // Приложение запускается через initializeApp() в DOMContentLoaded
 
 // Функция для управления спиннером в кнопке
-function showButtonLoading(show) {
-    const spinner = document.querySelector('#enrich-btn .loading-spinner');
-    const btnText = document.querySelector('#enrich-btn .btn-text');
-    const button = document.getElementById('enrich-btn');
+function showButtonLoading(show, buttonId = 'enrich-btn') {
+    const spinner = document.querySelector(`#${buttonId} .loading-spinner`);
+    const btnText = document.querySelector(`#${buttonId} .btn-text`);
+    const button = document.getElementById(buttonId);
     
     if (show) {
         spinner.classList.remove('hidden');
-        btnText.textContent = t('enriching');
+        if (buttonId === 'enrich-btn') {
+            btnText.textContent = t('enriching');
+        } else if (buttonId === 'add-phrase-btn') {
+            btnText.textContent = t('adding_phrase');
+        }
         button.disabled = true;
     } else {
         spinner.classList.add('hidden');
-        btnText.textContent = t('enrich_button');
+        if (buttonId === 'enrich-btn') {
+            btnText.textContent = t('enrich_button');
+        } else if (buttonId === 'add-phrase-btn') {
+            btnText.textContent = t('add_phrase_button');
+        }
         button.disabled = false;
     }
 }

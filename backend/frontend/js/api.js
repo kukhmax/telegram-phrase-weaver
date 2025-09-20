@@ -187,6 +187,7 @@ export const api = {
     getDeckCards: (deckId) => request(`/api/cards/deck/${deckId}`, 'GET'),
     saveCard: (cardData) => request('/api/cards/save', 'POST', cardData),
     enrichPhrase: (enrichData) => request('/api/cards/enrich', 'POST', enrichData),
+    addPhrase: (phraseData) => request('/api/cards/add-phrase', 'POST', phraseData),
     generateAudio: (audioData) => request('/api/cards/generate-audio', 'POST', audioData),
     updateCardStatus: (statusData) => request('/api/cards/update-status', 'POST', statusData),
     deleteCard: (cardId) => request(`/api/cards/delete/${cardId}`, 'DELETE'),
