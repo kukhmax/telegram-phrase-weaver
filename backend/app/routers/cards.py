@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Body
 from pydantic import BaseModel
 from typing import Optional
 from app.services.enrichment import enrich_phrase, generate_audio
+from app.services.simple_phrase_service import generate_simple_phrase_with_ai
 import logging
 import traceback
 
@@ -40,6 +41,33 @@ async def enrich(request: EnrichRequest = Body(...)):
         request.lang_code, 
         request.target_lang
     )
+
+@router.post("/add-phrase")
+async def add_phrase(request: EnrichRequest = Body(...)):
+    """
+    Роут для простого добавления фразы: POST body с данными → вызов generate_simple_phrase_with_ai.
+    Возвращает только фразу с переводом, картинку и озвучку без дополнительных примеров.
+    """
+    try:
+        result = await generate_simple_phrase_with_ai(
+            request.phrase, 
+            request.keyword, 
+            request.lang_code, 
+            request.target_lang
+        )
+        
+        if result and "error" not in result:
+            logging.info(f"Simple phrase generated successfully for '{request.phrase}'")
+            return result
+        else:
+            error_msg = result.get("error", "Unknown error") if result else "AI service returned None"
+            logging.error(f"Simple phrase generation failed: {error_msg}")
+            raise HTTPException(status_code=500, detail=f"Failed to generate simple phrase: {error_msg}")
+            
+    except Exception as e:
+        logging.error(f"Exception in add_phrase endpoint: {str(e)}")
+        logging.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @router.post("/generate-audio")
 async def generate_audio_endpoint(request: AudioRequest = Body(...)):
