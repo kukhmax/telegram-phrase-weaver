@@ -143,8 +143,8 @@ def health_check():
 # Подключаем роутеры с обработкой ошибок
 for router_name, router in routers_to_include:
     try:
-        app.include_router(router)
-        logging.info(f"✅ Роутер {router_name} подключен")
+        app.include_router(router, prefix="/api")
+        logging.info(f"✅ Роутер {router_name} подключен с префиксом /api")
     except Exception as e:
         logging.error(f"❌ Ошибка подключения роутера {router_name}: {e}")
 

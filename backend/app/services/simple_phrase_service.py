@@ -35,13 +35,26 @@ Format example:
 }}
 """
 
-async def generate_simple_phrase_with_ai(phrase: str, keyword: str, language: str, target_language: str) -> Optional[dict]:
+async def generate_simple_phrase_with_ai(phrase: str, keyword: str, language: str, target_language: str) -> dict:
     """
     Генерирует простую фразу с переводом с помощью AI.
     """
     
+    # Проверяем, если это development режим с dummy ключом
+    if settings.GOOGLE_API_KEY == "dummy_key_for_dev" or settings.ENVIRONMENT == "development":
+        logging.info(f"🔧 Development mode: returning mock data for phrase '{phrase}'")
+        return {
+            "image_query": f"{keyword} concept",
+            "phrase": {
+                "original": f"{phrase.replace(keyword, f'<b>{keyword}</b>')}",
+                "translation": f"Перевод: {phrase.replace(keyword, f'<b>{keyword}</b>')}"
+            },
+            "audio_url": None,
+            "image_url": None
+        }
+    
     # Ключ кэша: hash от phrase + keyword + "simple" для uniqueness
-    cache_key = f"ai_simple:{hashlib.md5((phrase + keyword + "simple").encode()).hexdigest()}"
+    cache_key = f"ai_simple:{hashlib.md5((phrase + keyword + 'simple').encode()).hexdigest()}"
     
     # Проверяем кэш (async get) с обработкой ошибок Redis
     try:
