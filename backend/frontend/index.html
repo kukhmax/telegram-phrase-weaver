@@ -9,7 +9,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <link rel="stylesheet" href="/static/css/main.css?v=1.9">
+    <link rel="stylesheet" href="/static/css/main.css?v=2.0">
     <!-- Скрипт для интеграции с Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -122,16 +122,16 @@
                     <div class="button-group">
                         <button type="button" class="form-submit-btn secondary-btn" id="add-phrase-btn">
                             <span class="loading-spinner hidden"></span>
-                            <span class="btn-text" data-translate="add_phrase_button">Add phrase</span>
+                            <span class="btn-text" data-translate="add_phrase_button">Добавить фразу</span>
                         </button>
                         <button type="submit" class="form-submit-btn" id="enrich-btn">
                             <span class="loading-spinner hidden"></span>
-                            <span class="btn-text" data-translate="enrich_button">Enrich</span>
+                            <span class="btn-text" data-translate="enrich_button">Обогатить</span>
                         </button>
                     </div>
                 </form>
                 <div class="cards-actions">
-                    <button id="back-from-generate-btn" class="action-btn back-btn" data-translate="back_to_main">← Back to Main</button>
+                    <button id="back-from-generate-btn" class="action-btn back-btn" data-translate="back_to_main">← Назад на главную</button>
                 </div>
             </main>
         </div>
@@ -216,7 +216,7 @@
                     
                     <!-- Фраза -->
                     <div class="phrase-container">
-                        <div id="training-phrase" class="training-phrase">Loading...</div>
+                        <div id="training-phrase" class="training-phrase">Загрузка...</div>
                         <button id="play-audio-btn" class="audio-btn" title="Прослушать">
                             🔊
                         </button>
@@ -239,7 +239,7 @@
                 <!-- Кнопки оценки (скрыты до проверки) -->
                 <div id="rating-buttons" class="rating-buttons hidden">
                     <button id="again-btn" class="rating-btn again-btn" data-translate="again">Снова</button>
-                    <button id="good-btn" class="rating-btn good-btn" data-translate="good">Хорошо</button>
+                    <!-- <button id="good-btn" class="rating-btn good-btn" data-translate="good">Хорошо</button> -->
                     <button id="easy-btn" class="rating-btn easy-btn" data-translate="easy">Легко</button>
                 </div>
                 
@@ -295,70 +295,70 @@
     <div id="stats-modal" class="modal hidden">
         <div class="modal-content stats-modal-content">
             <div class="modal-header">
-                <h2 data-translate="statistics">Statistics</h2>
+                <h2 data-translate="statistics">Статистика</h2>
                 <button id="close-stats-modal" class="close-btn">&times;</button>
             </div>
             <div class="modal-body stats-modal-body">
                 <!-- Общая статистика -->
                 <div class="stats-section">
-                    <h3 data-translate="general_stats">General Statistics</h3>
+                    <h3 data-translate="general_stats">Общая статистика</h3>
                     <div class="stats-grid">
                         <div class="stat-item">
                             <span class="stat-number" id="total-decks-stat">0</span>
-                            <span class="stat-label" data-translate="total_decks">Total Decks</span>
+                            <span class="stat-label" data-translate="total_decks">Колоды</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-number" id="total-cards-stat">0</span>
-                            <span class="stat-label" data-translate="total_cards">Total Cards</span>
+                            <span class="stat-label" data-translate="total_cards">Карточки</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-number" id="learned-cards-stat">0</span>
-                            <span class="stat-label" data-translate="learned_cards">Learned Cards</span>
+                            <span class="stat-label" data-translate="learned_cards">Изученные карточки</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-number" id="repeat-cards-stat">0</span>
-                            <span class="stat-label" data-translate="cards_for_repeat">Cards for Repeat</span>
+                            <span class="stat-label" data-translate="cards_for_repeat">Карточки для повторения</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Статистика повторений -->
                 <div class="stats-section">
-                    <h3 data-translate="repeat_stats">Repeat Statistics</h3>
+                    <h3 data-translate="repeat_stats">Статистика повторений</h3>
                     <div class="repeat-stats-grid">
                         <div class="repeat-stat-item">
                             <span class="repeat-stat-number" id="again-cards-stat">0</span>
-                            <span class="repeat-stat-label" data-translate="again_cards">Again</span>
+                            <span class="repeat-stat-label" data-translate="again_cards">Снова</span>
                         </div>
                         <div class="repeat-stat-item">
                             <span class="repeat-stat-number" id="good-cards-stat">0</span>
-                            <span class="repeat-stat-label" data-translate="good_cards">Good</span>
+                            <span class="repeat-stat-label" data-translate="good_cards">Хорошо</span>
                         </div>
                         <div class="repeat-stat-item">
                             <span class="repeat-stat-number" id="easy-cards-stat">0</span>
-                            <span class="repeat-stat-label" data-translate="easy_cards">Easy</span>
+                            <span class="repeat-stat-label" data-translate="easy_cards">Легко</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Распределение по колодам -->
                 <div class="stats-section">
-                    <h3 data-translate="deck_distribution">Deck Distribution</h3>
+                    <h3 data-translate="deck_distribution">Распределение по колодам</h3>
                     <div id="deck-distribution-list" class="deck-distribution">
                         <!-- Динамически заполняется -->
                     </div>
                 </div>
 
                 <!-- График ежедневной тренировки -->
-                <div class="stats-section">
+                <!-- <div class="stats-section">
                     <h3 data-translate="daily_training">Daily Training</h3>
                     <div id="daily-chart-container" class="chart-container">
                         <canvas id="daily-chart" width="400" height="200"></canvas>
                     </div>
-                </div>
+                </div> -->
             </div>
             <div class="modal-footer">
-                <button id="close-stats-btn" class="action-btn" data-translate="close">Close</button>
+                <button id="close-stats-btn" class="action-btn" data-translate="close">Закрыть</button>
             </div>
         </div>
     </div>
@@ -369,7 +369,7 @@
             <div class="deck-info">
                 <div class="deck-leng-stat">
                     <div class="deck-langs"><span class="lang-from"></span> → <span class="lang-to"></span></div>
-                    <div class="deck-stats"><span data-translate="total">Total</span>: <span class="cards-total">0</span> | <span data-translate="repeat">Repeat</span>: <span class="cards-repeat">0</span></div>
+                    <div class="deck-stats"><span data-translate="total">Всего</span>: <span class="cards-total">0</span> | <span data-translate="repeat">Повторить</span>: <span class="cards-repeat">0</span></div>
                 </div>
                 
                 <h3 class="deck-name">Название колоды</h3>
@@ -377,18 +377,18 @@
                 
             </div>
             <div class="deck-actions">
-                <button class="action-btn cards-btn" data-translate="cards">Cards</button>
-                <button class="action-btn add-cards-btn" data-translate="add_cards">Add Cards</button>
+                <button class="action-btn cards-btn" data-translate="cards">Карточки</button>
+                <button class="action-btn add-cards-btn" data-translate="add_cards">Добавить карточки</button>
             </div>
             <div class="deck-actions">
-                <button class="action-btn train-btn" data-translate="training">Training</button>
-                <button class="action-btn delete-btn" data-translate="delete">Delete</button>
+                <button class="action-btn train-btn" data-translate="training">Тренировка</button>
+                <button class="action-btn delete-btn" data-translate="delete">Удалить</button>
             </div>
         </div>
     </template>
     
     <!-- Подключаем скрипты (было config.js, но мы его удалим позже) -->
-    <script src="/static/js/app.js?v=2.7" type="module" defer></script>
+    <script src="/static/js/app.js?v=2.8" type="module" defer></script>
 </body>
 </html>
 
