@@ -7,6 +7,8 @@ import google.generativeai as genai
 
 from .utils import redis_client
 from ..core.config import get_settings
+from .image_finder import find_image_via_api
+from .enrichment import download_and_save_image, get_translation
 
 settings = get_settings()
 
@@ -23,6 +25,8 @@ Please:
 1. Create an English search query (1-2 words) for finding an image that best visually represents the keyword "{keyword}". Call this field "image_query".
 2. Take the original phrase "{phrase}" and provide its accurate translation to {target_language}. In the original phrase, wrap the keyword "{keyword}" (in any of its forms) with HTML tags <b> and </b>.
 3. In the translation, also wrap the translated keyword with HTML tags <b> and </b>.
+
+IMPORTANT: The translation MUST be in {target_language} language. Do not translate to any other language.
 
 Return ONLY a valid JSON object without any other words or formatting.
 Format example:
@@ -140,6 +144,35 @@ async def generate_simple_phrase_with_ai(phrase: str, keyword: str, language: st
             logging.warning(f"⚠️ Отсутствуют поля в JSON: {missing_fields}")
         else:
             logging.info(f"✅ Все обязательные поля присутствуют в JSON")
+        
+        # ДОБАВЛЯЕМ ОБРАБОТКУ ИЗОБРАЖЕНИЙ
+        image_query = data.get("image_query", keyword)
+        image_path = None
+        
+        if image_query:
+            logging.info(f"🖼️ Начинаем поиск изображения для запроса: '{image_query}'")
+            
+            # Переводим image_query на английский если нужно
+            english_image_query = image_query
+            if language != 'en':
+                translated_query = await get_translation(image_query, from_lang=language, to_lang='en')
+                if translated_query:
+                    english_image_query = translated_query
+                    logging.info(f"🌐 Переведен запрос изображения: '{image_query}' -> '{english_image_query}'")
+            
+            # Ищем изображение через API
+            image_url = await find_image_via_api(english_image_query)
+            if image_url:
+                logging.info(f"🔍 Найден URL изображения: {image_url}")
+                # Скачиваем и сохраняем изображение
+                image_path = await download_and_save_image(image_url, english_image_query)
+                if image_path:
+                    logging.info(f"💾 Изображение сохранено: {image_path}")
+                    data['image_path'] = image_path
+                else:
+                    logging.warning(f"⚠️ Не удалось сохранить изображение")
+            else:
+                logging.warning(f"⚠️ Не удалось найти изображение для '{english_image_query}'")
         
         # Сохраняем в кэш (async set, TTL 7 дней = 604800 сек)
         try:
