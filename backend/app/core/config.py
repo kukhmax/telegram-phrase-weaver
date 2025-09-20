@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     PEXELS_API_KEY: str
     SECRET_KEY: str
     API_BASE_URL: str
+    ENVIRONMENT: str = "development"  # Добавляем отсутствующий атрибут
 
     class Config:
         env_file = "../.env"  # Путь к .env файлу в корневой директории проекта
