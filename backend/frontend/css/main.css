@@ -236,12 +236,12 @@ body {
 }
 
 .form-submit-btn .loading-spinner {
-    display: inline !important;
     font-size: 14px !important;
+    display: none !important;
 }
 
-.form-submit-btn.hidden .loading-spinner {
-    display: none !important;
+.form-submit-btn .loading-spinner:not(.hidden) {
+    display: inline !important;
 }
 
 #add-phrase-btn {

@@ -1267,6 +1267,9 @@ document.addEventListener('click', (event) => {
         } catch (error) {
             console.error('Error saving cards:', error);
             showError(`Ошибка сохранения: ${error.message}`);
+        } finally {
+            // Скрываем индикатор загрузки
+            document.getElementById('loading-overlay').classList.add('hidden');
         }
             });
         }
