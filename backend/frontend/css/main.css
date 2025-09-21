@@ -245,12 +245,12 @@ body {
 }
 
 #add-phrase-btn {
-    background: var(--tg-theme-secondary-bg-color, #6c757d) !important;
+    background: var(--tg-theme-secondary-bg-color, #1117c7) !important;
     color: var(--tg-theme-text-color, white) !important;
 }
 
 #add-phrase-btn:hover {
-    background: var(--tg-theme-secondary-bg-color, #5a6268) !important;
+    background: var(--tg-theme-secondary-bg-color, #b0b3b6) !important;
     opacity: 0.9 !important;
 }
 
@@ -1630,6 +1630,24 @@ body {
 .telegram-webapp {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Стили для активного состояния кнопок при touch */
+.touch-active {
+    transform: scale(0.95) !important;
+    opacity: 0.8 !important;
+    transition: all 0.1s ease !important;
+}
+
+/* Улучшенная поддержка touch для кнопок в Telegram WebApp */
+.telegram-webapp button,
+.telegram-webapp .btn,
+.telegram-webapp .form-submit-btn {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    touch-action: manipulation !important;
 }
 
 #telegram-webapp {

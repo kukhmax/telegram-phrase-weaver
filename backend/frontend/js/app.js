@@ -1079,7 +1079,8 @@ document.addEventListener('click', (event) => {
         // Обработчик формы генерации фраз
         const generateForm = document.getElementById('generate-cards-form');
         if (generateForm) {
-            generateForm.addEventListener('submit', async (event) => {
+            // Добавляем обработчики для мобильных устройств и Telegram WebApp
+            const handleSubmit = async (event) => {
         event.preventDefault();
         
         const phrase = document.getElementById('phrase-input').value.trim();
@@ -1123,13 +1124,25 @@ document.addEventListener('click', (event) => {
             // Скрываем спиннер в любом случае
             showButtonLoading(false);
         }
-            });
+            };
+            
+            generateForm.addEventListener('submit', handleSubmit);
+            
+            // Дополнительный обработчик для кнопки Enrich (для мобильных устройств)
+            const enrichBtn = document.getElementById('enrich-btn');
+            if (enrichBtn) {
+                enrichBtn.addEventListener('click', handleSubmit);
+                enrichBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleSubmit(e);
+                });
+            }
         }
 
         // Обработчик кнопки "Add phrase"
         const addPhraseBtn = document.getElementById('add-phrase-btn');
         if (addPhraseBtn) {
-            addPhraseBtn.addEventListener('click', async (event) => {
+            const handleAddPhrase = async (event) => {
                 event.preventDefault();
                 
                 const phrase = document.getElementById('phrase-input').value.trim();
@@ -1183,6 +1196,12 @@ document.addEventListener('click', (event) => {
                     // Скрываем спиннер в любом случае
                     showButtonLoading(false, 'add-phrase-btn');
                 }
+            };
+            
+            addPhraseBtn.addEventListener('click', handleAddPhrase);
+            addPhraseBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                handleAddPhrase(e);
             });
         }
     });
@@ -2236,6 +2255,30 @@ function initTelegram() {
       document.documentElement.style.setProperty('--tg-theme-text-color', '#1800ad');
       document.documentElement.style.setProperty('--tg-theme-button-color', '#f4c300');
       document.documentElement.style.setProperty('--tg-theme-button-text-color', '#1800ad');
+      
+      // Добавляем обработчики touch событий для всех кнопок в Telegram WebApp
+      document.addEventListener('DOMContentLoaded', () => {
+        const buttons = document.querySelectorAll('button, .btn, .form-submit-btn');
+        buttons.forEach(button => {
+          // Добавляем поддержку touch событий
+          button.addEventListener('touchstart', (e) => {
+            button.classList.add('touch-active');
+          });
+          
+          button.addEventListener('touchend', (e) => {
+            button.classList.remove('touch-active');
+            // Имитируем клик для кнопок, которые могут не реагировать на touch
+            if (!button.disabled) {
+              const clickEvent = new Event('click', { bubbles: true });
+              button.dispatchEvent(clickEvent);
+            }
+          });
+          
+          button.addEventListener('touchcancel', (e) => {
+            button.classList.remove('touch-active');
+          });
+        });
+      });
     }
   }
 }
