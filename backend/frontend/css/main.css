@@ -485,8 +485,53 @@ body {
     display: inline-block;
 }
 .add-cards-btn {
-    background-color: #28a745;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
     color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 44px;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1000;
+    pointer-events: auto !important;
+    -webkit-tap-highlight-color: rgba(76, 175, 80, 0.3);
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.add-cards-btn:hover {
+    background: linear-gradient(135deg, #45a049, #3d8b40);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.add-cards-btn:active {
+    transform: translateY(0);
+    background: linear-gradient(135deg, #3d8b40, #357a38);
+    box-shadow: 0 2px 6px rgba(76, 175, 80, 0.4);
+}
+
+/* Специальные стили для Telegram WebApp */
+.tg-viewport .add-cards-btn {
+    -webkit-tap-highlight-color: rgba(76, 175, 80, 0.5);
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.add-cards-btn:focus {
+    outline: 2px solid #4CAF50;
+    outline-offset: 2px;
 }
 .cards-btn {
     background-color: #f4c300;

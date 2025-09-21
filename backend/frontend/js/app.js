@@ -1014,21 +1014,41 @@ document.addEventListener('click', (event) => {
         }
     });
 
-    // Обработчик кнопки "Добавить карточки"
+    // Обработчик кнопки "Добавить карточки" с улучшенной поддержкой Telegram
     document.addEventListener('click', async (event) => {
         if (event.target.classList.contains('add-cards-btn')) {
+            console.log('🎯 Add cards button clicked:', event.target);
             event.preventDefault();
+            event.stopPropagation();
             
             const deckCard = event.target.closest('.deck-card');
+            if (!deckCard) {
+                console.error('❌ Deck card not found');
+                return;
+            }
+            
             const deckId = parseInt(deckCard.dataset.deckId);
+            console.log('📦 Deck ID:', deckId);
+            
+            if (!deckId || isNaN(deckId)) {
+                console.error('❌ Invalid deck ID:', deckId);
+                return;
+            }
             
             // Переходим к генерации карточек для этой колоды
             currentDeckId = deckId;
             
             // Получаем информацию о колоде для отображения языков
-            const deckName = deckCard.querySelector('.deck-name').textContent;
-            const langFromText = deckCard.querySelector('.lang-from').textContent;
-            const langToText = deckCard.querySelector('.lang-to').textContent;
+            const deckName = deckCard.querySelector('.deck-name')?.textContent;
+            const langFromText = deckCard.querySelector('.lang-from')?.textContent;
+            const langToText = deckCard.querySelector('.lang-to')?.textContent;
+            
+            console.log('🏷️ Deck info:', { deckName, langFromText, langToText });
+            
+            if (!langFromText || !langToText) {
+                console.error('❌ Language information not found');
+                return;
+            }
             
             // Извлекаем коды языков
             const langFromCode = extractLanguageCode(langFromText).toUpperCase();
@@ -1039,10 +1059,37 @@ document.addEventListener('click', (event) => {
             const langToFlag = getLanguageFlag(langToCode.toLowerCase());
             
             // Обновляем отображение языков в окне генерации
-            document.getElementById('lang-from-display').textContent = `${langFromFlag}${langFromCode}`;
-            document.getElementById('lang-to-display').textContent = `${langToFlag}${langToCode}`;
+            const langFromDisplay = document.getElementById('lang-from-display');
+            const langToDisplay = document.getElementById('lang-to-display');
             
+            if (langFromDisplay && langToDisplay) {
+                langFromDisplay.textContent = `${langFromFlag}${langFromCode}`;
+                langToDisplay.textContent = `${langToFlag}${langToCode}`;
+                console.log('🌐 Language display updated');
+            } else {
+                console.error('❌ Language display elements not found');
+            }
+            
+            console.log('🚀 Showing generate cards window');
             showWindow('generate-cards-window');
+        }
+    });
+
+    // Дополнительный обработчик для touch-событий на кнопке "Добавить карточки"
+    document.addEventListener('touchend', async (event) => {
+        if (event.target.classList.contains('add-cards-btn')) {
+            console.log('👆 Add cards button touched');
+            event.preventDefault();
+            
+            // Имитируем клик
+            setTimeout(() => {
+                const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window
+                });
+                event.target.dispatchEvent(clickEvent);
+            }, 50);
         }
     });
 
