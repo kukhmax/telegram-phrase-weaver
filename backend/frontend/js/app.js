@@ -1191,9 +1191,14 @@ document.addEventListener('click', (event) => {
         if (addPhraseBtn) {
             const handleAddPhrase = async (event) => {
                 event.preventDefault();
+                event.stopPropagation();
+                
+                console.log('Add phrase button clicked - Telegram WebApp:', window.Telegram?.WebApp?.platform);
                 
                 const phrase = document.getElementById('phrase-input').value.trim();
                 const keyword = document.getElementById('keyword-input').value.trim();
+                
+                console.log('Phrase:', phrase, 'Keyword:', keyword);
                 
                 if (!phrase || !keyword) {
                     alert(t('fill_all_fields'));
@@ -1208,17 +1213,22 @@ document.addEventListener('click', (event) => {
                 const langFromCode = extractLanguageCode(langFrom);
                 const langToCode = extractLanguageCode(langTo);
                 
+                console.log('Languages:', langFromCode, '->', langToCode);
+                
                 try {
                     // Показываем спиннер в кнопке Add phrase
                     showButtonLoading(true, 'add-phrase-btn');
                     showLoading('Добавляем фразу...');
                     
+                    console.log('Calling API addPhrase...');
                     const response = await api.addPhrase({
                         phrase: phrase,
                         keyword: keyword,
                         lang_code: langFromCode,
                         target_lang: langToCode
                     });
+                    
+                    console.log('API response:', response);
                     
                     if (response && response.phrase) {
                         // Создаем структуру данных для отображения простой фразы
@@ -1231,9 +1241,11 @@ document.addEventListener('click', (event) => {
                             image_path: response.image_path || null
                         };
                         
+                        console.log('Displaying generated phrases...');
                         displayGeneratedPhrases(simpleData, langFrom, langTo);
                         showWindow('generated-phrases-window');
                     } else {
+                        console.error('Invalid response:', response);
                         showError('Не удалось добавить фразу');
                     }
                 } catch (error) {
@@ -1245,11 +1257,37 @@ document.addEventListener('click', (event) => {
                 }
             };
             
-            addPhraseBtn.addEventListener('click', handleAddPhrase);
-            addPhraseBtn.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                handleAddPhrase(e);
-            });
+            // Специальная обработка для Telegram WebApp
+            if (window.Telegram && window.Telegram.WebApp) {
+                console.log('Setting up Telegram WebApp handlers for add-phrase-btn');
+                
+                // Для мобильного Telegram используем touchstart вместо click
+                addPhraseBtn.addEventListener('touchstart', (e) => {
+                    console.log('Add phrase touchstart event');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Добавляем небольшую задержку для визуального feedback
+                    addPhraseBtn.style.opacity = '0.7';
+                    setTimeout(() => {
+                        addPhraseBtn.style.opacity = '1';
+                        handleAddPhrase(e);
+                    }, 100);
+                }, { passive: false });
+                
+                // Также оставляем обычный click для совместимости
+                addPhraseBtn.addEventListener('click', (e) => {
+                    console.log('Add phrase click event');
+                    handleAddPhrase(e);
+                });
+            } else {
+                // Обычная обработка для веб-браузера
+                addPhraseBtn.addEventListener('click', handleAddPhrase);
+                addPhraseBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleAddPhrase(e);
+                });
+            }
         }
     });
 
