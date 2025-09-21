@@ -1328,6 +1328,11 @@ function showButtonLoading(show, buttonId = 'enrich-btn') {
     const btnText = document.querySelector(`#${buttonId} .btn-text`);
     const button = document.getElementById(buttonId);
     
+    if (!spinner || !btnText || !button) {
+        console.warn(`Button elements not found for ${buttonId}`);
+        return;
+    }
+    
     if (show) {
         spinner.classList.remove('hidden');
         if (buttonId === 'enrich-btn') {
@@ -1336,6 +1341,7 @@ function showButtonLoading(show, buttonId = 'enrich-btn') {
             btnText.textContent = t('adding_phrase');
         }
         button.disabled = true;
+        button.style.opacity = '0.7';
     } else {
         spinner.classList.add('hidden');
         if (buttonId === 'enrich-btn') {
@@ -1344,6 +1350,7 @@ function showButtonLoading(show, buttonId = 'enrich-btn') {
             btnText.textContent = t('add_phrase_button');
         }
         button.disabled = false;
+        button.style.opacity = '1';
     }
 }
 

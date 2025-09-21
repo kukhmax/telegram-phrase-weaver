@@ -207,6 +207,63 @@ body {
     max-height: 8px !important;
 }
 
+.form-submit-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    min-height: 44px !important;
+    padding: 12px 20px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.form-submit-btn .btn-text {
+    display: inline !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-size: inherit !important;
+    color: inherit !important;
+}
+
+.form-submit-btn .loading-spinner {
+    display: inline !important;
+    font-size: 14px !important;
+}
+
+.form-submit-btn.hidden .loading-spinner {
+    display: none !important;
+}
+
+#add-phrase-btn {
+    background: var(--tg-theme-secondary-bg-color, #6c757d) !important;
+    color: var(--tg-theme-text-color, white) !important;
+}
+
+#add-phrase-btn:hover {
+    background: var(--tg-theme-secondary-bg-color, #5a6268) !important;
+    opacity: 0.9 !important;
+}
+
+#enrich-btn {
+    background: var(--tg-theme-button-color, #007bff) !important;
+    color: var(--tg-theme-button-text-color, white) !important;
+}
+
+#enrich-btn:hover {
+    background: var(--tg-theme-button-color, #0056b3) !important;
+    opacity: 0.9 !important;
+}
+
 /* Дополнительные стили для мобильных устройств */
 @media screen and (max-device-width: 480px) {
     .header-btn {
