@@ -1168,7 +1168,7 @@ document.addEventListener('click', (event) => {
                                 translation: response.phrase.translation
                             },
                             additional_examples: [], // Пустой массив для простой фразы
-                            image_path: response.image_query ? `/static/assets/images/${response.image_query}.jpg` : null
+                            image_path: response.image_path || null
                         };
                         
                         displayGeneratedPhrases(simpleData, langFrom, langTo);

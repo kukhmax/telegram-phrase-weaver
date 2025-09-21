@@ -7,6 +7,8 @@ import google.generativeai as genai
 
 from .utils import redis_client
 from ..core.config import get_settings
+from .image_finder import find_image_via_api
+from .enrichment import download_and_save_image
 
 settings = get_settings()
 
@@ -50,7 +52,8 @@ async def generate_simple_phrase_with_ai(phrase: str, keyword: str, language: st
                 "translation": f"Перевод: {phrase.replace(keyword, f'<b>{keyword}</b>')}"
             },
             "audio_url": None,
-            "image_url": None
+            "image_url": None,
+            "image_path": None
         }
     
     # Ключ кэша: hash от phrase + keyword + "simple" для uniqueness
@@ -148,6 +151,26 @@ async def generate_simple_phrase_with_ai(phrase: str, keyword: str, language: st
                 logging.info(f"💾 Данные для простой фразы '{phrase}' сохранены в кэш")
         except Exception as cache_error:
             logging.warning(f"⚠️ Не удалось сохранить в кэш: {cache_error}")
+        
+        # Добавляем обработку изображения
+        image_path = None
+        if 'image_query' in data and data['image_query']:
+            try:
+                logging.info(f"🖼️ Поиск изображения для запроса: '{data['image_query']}'")
+                image_url = await find_image_via_api(data['image_query'])
+                if image_url:
+                    image_path = await download_and_save_image(image_url, data['image_query'])
+                    if image_path:
+                        logging.info(f"✅ Изображение успешно сохранено: {image_path}")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить изображение для '{data['image_query']}'")
+                else:
+                    logging.warning(f"⚠️ Изображение не найдено для запроса '{data['image_query']}'")
+            except Exception as img_error:
+                logging.error(f"❌ Ошибка при обработке изображения: {img_error}")
+        
+        # Добавляем путь к изображению в результат
+        data['image_path'] = image_path
         
         return data
     except Exception as e:
