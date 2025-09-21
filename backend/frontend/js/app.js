@@ -2257,27 +2257,90 @@ function initTelegram() {
       document.documentElement.style.setProperty('--tg-theme-button-text-color', '#1800ad');
       
       // Добавляем обработчики touch событий для всех кнопок в Telegram WebApp
-      document.addEventListener('DOMContentLoaded', () => {
+      const setupTouchHandlers = () => {
         const buttons = document.querySelectorAll('button, .btn, .form-submit-btn');
-        buttons.forEach(button => {
+        console.log(`🔘 Найдено ${buttons.length} кнопок для обработки touch-событий`);
+        
+        buttons.forEach((button, index) => {
+          // Проверяем, не настроены ли уже обработчики
+          if (button.dataset.touchHandlersSet) {
+            return;
+          }
+          button.dataset.touchHandlersSet = 'true';
+          
+          console.log(`🔘 Настройка кнопки ${index + 1}: ${button.id || button.className}`);
+          
+          let touchStartTime = 0;
+          let touchStarted = false;
+          
           // Добавляем поддержку touch событий
           button.addEventListener('touchstart', (e) => {
+            console.log('👆 touchstart на кнопке:', button.id || button.className);
+            touchStartTime = Date.now();
+            touchStarted = true;
             button.classList.add('touch-active');
-          });
+          }, { passive: true });
           
           button.addEventListener('touchend', (e) => {
+            console.log('👆 touchend на кнопке:', button.id || button.className);
+            
+            if (!touchStarted) return;
+            
+            const touchDuration = Date.now() - touchStartTime;
+            console.log('⏱️ Touch duration:', touchDuration + 'ms');
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
             button.classList.remove('touch-active');
+            touchStarted = false;
+            
             // Имитируем клик для кнопок, которые могут не реагировать на touch
-            if (!button.disabled) {
-              const clickEvent = new Event('click', { bubbles: true });
-              button.dispatchEvent(clickEvent);
+            if (!button.disabled && touchDuration < 1000) {
+              setTimeout(() => {
+                console.log('🖱️ Имитация клика на кнопке:', button.id || button.className);
+                
+                // Создаем и диспатчим событие клика
+                const clickEvent = new MouseEvent('click', {
+                  bubbles: true,
+                  cancelable: true,
+                  view: window
+                });
+                
+                button.dispatchEvent(clickEvent);
+              }, 100);
             }
           });
           
           button.addEventListener('touchcancel', (e) => {
+            console.log('❌ touchcancel на кнопке:', button.id || button.className);
             button.classList.remove('touch-active');
+            touchStarted = false;
+          });
+          
+          // Дополнительный обработчик для отладки кликов
+          button.addEventListener('click', (e) => {
+            console.log('🖱️ Click event на кнопке:', button.id || button.className);
+            console.log('🖱️ Event details:', {
+              isTrusted: e.isTrusted,
+              type: e.type,
+              target: e.target.id || e.target.className
+            });
           });
         });
+      };
+      
+      // Настраиваем обработчики сразу и при изменении DOM
+      document.addEventListener('DOMContentLoaded', setupTouchHandlers);
+      
+      // Наблюдатель за изменениями DOM для новых кнопок
+      const observer = new MutationObserver(() => {
+        setupTouchHandlers();
+      });
+      
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
       });
     }
   }

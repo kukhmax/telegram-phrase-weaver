@@ -246,7 +246,7 @@ body {
 
 #add-phrase-btn {
     background: var(--tg-theme-secondary-bg-color, #1117c7) !important;
-    color: var(--tg-theme-text-color, white) !important;
+    color: white !important;
 }
 
 #add-phrase-btn:hover {
@@ -1648,6 +1648,27 @@ body {
     -webkit-user-select: none !important;
     user-select: none !important;
     touch-action: manipulation !important;
+    cursor: pointer !important;
+}
+
+/* Специальные стили для кнопок Enrich и Add phrase в Telegram */
+.telegram-webapp #enrich-btn,
+.telegram-webapp #add-phrase-btn {
+    position: relative !important;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+    -webkit-tap-highlight-color: rgba(244, 195, 0, 0.3) !important;
+}
+
+/* Убираем возможные конфликты с другими элементами */
+.telegram-webapp .form-container {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.telegram-webapp .form-submit-btn {
+    min-height: 44px !important; /* Минимальная высота для touch targets */
+    min-width: 44px !important;
 }
 
 #telegram-webapp {
