@@ -41,7 +41,7 @@ const translations = {
         keyword_label: 'Ключевое слово:',
         keyword_placeholder: 'Введите ключевое слово',
         enrich_button: 'Обогатить',
-        add_phrase_button: 'Add phrase',
+        add_phrase_button: 'Добавить карточку',
         enriching: 'Обогащаем...',
         adding_phrase: 'Добавляем...',
         phrases_for_training: 'Фразы для тренировки',
