@@ -4,6 +4,124 @@ import { DOMElements, showWindow, renderDecks, showLoading, showError } from '/s
 import { t, setLanguage, getCurrentLanguage, updateInterface, initializeI18n } from '/static/js/i18n.js';
 // CSS подключен в HTML, не нужно импортировать здесь
 
+// ===== ФУНКЦИИ УПРАВЛЕНИЯ КЕШЕМ ДЛЯ TELEGRAM =====
+
+/**
+ * Установка мета-тегов для предотвращения кеширования
+ */
+function setupNoCacheHeaders() {
+    // Добавляем мета-теги для предотвращения кеширования
+    const metaTags = [
+        { name: 'cache-control', content: 'no-cache, no-store, must-revalidate' },
+        { name: 'pragma', content: 'no-cache' },
+        { name: 'expires', content: '0' }
+    ];
+    
+    metaTags.forEach(tag => {
+        const meta = document.createElement('meta');
+        meta.httpEquiv = tag.name;
+        meta.content = tag.content;
+        document.head.appendChild(meta);
+    });
+    
+    console.log('[Cache] No-cache headers установлены');
+}
+
+/**
+ * Перезагрузка приложения с обновлением кеша
+ */
+window.reloadApp = function() {
+    console.log('[Cache] Начинаем перезагрузку приложения с очисткой кеша...');
+    
+    // Очищаем кеш браузера для текущей страницы
+    if ('caches' in window) {
+        caches.keys().then(function(cacheNames) {
+            return Promise.all(
+                cacheNames.map(function(cacheName) {
+                    return caches.delete(cacheName);
+                })
+            );
+        }).then(() => {
+            console.log('[Cache] Браузерный кеш очищен');
+        });
+    }
+    
+    // Перезагружаем страницу с принудительным обновлением
+    setTimeout(() => {
+        window.location.reload(true);
+    }, 1000);
+};
+
+/**
+ * Очистка локального кеша
+ */
+window.clearCache = function() {
+    try {
+        console.log('[Cache] Начинаем очистку локального кеша...');
+        
+        // Очищаем localStorage (сохраняем только важные данные)
+        const keysToKeep = ['tg_theme', 'user_language', 'auth_token'];
+        const allKeys = Object.keys(localStorage);
+        
+        allKeys.forEach(key => {
+            if (!keysToKeep.includes(key)) {
+                localStorage.removeItem(key);
+            }
+        });
+        
+        // Очищаем sessionStorage
+        sessionStorage.clear();
+        
+        // Очищаем куки
+        document.cookie.split(";").forEach(function(c) {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+        
+        console.log('[Cache] Локальный кеш успешно очищен');
+        
+        // Показываем уведомление пользователю
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.showAlert('Кеш успешно очищен!');
+        } else {
+            alert('Кеш успешно очищен!');
+        }
+        
+    } catch (error) {
+        console.error('[Cache] Ошибка при очистке кеша:', error);
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.showAlert('Ошибка при очистке кеша');
+        } else {
+            alert('Ошибка при очистке кеша');
+        }
+    }
+};
+
+/**
+ * Проверка и обновление кеша при загрузке
+ */
+function checkCacheOnLoad() {
+    // Проверяем, работаем ли мы в Telegram WebApp
+    if (window.Telegram && window.Telegram.WebApp) {
+        console.log('[Cache] Telegram WebApp обнаружен, применяем настройки кеша');
+        
+        // Устанавливаем обработчик для события видимости страницы
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                console.log('[Cache] Страница стала видимой, проверяем обновления');
+                // Можно добавить дополнительную логику проверки обновлений
+            }
+        });
+        
+        // Обработчик перед закрытием приложения
+        window.addEventListener('beforeunload', () => {
+            console.log('[Cache] Приложение закрывается, сохраняем состояние');
+        });
+    }
+}
+
+// Вызываем установку no-cache headers сразу
+setupNoCacheHeaders();
+
 // Глобальные переменные для хранения данных
 let currentGeneratedData = null;
 let selectedPhrases = new Set();
@@ -2207,6 +2325,19 @@ document.getElementById('save-settings-btn').addEventListener('click', () => {
     modal.classList.add('hidden');
 });
 
+// Обработчики для кнопок управления кешем
+document.getElementById('clear-cache-btn').addEventListener('click', () => {
+    if (confirm('Вы уверены, что хотите очистить кеш? Это может помочь решить проблемы с отображением.')) {
+        clearCache();
+    }
+});
+
+document.getElementById('reload-app-btn').addEventListener('click', () => {
+    if (confirm('Перезагрузить приложение? Все несохраненные данные будут потеряны.')) {
+        reloadApp();
+    }
+});
+
 // Закрытие модального окна при клике вне его
 document.getElementById('settings-modal').addEventListener('click', (e) => {
     if (e.target.id === 'settings-modal') {
@@ -2428,6 +2559,9 @@ function initTelegram() {
         subtree: true
       });
     }
+    
+    // Инициализируем проверку кеша для Telegram
+    checkCacheOnLoad();
   }
 }
 
