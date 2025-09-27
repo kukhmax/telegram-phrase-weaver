@@ -76,7 +76,7 @@ async def generate_simple_phrase_with_ai(phrase: str, keyword: str, language: st
             return {"error": "AI сервис недоступен: не настроен API ключ"}
         
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash-lite')
         logging.info(f"Google AI модель успешно настроена для простой фразы '{phrase}'")
     except AttributeError:
         logging.error("КРИТИЧЕСКАЯ ОШИБКА: Ключ GOOGLE_API_KEY не найден в настройках!")
