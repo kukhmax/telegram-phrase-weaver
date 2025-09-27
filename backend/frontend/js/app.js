@@ -799,14 +799,40 @@ window.showStatsModal = async function() {
         // Восстанавливаем оригинальное содержимое
         modalBody.innerHTML = originalContent;
         
-        // Ждем следующий кадр анимации, чтобы DOM успел обновиться
-        requestAnimationFrame(() => {
-            // Отображаем статистику
-            displayStatistics(stats);
+        // Функция для проверки готовности DOM элементов
+        const waitForElements = () => {
+            const requiredElements = [
+                'deck-distribution-list',
+                'total-decks-stat',
+                'total-cards-stat',
+                'learned-cards-stat',
+                'repeat-cards-stat',
+                'again-cards-stat',
+                'good-cards-stat',
+                'easy-cards-stat'
+            ];
             
-            // Создаем график
-            createDailyChart(stats.dailyTraining);
-        });
+            const allElementsExist = requiredElements.every(id => {
+                const element = document.getElementById(id);
+                const exists = element !== null;
+                if (!exists) {
+                    console.log(`Element ${id} not found yet`);
+                }
+                return exists;
+            });
+            
+            if (allElementsExist) {
+                console.log('All required elements found, displaying statistics');
+                displayStatistics(stats);
+                createDailyChart(stats.dailyTraining);
+            } else {
+                console.log('Some elements not ready, retrying in 50ms');
+                setTimeout(waitForElements, 50);
+            }
+        };
+        
+        // Начинаем проверку элементов
+        waitForElements();
         
     } catch (error) {
         console.error('Error loading statistics:', error);
