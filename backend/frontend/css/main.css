@@ -645,7 +645,7 @@ body {
 }
 
 .stats-section {
-    margin-bottom: 30px;
+    margin-bottom: 5px;
 }
 
 .stats-section h3 {
@@ -688,7 +688,7 @@ body {
 
 .repeat-stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
 }
 
@@ -886,7 +886,7 @@ body {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    padding: 20px;
+    padding: 5px;
     border-top: 1px solid #eee;
 }
 
