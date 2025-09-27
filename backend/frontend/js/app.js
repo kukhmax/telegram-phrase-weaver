@@ -778,32 +778,71 @@ window.showStatsModal = async function() {
         
         // Показываем загрузку внутри модального окна
         const modalBody = document.querySelector('.stats-modal-body');
+        if (!modalBody) {
+            console.error('stats-modal-body element not found');
+            return;
+        }
+        
+        // Сохраняем оригинальное содержимое для восстановления
         const originalContent = modalBody.innerHTML;
+        
         modalBody.innerHTML = `
-            <div style="text-align: center; padding: 40px;">
-                <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
-                <p>${t('loading_stats') || 'Loading statistics...'}</p>
+            <div class="loading-container" style="text-align: center; padding: 40px;">
+                <div class="loading-spinner" style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+                <p data-translate="loading_statistics">${t('loading_stats') || 'Loading statistics...'}</p>
             </div>
         `;
+        
+        // Обновляем переводы для индикатора загрузки
+        updateInterface();
         
         // Получаем статистику
         console.log('Calling getStatistics...');
         const stats = await getStatistics();
         console.log('Statistics received:', stats);
         
+        // Проверяем, что статистика загружена корректно
+        if (!stats) {
+            throw new Error('Statistics data is empty');
+        }
+        
         // Добавляем статистику текущей сессии к общей статистике
-        stats.againCards += sessionRepeatStats.againCards;
-        stats.goodCards += sessionRepeatStats.goodCards;
-        stats.easyCards += sessionRepeatStats.easyCards;
+        if (sessionRepeatStats) {
+            stats.againCards = (stats.againCards || 0) + (sessionRepeatStats.againCards || 0);
+            stats.goodCards = (stats.goodCards || 0) + (sessionRepeatStats.goodCards || 0);
+            stats.easyCards = (stats.easyCards || 0) + (sessionRepeatStats.easyCards || 0);
+        }
         
         // Восстанавливаем оригинальное содержимое
         modalBody.innerHTML = originalContent;
         
+        // Обновляем переводы для восстановленного содержимого
+        updateInterface();
+        
         // Отображаем статистику
         displayStatistics(stats);
         
-        // Создаем график
-        createDailyChart(stats.dailyTraining);
+        // Создаем график (с обработкой ошибок)
+        try {
+            const dailyData = await generateDailyTrainingData();
+            if (dailyData && dailyData.length > 0) {
+                createDailyChart(dailyData);
+            } else {
+                console.warn('No daily training data available');
+                // Создаем график с пустыми данными или скрываем секцию
+                const chartContainer = document.getElementById('daily-chart-container');
+                if (chartContainer) {
+                    chartContainer.innerHTML = '<p style="text-align: center; color: #666;">No training data available yet</p>';
+                }
+            }
+        } catch (chartError) {
+            console.warn('Error creating daily chart:', chartError);
+            // График не критичен, продолжаем без него
+            const chartContainer = document.getElementById('daily-chart-container');
+            if (chartContainer) {
+                chartContainer.innerHTML = '<p style="text-align: center; color: #666;">Chart unavailable</p>';
+            }
+        }
         
     } catch (error) {
         console.error('Error loading statistics:', error);
@@ -830,14 +869,19 @@ window.showStatsModal = async function() {
         
         // Показываем ошибку внутри модального окна
         const modalBody = document.querySelector('.stats-modal-body');
-        modalBody.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: #ff4757;">
-                <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
-                <p style="font-weight: bold; margin-bottom: 10px;">${errorMessage}</p>
-                ${errorDetails ? `<p style="font-size: 14px; color: #666; margin-bottom: 20px;">${errorDetails}</p>` : ''}
-                <button onclick="window.showStatsModal()" style="margin-top: 20px; padding: 10px 20px; background: #f4c300; border: none; border-radius: 10px; cursor: pointer;">${t('try_again') || 'Try Again'}</button>
-            </div>
-        `;
+        if (modalBody) {
+            modalBody.innerHTML = `
+                <div class="error-container" style="text-align: center; padding: 40px;">
+                    <div class="error-icon" style="font-size: 48px; color: #ff6b6b; margin-bottom: 20px;">⚠️</div>
+                    <p class="error-message" style="font-weight: bold; margin-bottom: 10px; color: #333;">${errorMessage}</p>
+                    ${errorDetails ? `<p class="error-details" style="font-size: 14px; color: #666; margin-bottom: 20px;">${errorDetails}</p>` : ''}
+                    <button class="btn btn-primary" onclick="window.showStatsModal()" style="margin-top: 20px; padding: 10px 20px; background: #f4c300; border: none; border-radius: 10px; cursor: pointer; color: #333;" data-translate="retry">${t('try_again') || 'Try Again'}</button>
+                </div>
+            `;
+            
+            // Обновляем переводы для сообщения об ошибке
+            updateInterface();
+        }
     }
 }
 
