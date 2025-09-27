@@ -1615,16 +1615,6 @@ body {
     transform: translateY(-2px);
 }
 
-.good-btn {
-    background-color: #f4c300;
-    color: #1800ad;
-}
-
-.good-btn:hover {
-    background-color: #e6b000;
-    transform: translateY(-2px);
-}
-
 .easy-btn {
     background-color: #28a745;
     color: white;

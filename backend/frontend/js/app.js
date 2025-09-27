@@ -1617,9 +1617,19 @@ let trainingData = {
 // Глобальная переменная для отслеживания статистики повторов в текущей сессии
 let sessionRepeatStats = {
     againCards: 0,
-    goodCards: 0,
     easyCards: 0
 };
+
+// Функция для обновления отображения счетчика repeat в интерфейсе
+function updateDeckRepeatDisplay() {
+    const cardsRepeatElement = document.querySelector('.cards-repeat');
+    if (cardsRepeatElement && trainingData.deckInfo) {
+        cardsRepeatElement.textContent = trainingData.deckInfo.due_count || 0;
+    }
+}
+
+// Множество для отслеживания карточек, добавленных в повтор в текущей сессии
+let cardsAddedToRepeat = new Set();
 
 // Функция запуска тренировки
 window.startTraining = async function(deckId) {
@@ -1641,9 +1651,11 @@ window.startTraining = async function(deckId) {
         // Сбрасываем статистику повторов для новой сессии
         sessionRepeatStats = {
             againCards: 0,
-            goodCards: 0,
             easyCards: 0
         };
+        
+        // Сбрасываем множество карточек, добавленных в повтор
+        cardsAddedToRepeat.clear();
         
         // Инициализируем данные тренировки
         trainingData = {
@@ -2171,10 +2183,6 @@ document.getElementById('again-btn').addEventListener('click', async () => {
     await handleCardRating('again');
 });
 
-document.getElementById('good-btn').addEventListener('click', async () => {
-    await handleCardRating('good');
-});
-
 document.getElementById('easy-btn').addEventListener('click', async () => {
     await handleCardRating('easy');
 });
@@ -2183,11 +2191,9 @@ document.getElementById('easy-btn').addEventListener('click', async () => {
 function updateRepeatStatsDisplay() {
     // Обновляем отображение статистики повторов в DOM элементах
     const againStat = document.getElementById('again-cards-stat');
-    const goodStat = document.getElementById('good-cards-stat');
     const easyStat = document.getElementById('easy-cards-stat');
     
     if (againStat) againStat.textContent = sessionRepeatStats.againCards;
-    if (goodStat) goodStat.textContent = sessionRepeatStats.goodCards;
     if (easyStat) easyStat.textContent = sessionRepeatStats.easyCards;
     
     console.log('Updated repeat stats:', sessionRepeatStats);
@@ -2217,10 +2223,19 @@ async function handleCardRating(rating) {
             case 'again':
                 sessionRepeatStats.againCards++;
                 console.log('Incremented againCards to', sessionRepeatStats.againCards);
-                break;
-            case 'good':
-                sessionRepeatStats.goodCards++;
-                console.log('Incremented goodCards to', sessionRepeatStats.goodCards);
+                
+                // Увеличиваем счетчик repeat только если карточка еще не была добавлена в повтор
+                if (!cardsAddedToRepeat.has(currentCard.id)) {
+                    cardsAddedToRepeat.add(currentCard.id);
+                    // Увеличиваем локальный счетчик due_count
+                    if (trainingData.deckInfo) {
+                        trainingData.deckInfo.due_count = (trainingData.deckInfo.due_count || 0) + 1;
+                        console.log(`Incremented deck due_count to ${trainingData.deckInfo.due_count} for card ${currentCard.id}`);
+                        
+                        // Обновляем отображение счетчика repeat в интерфейсе
+                        updateDeckRepeatDisplay();
+                    }
+                }
                 break;
             case 'easy':
                 sessionRepeatStats.easyCards++;
