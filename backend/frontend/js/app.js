@@ -783,15 +783,23 @@ window.showStatsModal = async function() {
             return;
         }
         
-        // Сохраняем оригинальное содержимое для восстановления
-        const originalContent = modalBody.innerHTML;
+        // Скрываем содержимое и показываем загрузку
+        modalBody.style.display = 'none';
         
-        modalBody.innerHTML = `
-            <div class="loading-container" style="text-align: center; padding: 40px;">
-                <div class="loading-spinner" style="font-size: 24px; margin-bottom: 10px;">⏳</div>
-                <p data-translate="loading_statistics">${t('loading_stats') || 'Loading statistics...'}</p>
-            </div>
+        // Создаем контейнер для загрузки
+        let loadingContainer = document.getElementById('stats-loading-container');
+        if (!loadingContainer) {
+            loadingContainer = document.createElement('div');
+            loadingContainer.id = 'stats-loading-container';
+            loadingContainer.style.cssText = 'text-align: center; padding: 40px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%;';
+            statsModal.querySelector('.stats-modal-content').appendChild(loadingContainer);
+        }
+        
+        loadingContainer.innerHTML = `
+            <div class="loading-spinner" style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+            <p data-translate="loading_statistics">${t('loading_stats') || 'Loading statistics...'}</p>
         `;
+        loadingContainer.style.display = 'block';
         
         // Обновляем переводы для индикатора загрузки
         updateInterface();
@@ -813,10 +821,11 @@ window.showStatsModal = async function() {
             stats.easyCards = (stats.easyCards || 0) + (sessionRepeatStats.easyCards || 0);
         }
         
-        // Восстанавливаем оригинальное содержимое
-        modalBody.innerHTML = originalContent;
+        // Скрываем загрузку и показываем содержимое
+        loadingContainer.style.display = 'none';
+        modalBody.style.display = 'block';
         
-        // Обновляем переводы для восстановленного содержимого
+        // Обновляем переводы для содержимого
         updateInterface();
         
         // Отображаем статистику
