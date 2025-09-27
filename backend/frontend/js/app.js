@@ -778,7 +778,12 @@ window.showStatsModal = async function() {
         
         // Показываем загрузку внутри модального окна
         const modalBody = document.querySelector('.stats-modal-body');
+        console.log('Modal body found:', !!modalBody);
+        
         const originalContent = modalBody.innerHTML;
+        console.log('Original content length:', originalContent.length);
+        console.log('Original content preview:', originalContent.substring(0, 200) + '...');
+        
         modalBody.innerHTML = `
             <div style="text-align: center; padding: 40px;">
                 <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
@@ -797,10 +802,23 @@ window.showStatsModal = async function() {
         stats.easyCards += sessionRepeatStats.easyCards;
         
         // Восстанавливаем оригинальное содержимое
+        console.log('Restoring original content...');
         modalBody.innerHTML = originalContent;
+        console.log('Original content restored');
+        
+        // Проверяем состояние DOM сразу после восстановления
+        console.log('Checking DOM state immediately after restore:');
+        const immediateCheck = document.getElementById('deck-distribution-list');
+        console.log('deck-distribution-list found immediately:', !!immediateCheck);
         
         // Даем браузеру время на рендеринг DOM элементов
+        console.log('Waiting 100ms for DOM rendering...');
         await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Проверяем состояние DOM после задержки
+        console.log('Checking DOM state after 100ms delay:');
+        const delayedCheck = document.getElementById('deck-distribution-list');
+        console.log('deck-distribution-list found after delay:', !!delayedCheck);
         
         // Функция для проверки готовности DOM элементов
         const waitForElements = () => {
