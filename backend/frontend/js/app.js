@@ -822,27 +822,6 @@ window.showStatsModal = async function() {
         // Отображаем статистику
         displayStatistics(stats);
         
-        // Создаем график (с обработкой ошибок)
-        try {
-            const dailyData = await generateDailyTrainingData();
-            if (dailyData && dailyData.length > 0) {
-                createDailyChart(dailyData);
-            } else {
-                console.warn('No daily training data available');
-                // Создаем график с пустыми данными или скрываем секцию
-                const chartContainer = document.getElementById('daily-chart-container');
-                if (chartContainer) {
-                    chartContainer.innerHTML = '<p style="text-align: center; color: #666;">No training data available yet</p>';
-                }
-            }
-        } catch (chartError) {
-            console.warn('Error creating daily chart:', chartError);
-            // График не критичен, продолжаем без него
-            const chartContainer = document.getElementById('daily-chart-container');
-            if (chartContainer) {
-                chartContainer.innerHTML = '<p style="text-align: center; color: #666;">Chart unavailable</p>';
-            }
-        }
         
     } catch (error) {
         console.error('Error loading statistics:', error);
