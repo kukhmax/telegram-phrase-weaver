@@ -799,11 +799,14 @@ window.showStatsModal = async function() {
         // Восстанавливаем оригинальное содержимое
         modalBody.innerHTML = originalContent;
         
-        // Отображаем статистику
-        displayStatistics(stats);
-        
-        // Создаем график
-        createDailyChart(stats.dailyTraining);
+        // Ждем следующий кадр анимации, чтобы DOM успел обновиться
+        requestAnimationFrame(() => {
+            // Отображаем статистику
+            displayStatistics(stats);
+            
+            // Создаем график
+            createDailyChart(stats.dailyTraining);
+        });
         
     } catch (error) {
         console.error('Error loading statistics:', error);
@@ -913,45 +916,104 @@ window.getStatistics = async function() {
 }
 
 window.displayStatistics = function(stats) {
+    console.log('displayStatistics called with:', stats);
+    
     // Общая статистика - с проверками на существование элементов
     const totalDecksEl = document.getElementById('total-decks-stat');
-    if (totalDecksEl) totalDecksEl.textContent = stats.totalDecks;
+    if (totalDecksEl) {
+        totalDecksEl.textContent = stats.totalDecks;
+        console.log('Updated total-decks-stat:', stats.totalDecks);
+    } else {
+        console.warn('total-decks-stat element not found');
+    }
     
     const totalCardsEl = document.getElementById('total-cards-stat');
-    if (totalCardsEl) totalCardsEl.textContent = stats.totalCards;
+    if (totalCardsEl) {
+        totalCardsEl.textContent = stats.totalCards;
+        console.log('Updated total-cards-stat:', stats.totalCards);
+    } else {
+        console.warn('total-cards-stat element not found');
+    }
     
     const learnedCardsEl = document.getElementById('learned-cards-stat');
-    if (learnedCardsEl) learnedCardsEl.textContent = stats.learnedCards;
+    if (learnedCardsEl) {
+        learnedCardsEl.textContent = stats.learnedCards;
+        console.log('Updated learned-cards-stat:', stats.learnedCards);
+    } else {
+        console.warn('learned-cards-stat element not found');
+    }
     
     const repeatCardsEl = document.getElementById('repeat-cards-stat');
-    if (repeatCardsEl) repeatCardsEl.textContent = stats.repeatCards;
+    if (repeatCardsEl) {
+        repeatCardsEl.textContent = stats.repeatCards;
+        console.log('Updated repeat-cards-stat:', stats.repeatCards);
+    } else {
+        console.warn('repeat-cards-stat element not found');
+    }
     
     // Статистика повторений - с проверками на существование элементов
     const againCardsEl = document.getElementById('again-cards-stat');
-    if (againCardsEl) againCardsEl.textContent = stats.againCards;
+    if (againCardsEl) {
+        againCardsEl.textContent = stats.againCards;
+        console.log('Updated again-cards-stat:', stats.againCards);
+    } else {
+        console.warn('again-cards-stat element not found');
+    }
     
     const goodCardsEl = document.getElementById('good-cards-stat');
-    if (goodCardsEl) goodCardsEl.textContent = stats.goodCards;
+    if (goodCardsEl) {
+        goodCardsEl.textContent = stats.goodCards;
+        console.log('Updated good-cards-stat:', stats.goodCards);
+    } else {
+        console.warn('good-cards-stat element not found');
+    }
     
     const easyCardsEl = document.getElementById('easy-cards-stat');
-    if (easyCardsEl) easyCardsEl.textContent = stats.easyCards;
+    if (easyCardsEl) {
+        easyCardsEl.textContent = stats.easyCards;
+        console.log('Updated easy-cards-stat:', stats.easyCards);
+    } else {
+        console.warn('easy-cards-stat element not found');
+    }
     
     // Распределение по колодам - с проверкой на существование контейнера
     const distributionContainer = document.getElementById('deck-distribution-list');
+    console.log('Looking for deck-distribution-list element...');
+    console.log('distributionContainer found:', !!distributionContainer);
+    
     if (distributionContainer) {
+        console.log('Clearing and populating deck distribution...');
         distributionContainer.innerHTML = '';
         
-        stats.deckDistribution.forEach(deck => {
-            const deckItem = document.createElement('div');
-            deckItem.className = 'deck-item';
-            deckItem.innerHTML = `
-                <span class="deck-name">${deck.name}</span>
-                <span class="deck-cards-count">${deck.totalCards} ${t('total').toLowerCase()}, ${deck.learnedCards} ${t('learned_cards').toLowerCase()}</span>
-            `;
-            distributionContainer.appendChild(deckItem);
-        });
+        if (stats.deckDistribution && stats.deckDistribution.length > 0) {
+            stats.deckDistribution.forEach((deck, index) => {
+                console.log(`Adding deck ${index + 1}:`, deck);
+                const deckItem = document.createElement('div');
+                deckItem.className = 'deck-item';
+                deckItem.innerHTML = `
+                    <span class="deck-name">${deck.name}</span>
+                    <span class="deck-cards-count">${deck.totalCards} ${t('total').toLowerCase()}, ${deck.learnedCards} ${t('learned_cards').toLowerCase()}</span>
+                `;
+                distributionContainer.appendChild(deckItem);
+            });
+            console.log('Deck distribution populated successfully');
+        } else {
+            console.log('No deck distribution data available');
+            distributionContainer.innerHTML = '<p>No decks found</p>';
+        }
     } else {
-        console.warn('deck-distribution-list element not found in DOM');
+        console.error('deck-distribution-list element not found in DOM');
+        // Попробуем найти элемент через querySelector
+        const altContainer = document.querySelector('#deck-distribution-list');
+        console.log('Alternative search result:', !!altContainer);
+        
+        // Проверим, есть ли модальное окно в DOM
+        const modal = document.getElementById('stats-modal');
+        console.log('Stats modal found:', !!modal);
+        if (modal) {
+            console.log('Modal classes:', modal.className);
+            console.log('Modal innerHTML length:', modal.innerHTML.length);
+        }
     }
 }
 
