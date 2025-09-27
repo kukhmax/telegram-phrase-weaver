@@ -799,6 +799,9 @@ window.showStatsModal = async function() {
         // Восстанавливаем оригинальное содержимое
         modalBody.innerHTML = originalContent;
         
+        // Даем браузеру время на рендеринг DOM элементов
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Функция для проверки готовности DOM элементов
         const waitForElements = () => {
             const requiredElements = [
