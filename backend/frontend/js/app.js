@@ -780,9 +780,12 @@ window.showStatsModal = async function() {
         const modalBody = document.querySelector('.stats-modal-body');
         console.log('Modal body found:', !!modalBody);
         
-        const originalContent = modalBody.innerHTML;
-        console.log('Original content length:', originalContent.length);
-        console.log('Original content preview:', originalContent.substring(0, 200) + '...');
+        // Если у нас уже есть сохраненное содержимое статистики, используем его
+        if (window.statsModalContent) {
+            console.log('Using cached stats content');
+            modalBody.innerHTML = window.statsModalContent;
+            return;
+        }
         
         modalBody.innerHTML = `
             <div style="text-align: center; padding: 40px;">
@@ -798,62 +801,15 @@ window.showStatsModal = async function() {
         
         // Добавляем статистику текущей сессии к общей статистике
         stats.againCards += sessionRepeatStats.againCards;
-        stats.goodCards += sessionRepeatStats.goodCards;
         stats.easyCards += sessionRepeatStats.easyCards;
         
-        // Восстанавливаем оригинальное содержимое
-        console.log('Restoring original content...');
-        modalBody.innerHTML = originalContent;
-        console.log('Original content restored');
+        // Сначала отображаем статистику
+        displayStatistics(stats);
+        createDailyChart(stats.dailyTraining);
         
-        // Проверяем состояние DOM сразу после восстановления
-        console.log('Checking DOM state immediately after restore:');
-        const immediateCheck = document.getElementById('deck-distribution-list');
-        console.log('deck-distribution-list found immediately:', !!immediateCheck);
-        
-        // Даем браузеру время на рендеринг DOM элементов
-        console.log('Waiting 100ms for DOM rendering...');
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Проверяем состояние DOM после задержки
-        console.log('Checking DOM state after 100ms delay:');
-        const delayedCheck = document.getElementById('deck-distribution-list');
-        console.log('deck-distribution-list found after delay:', !!delayedCheck);
-        
-        // Функция для проверки готовности DOM элементов
-        const waitForElements = () => {
-            const requiredElements = [
-                'deck-distribution-list',
-                'total-decks-stat',
-                'total-cards-stat',
-                'learned-cards-stat',
-                'repeat-cards-stat',
-                'again-cards-stat',
-                'good-cards-stat',
-                'easy-cards-stat'
-            ];
-            
-            const allElementsExist = requiredElements.every(id => {
-                const element = document.getElementById(id);
-                const exists = element !== null;
-                if (!exists) {
-                    console.log(`Element ${id} not found yet`);
-                }
-                return exists;
-            });
-            
-            if (allElementsExist) {
-                console.log('All required elements found, displaying statistics');
-                displayStatistics(stats);
-                createDailyChart(stats.dailyTraining);
-            } else {
-                console.log('Some elements not ready, retrying in 50ms');
-                setTimeout(waitForElements, 50);
-            }
-        };
-        
-        // Начинаем проверку элементов
-        waitForElements();
+        // Теперь сохраняем содержимое с загруженной статистикой для будущих открытий
+        window.statsModalContent = modalBody.innerHTML;
+        console.log('Stats content cached for future use');
         
     } catch (error) {
         console.error('Error loading statistics:', error);
