@@ -1627,6 +1627,12 @@ window.startTraining = async function(deckId) {
         // Сбрасываем множество карточек, добавленных в повтор
         cardsAddedToRepeat.clear();
         
+        // Безопасно извлекаем данные пагинации
+        const pagination = response.pagination || {};
+        const currentPageFromResponse = pagination.current_page || currentPage;
+        const totalPages = pagination.total_pages || 1;
+        const hasNextPage = pagination.has_next || false;
+        
         // Инициализируем данные тренировки
         trainingData = {
             cards: response.cards,
@@ -1635,9 +1641,9 @@ window.startTraining = async function(deckId) {
             deckInfo: response.deck,
             sessionStartTime: new Date(),
             cardsStudiedInSession: 0,
-            currentPage: response.pagination.current_page,
-            totalPages: response.pagination.total_pages,
-            hasNextPage: response.pagination.has_next,
+            currentPage: currentPageFromResponse,
+            totalPages: totalPages,
+            hasNextPage: hasNextPage,
             deckId: deckId
         };
         
