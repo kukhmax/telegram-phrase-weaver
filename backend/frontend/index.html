@@ -5,22 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Phrase Weaver</title>
     
-    <!-- Агрессивные мета-теги против кеширования -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <!-- Агрессивные мета-теги против кеширования для мобильных браузеров -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0, private">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="cache-control" content="no-cache">
+    <meta name="cache-control" content="no-cache, no-store, must-revalidate">
     <meta name="expires" content="0">
     <meta name="pragma" content="no-cache">
     
-    <!-- Cache busting script - должен быть первым -->
-    <script src="/static/cache-buster.js"></script>
+    <!-- Дополнительные мета-теги для мобильных браузеров и Telegram -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a1a1a">
     
-    <!-- CSS с версионированием -->
-    <link rel="stylesheet" href="/static/css/main.css">
+    <!-- Предотвращение кеширования в iOS Safari и Android Chrome -->
+    <meta http-equiv="Last-Modified" content="0">
+    <meta http-equiv="If-Modified-Since" content="0">
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+    
+    <!-- Cache busting script - должен быть первым -->
+    <script>
+        // Генерируем уникальную версию для каждой загрузки
+        const cacheVersion = Date.now();
+        document.write('<script src="/static/cache-buster.js?v=' + cacheVersion + '"><\/script>');
+    </script>
+    
+    <!-- CSS с версионированием и принудительным обновлением -->
+    <script>
+        document.write('<link rel="stylesheet" href="/static/css/main.css?v=' + cacheVersion + '&mobile=1&t=' + Math.random() + '">');
+    </script>
     
     <!-- Telegram WebApp script -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        document.write('<script src="https://telegram.org/js/telegram-web-app.js?v=' + cacheVersion + '"><\/script>');
+    </script>
 </head>
 <body>
     <!-- Главный контейнер всего приложения -->

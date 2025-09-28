@@ -2,16 +2,17 @@
 (function() {
     'use strict';
     
-    // Генерируем уникальный timestamp для версии (обновляется каждые 5 минут)
-    const version = Math.floor(Date.now() / (5 * 60 * 1000));
+    // Генерируем уникальный timestamp для версии (обновляется каждую минуту для мобильных)
+    const version = Math.floor(Date.now() / (1 * 60 * 1000));
     
-    console.log(`🔄 Cache Buster v${version} - Telegram WebApp`);
+    console.log(`🔄 Cache Buster v${version} - Telegram WebApp (Mobile Enhanced)`);
     
-    // Функция для добавления версии к URL
+    // Функция для добавления версии к URL с дополнительными параметрами для мобильных
     function addVersionToUrl(url) {
         if (!url || url.includes('?v=')) return url;
         const separator = url.includes('?') ? '&' : '?';
-        return `${url}${separator}v=${version}&t=${Date.now()}`;
+        const mobileParams = `mobile=1&platform=${navigator.platform}&ua=${encodeURIComponent(navigator.userAgent.substring(0, 50))}`;
+        return `${url}${separator}v=${version}&t=${Date.now()}&${mobileParams}`;
     }
     
     // Обновляем CSS файлы
@@ -99,17 +100,29 @@
             meta.setAttribute('content', tag.content);
         });
         
-        // Принудительная перезагрузка стилей каждые 30 секунд в Telegram
+        // Принудительная перезагрузка стилей каждые 15 секунд в Telegram для мобильных
         setInterval(() => {
             const currentTime = Date.now();
             document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
                 const href = link.getAttribute('href');
                 if (href && href.includes('/static/')) {
                     const baseUrl = href.split('?')[0];
-                    link.setAttribute('href', `${baseUrl}?v=${version}&refresh=${currentTime}`);
+                    const mobileParams = `mobile=1&refresh=${currentTime}&rand=${Math.random()}`;
+                    link.setAttribute('href', `${baseUrl}?v=${version}&${mobileParams}`);
                 }
             });
-        }, 30000);
+            
+            // Принудительное обновление JS файлов для мобильных браузеров
+            document.querySelectorAll('script[src*="/static/"]').forEach(script => {
+                const src = script.getAttribute('src');
+                if (src && !src.includes('cache-buster')) {
+                    const baseUrl = src.split('?')[0];
+                    const newScript = document.createElement('script');
+                    newScript.src = `${baseUrl}?v=${version}&mobile=1&t=${currentTime}`;
+                    script.parentNode.replaceChild(newScript, script);
+                }
+            });
+        }, 15000);
     }
     
     console.log(`✅ Cache buster initialized - Version: ${version}`);
