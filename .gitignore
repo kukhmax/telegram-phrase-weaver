@@ -93,3 +93,5 @@ backend/frontend/assets/audio/
 *.jpg
 *.mp3
 *.wav
+
+example-cache.js

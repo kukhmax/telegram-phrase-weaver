@@ -207,6 +207,63 @@ body {
     max-height: 8px !important;
 }
 
+.form-submit-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    min-height: 44px !important;
+    padding: 12px 20px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.form-submit-btn .btn-text {
+    display: inline !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-size: inherit !important;
+    color: inherit !important;
+}
+
+.form-submit-btn .loading-spinner {
+    font-size: 14px !important;
+    display: none !important;
+}
+
+.form-submit-btn .loading-spinner:not(.hidden) {
+    display: inline !important;
+}
+
+#add-phrase-btn {
+    background: var(--tg-theme-secondary-bg-color, #1117c7) !important;
+    color: white !important;
+}
+
+#add-phrase-btn:hover {
+    background: var(--tg-theme-secondary-bg-color, #b0b3b6) !important;
+    opacity: 0.9 !important;
+}
+
+#enrich-btn {
+    background: var(--tg-theme-button-color, #007bff) !important;
+    color: var(--tg-theme-button-text-color, white) !important;
+}
+
+#enrich-btn:hover {
+    background: var(--tg-theme-button-color, #0056b3) !important;
+    opacity: 0.9 !important;
+}
+
 /* Дополнительные стили для мобильных устройств */
 @media screen and (max-device-width: 480px) {
     .header-btn {
@@ -428,8 +485,53 @@ body {
     display: inline-block;
 }
 .add-cards-btn {
-    background-color: #28a745;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
     color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 44px;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1000;
+    pointer-events: auto !important;
+    -webkit-tap-highlight-color: rgba(76, 175, 80, 0.3);
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.add-cards-btn:hover {
+    background: linear-gradient(135deg, #45a049, #3d8b40);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.add-cards-btn:active {
+    transform: translateY(0);
+    background: linear-gradient(135deg, #3d8b40, #357a38);
+    box-shadow: 0 2px 6px rgba(76, 175, 80, 0.4);
+}
+
+/* Специальные стили для Telegram WebApp */
+.tg-viewport .add-cards-btn {
+    -webkit-tap-highlight-color: rgba(76, 175, 80, 0.5);
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.add-cards-btn:focus {
+    outline: 2px solid #4CAF50;
+    outline-offset: 2px;
 }
 .cards-btn {
     background-color: #f4c300;
@@ -543,7 +645,7 @@ body {
 }
 
 .stats-section {
-    margin-bottom: 30px;
+    margin-bottom: 5px;
 }
 
 .stats-section h3 {
@@ -586,7 +688,7 @@ body {
 
 .repeat-stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
 }
 
@@ -784,7 +886,7 @@ body {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    padding: 20px;
+    padding: 5px;
     border-top: 1px solid #eee;
 }
 
@@ -1513,16 +1615,6 @@ body {
     transform: translateY(-2px);
 }
 
-.good-btn {
-    background-color: #f4c300;
-    color: #1800ad;
-}
-
-.good-btn:hover {
-    background-color: #e6b000;
-    transform: translateY(-2px);
-}
-
 .easy-btn {
     background-color: #28a745;
     color: white;
@@ -1573,6 +1665,45 @@ body {
 .telegram-webapp {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Стили для активного состояния кнопок при touch */
+.touch-active {
+    transform: scale(0.95) !important;
+    opacity: 0.8 !important;
+    transition: all 0.1s ease !important;
+}
+
+/* Улучшенная поддержка touch для кнопок в Telegram WebApp */
+.telegram-webapp button,
+.telegram-webapp .btn,
+.telegram-webapp .form-submit-btn {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    touch-action: manipulation !important;
+    cursor: pointer !important;
+}
+
+/* Специальные стили для кнопок Enrich и Add phrase в Telegram */
+.telegram-webapp #enrich-btn,
+.telegram-webapp #add-phrase-btn {
+    position: relative !important;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+    -webkit-tap-highlight-color: rgba(244, 195, 0, 0.3) !important;
+}
+
+/* Убираем возможные конфликты с другими элементами */
+.telegram-webapp .form-container {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.telegram-webapp .form-submit-btn {
+    min-height: 44px !important; /* Минимальная высота для touch targets */
+    min-width: 44px !important;
 }
 
 #telegram-webapp {

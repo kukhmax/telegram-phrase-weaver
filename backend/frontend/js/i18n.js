@@ -130,8 +130,14 @@ const translations = {
         fill_this_field: 'Заполните это поле.',
         select_item_from_list: 'Выберите один из пунктов списка.',
         enter_valid_value: 'Введите допустимое значение.',
-         
-          // Футер
+        
+        // Управление кешем
+        cache_management: 'Управление кешем',
+        clear_cache: 'Очистить кеш',
+        reload_app: 'Перезагрузить приложение',
+        cache_info: 'Используйте эти кнопки если приложение работает некорректно или не обновляется',
+        
+        // Версия приложения
         app_version: 'PhraseWeaver v0.1.0'
     },
     
@@ -260,11 +266,17 @@ const translations = {
         no_data: 'No data available',
         
         // Validation hints
-        fill_this_field: 'Please fill out this field.',
-        select_item_from_list: 'Please select an item in the list.',
+        fill_this_field: 'Please fill this field.',
+        select_item_from_list: 'Please select an item from the list.',
         enter_valid_value: 'Please enter a valid value.',
-         
-          // Footer
+        
+        // Cache management
+        cache_management: 'Cache Management',
+        clear_cache: 'Clear Cache',
+        reload_app: 'Reload Application',
+        cache_info: 'Use these buttons if the application is not working correctly or not updating',
+        
+        // App version
         app_version: 'PhraseWeaver v0.1.0'
     }
 };

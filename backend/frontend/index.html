@@ -2,15 +2,24 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhraseWeaver</title>
-    <!-- Мета-теги для предотвращения кэширования -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Phrase Weaver</title>
+    
+    <!-- Агрессивные мета-теги против кеширования -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-
-    <link rel="stylesheet" href="/static/css/main.css?v=4.0">
-    <!-- Скрипт для интеграции с Telegram -->
+    <meta name="cache-control" content="no-cache">
+    <meta name="expires" content="0">
+    <meta name="pragma" content="no-cache">
+    
+    <!-- Cache busting script - должен быть первым -->
+    <script src="/static/cache-buster.js"></script>
+    
+    <!-- CSS с версионированием -->
+    <link rel="stylesheet" href="/static/css/main.css">
+    
+    <!-- Telegram WebApp script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -25,7 +34,6 @@
             <button class="header-name-btn">
                 <span class="header-name">PHRASE WEAVER</span>
             </button>
-            <div id="user-info" style="display: none; color: #1800ad; font-size: 14px; font-weight: 500;"></div>
             <button id="settings-btn" class="header-btn">
                 <img src="/static/assets/icons/tutorial.png" alt="Settings" class="settings-icon">
             </button>
@@ -120,13 +128,13 @@
                         </div>
                     </div>
                     <div class="button-group">
-                        <button type="button" class="form-submit-btn secondary-btn" id="add-phrase-btn">
+                        <button type="button" id="add-phrase-btn" class="form-submit-btn secondary-btn">
                             <span class="loading-spinner hidden"></span>
-                            <span class="btn-text" data-translate="add_phrase_button">Add phrase</span>
+                            <span class="btn-text" data-i18n="add_phrase_button">Add phrase</span>
                         </button>
-                        <button type="submit" class="form-submit-btn" id="enrich-btn">
+                        <button type="button" id="enrich-btn" class="form-submit-btn">
                             <span class="loading-spinner hidden"></span>
-                            <span class="btn-text" data-translate="enrich_button">Enrich</span>
+                            <span class="btn-text" data-i18n="enrich_button">Enrich</span>
                         </button>
                     </div>
                 </form>
@@ -239,7 +247,6 @@
                 <!-- Кнопки оценки (скрыты до проверки) -->
                 <div id="rating-buttons" class="rating-buttons hidden">
                     <button id="again-btn" class="rating-btn again-btn" data-translate="again">Снова</button>
-                    <button id="good-btn" class="rating-btn good-btn" data-translate="good">Хорошо</button>
                     <button id="easy-btn" class="rating-btn easy-btn" data-translate="easy">Легко</button>
                 </div>
                 
@@ -281,6 +288,22 @@
                             <span class="radio-custom"></span>
                             <span data-translate="english">🇺🇸 English</span>
                         </label>
+                    </div>
+                </div>
+                
+                <!-- Секция управления кешем -->
+                <div class="settings-section">
+                    <h3 data-translate="cache_management">Управление кешем</h3>
+                    <div class="cache-controls">
+                        <button id="clear-cache-btn" class="action-btn secondary cache-btn" data-translate="clear_cache">
+                            🗑️ Очистить кеш
+                        </button>
+                        <button id="reload-app-btn" class="action-btn secondary cache-btn" data-translate="reload_app">
+                            🔄 Перезагрузить приложение
+                        </button>
+                        <p class="cache-info" data-translate="cache_info">
+                            Используйте эти кнопки если приложение работает некорректно или не обновляется
+                        </p>
                     </div>
                 </div>
             </div>
@@ -331,10 +354,6 @@
                             <span class="repeat-stat-label" data-translate="again_cards">Again</span>
                         </div>
                         <div class="repeat-stat-item">
-                            <span class="repeat-stat-number" id="good-cards-stat">0</span>
-                            <span class="repeat-stat-label" data-translate="good_cards">Good</span>
-                        </div>
-                        <div class="repeat-stat-item">
                             <span class="repeat-stat-number" id="easy-cards-stat">0</span>
                             <span class="repeat-stat-label" data-translate="easy_cards">Easy</span>
                         </div>
@@ -349,13 +368,6 @@
                     </div>
                 </div>
 
-                <!-- График ежедневной тренировки -->
-                <div class="stats-section">
-                    <h3 data-translate="daily_training">Daily Training</h3>
-                    <div id="daily-chart-container" class="chart-container">
-                        <canvas id="daily-chart" width="400" height="200"></canvas>
-                    </div>
-                </div>
             </div>
             <div class="modal-footer">
                 <button id="close-stats-btn" class="action-btn" data-translate="close">Close</button>
@@ -388,7 +400,7 @@
     </template>
     
     <!-- Подключаем скрипты (было config.js, но мы его удалим позже) -->
-    <script src="/static/js/app.js?v=4.0" type="module" defer></script>
+    <script src="/static/js/app.js" type="module" defer></script>
 </body>
 </html>
 

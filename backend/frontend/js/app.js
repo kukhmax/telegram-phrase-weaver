@@ -4,6 +4,124 @@ import { DOMElements, showWindow, renderDecks, showLoading, showError } from '/s
 import { t, setLanguage, getCurrentLanguage, updateInterface, initializeI18n } from '/static/js/i18n.js';
 // CSS подключен в HTML, не нужно импортировать здесь
 
+// ===== ФУНКЦИИ УПРАВЛЕНИЯ КЕШЕМ ДЛЯ TELEGRAM =====
+
+/**
+ * Установка мета-тегов для предотвращения кеширования
+ */
+function setupNoCacheHeaders() {
+    // Добавляем мета-теги для предотвращения кеширования
+    const metaTags = [
+        { name: 'cache-control', content: 'no-cache, no-store, must-revalidate' },
+        { name: 'pragma', content: 'no-cache' },
+        { name: 'expires', content: '0' }
+    ];
+    
+    metaTags.forEach(tag => {
+        const meta = document.createElement('meta');
+        meta.httpEquiv = tag.name;
+        meta.content = tag.content;
+        document.head.appendChild(meta);
+    });
+    
+    console.log('[Cache] No-cache headers установлены');
+}
+
+/**
+ * Перезагрузка приложения с обновлением кеша
+ */
+window.reloadApp = function() {
+    console.log('[Cache] Начинаем перезагрузку приложения с очисткой кеша...');
+    
+    // Очищаем кеш браузера для текущей страницы
+    if ('caches' in window) {
+        caches.keys().then(function(cacheNames) {
+            return Promise.all(
+                cacheNames.map(function(cacheName) {
+                    return caches.delete(cacheName);
+                })
+            );
+        }).then(() => {
+            console.log('[Cache] Браузерный кеш очищен');
+        });
+    }
+    
+    // Перезагружаем страницу с принудительным обновлением
+    setTimeout(() => {
+        window.location.reload(true);
+    }, 1000);
+};
+
+/**
+ * Очистка локального кеша
+ */
+window.clearCache = function() {
+    try {
+        console.log('[Cache] Начинаем очистку локального кеша...');
+        
+        // Очищаем localStorage (сохраняем только важные данные)
+        const keysToKeep = ['tg_theme', 'user_language', 'auth_token'];
+        const allKeys = Object.keys(localStorage);
+        
+        allKeys.forEach(key => {
+            if (!keysToKeep.includes(key)) {
+                localStorage.removeItem(key);
+            }
+        });
+        
+        // Очищаем sessionStorage
+        sessionStorage.clear();
+        
+        // Очищаем куки
+        document.cookie.split(";").forEach(function(c) {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+        
+        console.log('[Cache] Локальный кеш успешно очищен');
+        
+        // Показываем уведомление пользователю
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.showAlert('Кеш успешно очищен!');
+        } else {
+            alert('Кеш успешно очищен!');
+        }
+        
+    } catch (error) {
+        console.error('[Cache] Ошибка при очистке кеша:', error);
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.showAlert('Ошибка при очистке кеша');
+        } else {
+            alert('Ошибка при очистке кеша');
+        }
+    }
+};
+
+/**
+ * Проверка и обновление кеша при загрузке
+ */
+function checkCacheOnLoad() {
+    // Проверяем, работаем ли мы в Telegram WebApp
+    if (window.Telegram && window.Telegram.WebApp) {
+        console.log('[Cache] Telegram WebApp обнаружен, применяем настройки кеша');
+        
+        // Устанавливаем обработчик для события видимости страницы
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                console.log('[Cache] Страница стала видимой, проверяем обновления');
+                // Можно добавить дополнительную логику проверки обновлений
+            }
+        });
+        
+        // Обработчик перед закрытием приложения
+        window.addEventListener('beforeunload', () => {
+            console.log('[Cache] Приложение закрывается, сохраняем состояние');
+        });
+    }
+}
+
+// Вызываем установку no-cache headers сразу
+setupNoCacheHeaders();
+
 // Глобальные переменные для хранения данных
 let currentGeneratedData = null;
 let selectedPhrases = new Set();
@@ -660,32 +778,59 @@ window.showStatsModal = async function() {
         
         // Показываем загрузку внутри модального окна
         const modalBody = document.querySelector('.stats-modal-body');
-        const originalContent = modalBody.innerHTML;
-        modalBody.innerHTML = `
-            <div style="text-align: center; padding: 40px;">
-                <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
-                <p>${t('loading_stats') || 'Loading statistics...'}</p>
-            </div>
+        if (!modalBody) {
+            console.error('stats-modal-body element not found');
+            return;
+        }
+        
+        // Скрываем содержимое и показываем загрузку
+        modalBody.style.display = 'none';
+        
+        // Создаем контейнер для загрузки
+        let loadingContainer = document.getElementById('stats-loading-container');
+        if (!loadingContainer) {
+            loadingContainer = document.createElement('div');
+            loadingContainer.id = 'stats-loading-container';
+            loadingContainer.style.cssText = 'text-align: center; padding: 40px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%;';
+            statsModal.querySelector('.stats-modal-content').appendChild(loadingContainer);
+        }
+        
+        loadingContainer.innerHTML = `
+            <div class="loading-spinner" style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+            <p data-translate="loading_statistics">${t('loading_stats') || 'Loading statistics...'}</p>
         `;
+        loadingContainer.style.display = 'block';
+        
+        // Обновляем переводы для индикатора загрузки
+        updateInterface();
         
         // Получаем статистику
         console.log('Calling getStatistics...');
         const stats = await getStatistics();
         console.log('Statistics received:', stats);
         
-        // Добавляем статистику текущей сессии к общей статистике
-        stats.againCards += sessionRepeatStats.againCards;
-        stats.goodCards += sessionRepeatStats.goodCards;
-        stats.easyCards += sessionRepeatStats.easyCards;
+        // Проверяем, что статистика загружена корректно
+        if (!stats) {
+            throw new Error('Statistics data is empty');
+        }
         
-        // Восстанавливаем оригинальное содержимое
-        modalBody.innerHTML = originalContent;
+        // Добавляем статистику текущей сессии к общей статистике
+        if (sessionRepeatStats) {
+            stats.againCards = (stats.againCards || 0) + (sessionRepeatStats.againCards || 0);
+            stats.goodCards = (stats.goodCards || 0) + (sessionRepeatStats.goodCards || 0);
+            stats.easyCards = (stats.easyCards || 0) + (sessionRepeatStats.easyCards || 0);
+        }
+        
+        // Скрываем загрузку и показываем содержимое
+        loadingContainer.style.display = 'none';
+        modalBody.style.display = 'block';
+        
+        // Обновляем переводы для содержимого
+        updateInterface();
         
         // Отображаем статистику
         displayStatistics(stats);
         
-        // Создаем график
-        createDailyChart(stats.dailyTraining);
         
     } catch (error) {
         console.error('Error loading statistics:', error);
@@ -712,14 +857,19 @@ window.showStatsModal = async function() {
         
         // Показываем ошибку внутри модального окна
         const modalBody = document.querySelector('.stats-modal-body');
-        modalBody.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: #ff4757;">
-                <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
-                <p style="font-weight: bold; margin-bottom: 10px;">${errorMessage}</p>
-                ${errorDetails ? `<p style="font-size: 14px; color: #666; margin-bottom: 20px;">${errorDetails}</p>` : ''}
-                <button onclick="window.showStatsModal()" style="margin-top: 20px; padding: 10px 20px; background: #f4c300; border: none; border-radius: 10px; cursor: pointer;">${t('try_again') || 'Try Again'}</button>
-            </div>
-        `;
+        if (modalBody) {
+            modalBody.innerHTML = `
+                <div class="error-container" style="text-align: center; padding: 40px;">
+                    <div class="error-icon" style="font-size: 48px; color: #ff6b6b; margin-bottom: 20px;">⚠️</div>
+                    <p class="error-message" style="font-weight: bold; margin-bottom: 10px; color: #333;">${errorMessage}</p>
+                    ${errorDetails ? `<p class="error-details" style="font-size: 14px; color: #666; margin-bottom: 20px;">${errorDetails}</p>` : ''}
+                    <button class="btn btn-primary" onclick="window.showStatsModal()" style="margin-top: 20px; padding: 10px 20px; background: #f4c300; border: none; border-radius: 10px; cursor: pointer; color: #333;" data-translate="retry">${t('try_again') || 'Try Again'}</button>
+                </div>
+            `;
+            
+            // Обновляем переводы для сообщения об ошибке
+            updateInterface();
+        }
     }
 }
 
@@ -862,72 +1012,6 @@ window.generateDailyTrainingData = async function() {
     }
 };
 
-window.createDailyChart = function(data) {
-    const canvas = document.getElementById('daily-chart');
-    
-    // Проверяем существование canvas элемента
-    if (!canvas) {
-        console.warn('daily-chart canvas element not found in DOM');
-        return;
-    }
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        console.warn('Failed to get 2d context from daily-chart canvas');
-        return;
-    }
-    
-    // Очищаем canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    if (!data || data.length === 0) {
-        ctx.fillStyle = '#666';
-        ctx.font = '14px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(t('no_data') || 'No data available', canvas.width / 2, canvas.height / 2);
-        return;
-    }
-    
-    const padding = 40;
-    const chartWidth = canvas.width - 2 * padding;
-    const chartHeight = canvas.height - 2 * padding;
-    
-    const maxValue = Math.max(...data.map(d => d.cardsStudied));
-    const barWidth = chartWidth / data.length;
-    
-    // Рисуем оси
-    ctx.strokeStyle = '#ddd';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, canvas.height - padding);
-    ctx.lineTo(canvas.width - padding, canvas.height - padding);
-    ctx.stroke();
-    
-    // Рисуем столбцы
-    data.forEach((item, index) => {
-        const barHeight = (item.cardsStudied / maxValue) * chartHeight;
-        const x = padding + index * barWidth + barWidth * 0.1;
-        const y = canvas.height - padding - barHeight;
-        const width = barWidth * 0.8;
-        
-        // Столбец
-        ctx.fillStyle = 'var(--brand-blue)' || '#1800ad';
-        ctx.fillRect(x, y, width, barHeight);
-        
-        // Значение сверху
-        ctx.fillStyle = '#333';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(item.cardsStudied, x + width / 2, y - 5);
-        
-        // Дата снизу
-        ctx.fillStyle = '#666';
-        ctx.font = '10px Arial';
-        const dateLabel = new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        ctx.fillText(dateLabel, x + width / 2, canvas.height - padding + 15);
-    });
-};
 
     // Обработчик клика по колоде для перехода к генерации карточек
 document.addEventListener('click', (event) => {
@@ -1014,21 +1098,41 @@ document.addEventListener('click', (event) => {
         }
     });
 
-    // Обработчик кнопки "Добавить карточки"
+    // Обработчик кнопки "Добавить карточки" с улучшенной поддержкой Telegram
     document.addEventListener('click', async (event) => {
         if (event.target.classList.contains('add-cards-btn')) {
+            console.log('🎯 Add cards button clicked:', event.target);
             event.preventDefault();
+            event.stopPropagation();
             
             const deckCard = event.target.closest('.deck-card');
+            if (!deckCard) {
+                console.error('❌ Deck card not found');
+                return;
+            }
+            
             const deckId = parseInt(deckCard.dataset.deckId);
+            console.log('📦 Deck ID:', deckId);
+            
+            if (!deckId || isNaN(deckId)) {
+                console.error('❌ Invalid deck ID:', deckId);
+                return;
+            }
             
             // Переходим к генерации карточек для этой колоды
             currentDeckId = deckId;
             
             // Получаем информацию о колоде для отображения языков
-            const deckName = deckCard.querySelector('.deck-name').textContent;
-            const langFromText = deckCard.querySelector('.lang-from').textContent;
-            const langToText = deckCard.querySelector('.lang-to').textContent;
+            const deckName = deckCard.querySelector('.deck-name')?.textContent;
+            const langFromText = deckCard.querySelector('.lang-from')?.textContent;
+            const langToText = deckCard.querySelector('.lang-to')?.textContent;
+            
+            console.log('🏷️ Deck info:', { deckName, langFromText, langToText });
+            
+            if (!langFromText || !langToText) {
+                console.error('❌ Language information not found');
+                return;
+            }
             
             // Извлекаем коды языков
             const langFromCode = extractLanguageCode(langFromText).toUpperCase();
@@ -1039,10 +1143,37 @@ document.addEventListener('click', (event) => {
             const langToFlag = getLanguageFlag(langToCode.toLowerCase());
             
             // Обновляем отображение языков в окне генерации
-            document.getElementById('lang-from-display').textContent = `${langFromFlag}${langFromCode}`;
-            document.getElementById('lang-to-display').textContent = `${langToFlag}${langToCode}`;
+            const langFromDisplay = document.getElementById('lang-from-display');
+            const langToDisplay = document.getElementById('lang-to-display');
             
+            if (langFromDisplay && langToDisplay) {
+                langFromDisplay.textContent = `${langFromFlag}${langFromCode}`;
+                langToDisplay.textContent = `${langToFlag}${langToCode}`;
+                console.log('🌐 Language display updated');
+            } else {
+                console.error('❌ Language display elements not found');
+            }
+            
+            console.log('🚀 Showing generate cards window');
             showWindow('generate-cards-window');
+        }
+    });
+
+    // Дополнительный обработчик для touch-событий на кнопке "Добавить карточки"
+    document.addEventListener('touchend', async (event) => {
+        if (event.target.classList.contains('add-cards-btn')) {
+            console.log('👆 Add cards button touched');
+            event.preventDefault();
+            
+            // Имитируем клик
+            setTimeout(() => {
+                const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window
+                });
+                event.target.dispatchEvent(clickEvent);
+            }, 50);
         }
     });
 
@@ -1079,7 +1210,8 @@ document.addEventListener('click', (event) => {
         // Обработчик формы генерации фраз
         const generateForm = document.getElementById('generate-cards-form');
         if (generateForm) {
-            generateForm.addEventListener('submit', async (event) => {
+            // Добавляем обработчики для мобильных устройств и Telegram WebApp
+            const handleSubmit = async (event) => {
         event.preventDefault();
         
         const phrase = document.getElementById('phrase-input').value.trim();
@@ -1123,17 +1255,34 @@ document.addEventListener('click', (event) => {
             // Скрываем спиннер в любом случае
             showButtonLoading(false);
         }
-            });
+            };
+            
+            generateForm.addEventListener('submit', handleSubmit);
+            
+            // Дополнительный обработчик для кнопки Enrich (для мобильных устройств)
+            const enrichBtn = document.getElementById('enrich-btn');
+            if (enrichBtn) {
+                enrichBtn.addEventListener('click', handleSubmit);
+                enrichBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleSubmit(e);
+                });
+            }
         }
 
         // Обработчик кнопки "Add phrase"
         const addPhraseBtn = document.getElementById('add-phrase-btn');
         if (addPhraseBtn) {
-            addPhraseBtn.addEventListener('click', async (event) => {
+            const handleAddPhrase = async (event) => {
                 event.preventDefault();
+                event.stopPropagation();
+                
+                console.log('Add phrase button clicked - Telegram WebApp:', window.Telegram?.WebApp?.platform);
                 
                 const phrase = document.getElementById('phrase-input').value.trim();
                 const keyword = document.getElementById('keyword-input').value.trim();
+                
+                console.log('Phrase:', phrase, 'Keyword:', keyword);
                 
                 if (!phrase || !keyword) {
                     alert(t('fill_all_fields'));
@@ -1148,17 +1297,22 @@ document.addEventListener('click', (event) => {
                 const langFromCode = extractLanguageCode(langFrom);
                 const langToCode = extractLanguageCode(langTo);
                 
+                console.log('Languages:', langFromCode, '->', langToCode);
+                
                 try {
                     // Показываем спиннер в кнопке Add phrase
                     showButtonLoading(true, 'add-phrase-btn');
                     showLoading('Добавляем фразу...');
                     
+                    console.log('Calling API addPhrase...');
                     const response = await api.addPhrase({
                         phrase: phrase,
                         keyword: keyword,
                         lang_code: langFromCode,
                         target_lang: langToCode
                     });
+                    
+                    console.log('API response:', response);
                     
                     if (response && response.phrase) {
                         // Создаем структуру данных для отображения простой фразы
@@ -1171,9 +1325,11 @@ document.addEventListener('click', (event) => {
                             image_path: response.image_path || null
                         };
                         
+                        console.log('Displaying generated phrases...');
                         displayGeneratedPhrases(simpleData, langFrom, langTo);
                         showWindow('generated-phrases-window');
                     } else {
+                        console.error('Invalid response:', response);
                         showError('Не удалось добавить фразу');
                     }
                 } catch (error) {
@@ -1183,7 +1339,39 @@ document.addEventListener('click', (event) => {
                     // Скрываем спиннер в любом случае
                     showButtonLoading(false, 'add-phrase-btn');
                 }
-            });
+            };
+            
+            // Специальная обработка для Telegram WebApp
+            if (window.Telegram && window.Telegram.WebApp) {
+                console.log('Setting up Telegram WebApp handlers for add-phrase-btn');
+                
+                // Для мобильного Telegram используем touchstart вместо click
+                addPhraseBtn.addEventListener('touchstart', (e) => {
+                    console.log('Add phrase touchstart event');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Добавляем небольшую задержку для визуального feedback
+                    addPhraseBtn.style.opacity = '0.7';
+                    setTimeout(() => {
+                        addPhraseBtn.style.opacity = '1';
+                        handleAddPhrase(e);
+                    }, 100);
+                }, { passive: false });
+                
+                // Также оставляем обычный click для совместимости
+                addPhraseBtn.addEventListener('click', (e) => {
+                    console.log('Add phrase click event');
+                    handleAddPhrase(e);
+                });
+            } else {
+                // Обычная обработка для веб-браузера
+                addPhraseBtn.addEventListener('click', handleAddPhrase);
+                addPhraseBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleAddPhrase(e);
+                });
+            }
         }
     });
 
@@ -1267,6 +1455,9 @@ document.addEventListener('click', (event) => {
         } catch (error) {
             console.error('Error saving cards:', error);
             showError(`Ошибка сохранения: ${error.message}`);
+        } finally {
+            // Скрываем индикатор загрузки
+            document.getElementById('loading-overlay').classList.add('hidden');
         }
             });
         }
@@ -1328,6 +1519,11 @@ function showButtonLoading(show, buttonId = 'enrich-btn') {
     const btnText = document.querySelector(`#${buttonId} .btn-text`);
     const button = document.getElementById(buttonId);
     
+    if (!spinner || !btnText || !button) {
+        console.warn(`Button elements not found for ${buttonId}`);
+        return;
+    }
+    
     if (show) {
         spinner.classList.remove('hidden');
         if (buttonId === 'enrich-btn') {
@@ -1336,6 +1532,7 @@ function showButtonLoading(show, buttonId = 'enrich-btn') {
             btnText.textContent = t('adding_phrase');
         }
         button.disabled = true;
+        button.style.opacity = '0.7';
     } else {
         spinner.classList.add('hidden');
         if (buttonId === 'enrich-btn') {
@@ -1344,6 +1541,7 @@ function showButtonLoading(show, buttonId = 'enrich-btn') {
             btnText.textContent = t('add_phrase_button');
         }
         button.disabled = false;
+        button.style.opacity = '1';
     }
 }
 
@@ -1379,39 +1577,61 @@ let trainingData = {
     totalCards: 0,
     deckInfo: null,
     sessionStartTime: null,
-    cardsStudiedInSession: 0
+    cardsStudiedInSession: 0,
+    currentPage: 1,
+    totalPages: 1,
+    hasNextPage: false
 };
 
 // Глобальная переменная для отслеживания статистики повторов в текущей сессии
 let sessionRepeatStats = {
     againCards: 0,
-    goodCards: 0,
     easyCards: 0
 };
+
+// Функция для обновления отображения счетчика repeat в интерфейсе
+function updateDeckRepeatDisplay() {
+    const cardsRepeatElement = document.querySelector('.cards-repeat');
+    if (cardsRepeatElement && trainingData.deckInfo) {
+        cardsRepeatElement.textContent = trainingData.deckInfo.due_count || 0;
+    }
+}
+
+// Множество для отслеживания карточек, добавленных в повтор в текущей сессии
+let cardsAddedToRepeat = new Set();
 
 // Функция запуска тренировки
 window.startTraining = async function(deckId) {
     try {
         showLoading(t('loading_training_cards'));
         
-        // Получаем карточки колоды
-        const response = await api.getDeckCards(deckId);
+        // Получаем текущую позицию в колоде из localStorage
+        const deckPositionKey = `deck_${deckId}_position`;
+        const savedPosition = localStorage.getItem(deckPositionKey);
+        const currentPage = savedPosition ? parseInt(savedPosition) : 1;
+        
+        // Получаем карточки колоды с пагинацией
+        const response = await api.getDeckCards(deckId, currentPage, 10);
         
         if (!response || !response.cards || response.cards.length === 0) {
             showError('В этой колоде нет карточек для тренировки');
             return;
         }
         
-        // Перемешиваем карточки и берем максимум 10
-        const shuffledCards = response.cards.sort(() => Math.random() - 0.5);
-        const selectedCards = shuffledCards.slice(0, Math.min(10, shuffledCards.length));
-        
         // Сбрасываем статистику повторов для новой сессии
         sessionRepeatStats = {
             againCards: 0,
-            goodCards: 0,
             easyCards: 0
         };
+        
+        // Сбрасываем множество карточек, добавленных в повтор
+        cardsAddedToRepeat.clear();
+        
+        // Безопасно извлекаем данные пагинации
+        const pagination = response.pagination || {};
+        const currentPageFromResponse = pagination.current_page || currentPage;
+        const totalPages = pagination.total_pages || 1;
+        const hasNextPage = pagination.has_next || false;
         
         // Инициализируем данные тренировки
         trainingData = {
@@ -1420,7 +1640,11 @@ window.startTraining = async function(deckId) {
             totalCards: response.cards.length,
             deckInfo: response.deck,
             sessionStartTime: new Date(),
-            cardsStudiedInSession: 0
+            cardsStudiedInSession: 0,
+            currentPage: currentPageFromResponse,
+            totalPages: totalPages,
+            hasNextPage: hasNextPage,
+            deckId: deckId
         };
         
         // Показываем окно тренировки
@@ -1905,8 +2129,11 @@ function checkAnswer() {
 function nextCard() {
     trainingData.currentIndex++;
     
-    if (trainingData.currentIndex >= trainingData.totalCards) {
-        // Тренировка завершена
+    // Ограничиваем сессию максимум 10 карточками
+    const maxCardsPerSession = 10;
+    
+    if (trainingData.currentIndex >= trainingData.totalCards || trainingData.currentIndex >= maxCardsPerSession) {
+        // Тренировка завершена (либо закончились карточки, либо достигнут лимит в 10 карточек)
         finishTraining();
     } else {
         // Загружаем следующую карточку
@@ -1927,6 +2154,20 @@ async function finishTraining() {
         }
     }
     
+    // Сохраняем позицию для следующей сессии
+    if (trainingData.deckId && trainingData.hasNextPage) {
+        const deckPositionKey = `deck_${trainingData.deckId}_position`;
+        const nextPage = trainingData.currentPage + 1;
+        localStorage.setItem(deckPositionKey, nextPage.toString());
+        console.log(`Saved position for deck ${trainingData.deckId}: page ${nextPage}`);
+    } else if (trainingData.deckId) {
+        // Если больше нет страниц, сбрасываем позицию на начало
+        const deckPositionKey = `deck_${trainingData.deckId}_position`;
+        localStorage.removeItem(deckPositionKey);
+        console.log(`Reset position for deck ${trainingData.deckId} - no more pages`);
+    }
+    
+    // Показываем сообщение о завершении и автоматически закрываем тренировку
     alert(t('training_completed', { count: trainingData.totalCards }));
     showWindow('main-window');
     refreshDecks(); // Обновляем статистику колод
@@ -1939,10 +2180,6 @@ document.getElementById('again-btn').addEventListener('click', async () => {
     await handleCardRating('again');
 });
 
-document.getElementById('good-btn').addEventListener('click', async () => {
-    await handleCardRating('good');
-});
-
 document.getElementById('easy-btn').addEventListener('click', async () => {
     await handleCardRating('easy');
 });
@@ -1951,11 +2188,9 @@ document.getElementById('easy-btn').addEventListener('click', async () => {
 function updateRepeatStatsDisplay() {
     // Обновляем отображение статистики повторов в DOM элементах
     const againStat = document.getElementById('again-cards-stat');
-    const goodStat = document.getElementById('good-cards-stat');
     const easyStat = document.getElementById('easy-cards-stat');
     
     if (againStat) againStat.textContent = sessionRepeatStats.againCards;
-    if (goodStat) goodStat.textContent = sessionRepeatStats.goodCards;
     if (easyStat) easyStat.textContent = sessionRepeatStats.easyCards;
     
     console.log('Updated repeat stats:', sessionRepeatStats);
@@ -1985,10 +2220,19 @@ async function handleCardRating(rating) {
             case 'again':
                 sessionRepeatStats.againCards++;
                 console.log('Incremented againCards to', sessionRepeatStats.againCards);
-                break;
-            case 'good':
-                sessionRepeatStats.goodCards++;
-                console.log('Incremented goodCards to', sessionRepeatStats.goodCards);
+                
+                // Увеличиваем счетчик repeat только если карточка еще не была добавлена в повтор
+                if (!cardsAddedToRepeat.has(currentCard.id)) {
+                    cardsAddedToRepeat.add(currentCard.id);
+                    // Увеличиваем локальный счетчик due_count
+                    if (trainingData.deckInfo) {
+                        trainingData.deckInfo.due_count = (trainingData.deckInfo.due_count || 0) + 1;
+                        console.log(`Incremented deck due_count to ${trainingData.deckInfo.due_count} for card ${currentCard.id}`);
+                        
+                        // Обновляем отображение счетчика repeat в интерфейсе
+                        updateDeckRepeatDisplay();
+                    }
+                }
                 break;
             case 'easy':
                 sessionRepeatStats.easyCards++;
@@ -2091,6 +2335,19 @@ document.getElementById('save-settings-btn').addEventListener('click', () => {
     
     const modal = document.getElementById('settings-modal');
     modal.classList.add('hidden');
+});
+
+// Обработчики для кнопок управления кешем
+document.getElementById('clear-cache-btn').addEventListener('click', () => {
+    if (confirm('Вы уверены, что хотите очистить кеш? Это может помочь решить проблемы с отображением.')) {
+        clearCache();
+    }
+});
+
+document.getElementById('reload-app-btn').addEventListener('click', () => {
+    if (confirm('Перезагрузить приложение? Все несохраненные данные будут потеряны.')) {
+        reloadApp();
+    }
 });
 
 // Закрытие модального окна при клике вне его
@@ -2226,7 +2483,97 @@ function initTelegram() {
       document.documentElement.style.setProperty('--tg-theme-text-color', '#1800ad');
       document.documentElement.style.setProperty('--tg-theme-button-color', '#f4c300');
       document.documentElement.style.setProperty('--tg-theme-button-text-color', '#1800ad');
+      
+      // Добавляем обработчики touch событий для всех кнопок в Telegram WebApp
+      const setupTouchHandlers = () => {
+        const buttons = document.querySelectorAll('button, .btn, .form-submit-btn');
+        console.log(`🔘 Найдено ${buttons.length} кнопок для обработки touch-событий`);
+        
+        buttons.forEach((button, index) => {
+          // Проверяем, не настроены ли уже обработчики
+          if (button.dataset.touchHandlersSet) {
+            return;
+          }
+          button.dataset.touchHandlersSet = 'true';
+          
+          console.log(`🔘 Настройка кнопки ${index + 1}: ${button.id || button.className}`);
+          
+          let touchStartTime = 0;
+          let touchStarted = false;
+          
+          // Добавляем поддержку touch событий
+          button.addEventListener('touchstart', (e) => {
+            console.log('👆 touchstart на кнопке:', button.id || button.className);
+            touchStartTime = Date.now();
+            touchStarted = true;
+            button.classList.add('touch-active');
+          }, { passive: true });
+          
+          button.addEventListener('touchend', (e) => {
+            console.log('👆 touchend на кнопке:', button.id || button.className);
+            
+            if (!touchStarted) return;
+            
+            const touchDuration = Date.now() - touchStartTime;
+            console.log('⏱️ Touch duration:', touchDuration + 'ms');
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            button.classList.remove('touch-active');
+            touchStarted = false;
+            
+            // Имитируем клик для кнопок, которые могут не реагировать на touch
+            if (!button.disabled && touchDuration < 1000) {
+              setTimeout(() => {
+                console.log('🖱️ Имитация клика на кнопке:', button.id || button.className);
+                
+                // Создаем и диспатчим событие клика
+                const clickEvent = new MouseEvent('click', {
+                  bubbles: true,
+                  cancelable: true,
+                  view: window
+                });
+                
+                button.dispatchEvent(clickEvent);
+              }, 100);
+            }
+          });
+          
+          button.addEventListener('touchcancel', (e) => {
+            console.log('❌ touchcancel на кнопке:', button.id || button.className);
+            button.classList.remove('touch-active');
+            touchStarted = false;
+          });
+          
+          // Дополнительный обработчик для отладки кликов
+          button.addEventListener('click', (e) => {
+            console.log('🖱️ Click event на кнопке:', button.id || button.className);
+            console.log('🖱️ Event details:', {
+              isTrusted: e.isTrusted,
+              type: e.type,
+              target: e.target.id || e.target.className
+            });
+          });
+        });
+      };
+      
+      // Настраиваем обработчики сразу и при изменении DOM
+      document.addEventListener('DOMContentLoaded', setupTouchHandlers);
+      
+      // Наблюдатель за изменениями DOM для новых кнопок
+      const observer = new MutationObserver(() => {
+        setupTouchHandlers();
+      });
+      
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
     }
+    
+    // Инициализируем проверку кеша для Telegram
+    checkCacheOnLoad();
   }
 }
 

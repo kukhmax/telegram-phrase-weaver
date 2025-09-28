@@ -25,17 +25,19 @@ class CardService:
     """
     
     @staticmethod
-    def get_deck_with_cards(deck_id: int, user: User, db: Session) -> Dict[str, Any]:
+    def get_deck_with_cards(deck_id: int, user: User, db: Session, page: int = 1, limit: int = 10) -> Dict[str, Any]:
         """
-        Получает колоду с карточками для указанного пользователя.
+        Получает колоду с карточками для указанного пользователя с пагинацией.
         
         Args:
             deck_id: ID колоды
             user: Пользователь
             db: Сессия базы данных
+            page: Номер страницы (начиная с 1)
+            limit: Количество карточек на странице
             
         Returns:
-            Dict с информацией о колоде и карточках
+            Dict с информацией о колоде, карточках и пагинации
             
         Raises:
             HTTPException: Если колода не найдена или нет доступа
@@ -54,8 +56,24 @@ class CardService:
                 detail="Not authorized to access this deck"
             )
         
-        # Получаем карточки колоды
-        cards = db.query(Card).filter(Card.deck_id == deck_id).order_by(Card.id).all()
+        # Подсчитываем общее количество карточек
+        total_cards = db.query(Card).filter(Card.deck_id == deck_id).count()
+        
+        # Вычисляем offset для пагинации
+        offset = (page - 1) * limit
+        
+        # Получаем карточки колоды с пагинацией
+        cards = (db.query(Card)
+                .filter(Card.deck_id == deck_id)
+                .order_by(Card.id)
+                .offset(offset)
+                .limit(limit)
+                .all())
+        
+        # Вычисляем данные пагинации
+        total_pages = (total_cards + limit - 1) // limit  # Округление вверх
+        has_next = page < total_pages
+        has_prev = page > 1
         
         return {
             "deck": {
@@ -63,7 +81,8 @@ class CardService:
                 "name": deck.name,
                 "lang_from": deck.lang_from,
                 "lang_to": deck.lang_to,
-                "cards_count": deck.cards_count
+                "cards_count": deck.cards_count,
+                "due_count": deck.due_count
             },
             "cards": [
                 {
@@ -77,7 +96,15 @@ class CardService:
                     "image_path": card.image_path
                 }
                 for card in cards
-            ]
+            ],
+            "pagination": {
+                "current_page": page,
+                "total_pages": total_pages,
+                "total_cards": total_cards,
+                "has_next": has_next,
+                "has_prev": has_prev,
+                "limit": limit
+            }
         }
     
     @staticmethod
