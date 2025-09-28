@@ -419,8 +419,13 @@
         </div>
     </template>
     
-    <!-- Подключаем скрипты (было config.js, но мы его удалим позже) -->
-    <script src="/static/js/app.js" type="module" defer></script>
+    <!-- Подключаем скрипты с версионированием для предотвращения кеширования -->
+    <script>
+        // Подключаем app.js с версионированием и дополнительными параметрами для мобильных
+        const appVersion = Date.now();
+        const mobileParams = 'mobile=1&platform=' + encodeURIComponent(navigator.platform) + '&t=' + Math.random();
+        document.write('<script src="/static/js/app.js?v=' + appVersion + '&' + mobileParams + '" type="module" defer><\/script>');
+    </script>
 </body>
 </html>
 
