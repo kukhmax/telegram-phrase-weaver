@@ -347,7 +347,8 @@ async function displayDeckCards(deckId) {
     try {
         showLoading(t('loading_cards'));
         
-        const response = await api.getDeckCards(deckId);
+        // Загружаем все карточки с большим лимитом
+        const response = await api.getDeckCards(deckId, 1, 1000);
         
         if (response && response.deck && response.cards) {
             // Обновляем информацию о колоде
