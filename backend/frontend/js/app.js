@@ -1577,7 +1577,10 @@ let trainingData = {
     totalCards: 0,
     deckInfo: null,
     sessionStartTime: null,
-    cardsStudiedInSession: 0
+    cardsStudiedInSession: 0,
+    currentPage: 1,
+    totalPages: 1,
+    hasNextPage: false
 };
 
 // Глобальная переменная для отслеживания статистики повторов в текущей сессии
@@ -1602,17 +1605,18 @@ window.startTraining = async function(deckId) {
     try {
         showLoading(t('loading_training_cards'));
         
-        // Получаем карточки колоды
-        const response = await api.getDeckCards(deckId);
+        // Получаем текущую позицию в колоде из localStorage
+        const deckPositionKey = `deck_${deckId}_position`;
+        const savedPosition = localStorage.getItem(deckPositionKey);
+        const currentPage = savedPosition ? parseInt(savedPosition) : 1;
+        
+        // Получаем карточки колоды с пагинацией
+        const response = await api.getDeckCards(deckId, currentPage, 10);
         
         if (!response || !response.cards || response.cards.length === 0) {
             showError('В этой колоде нет карточек для тренировки');
             return;
         }
-        
-        // Перемешиваем карточки и берем максимум 10
-        const shuffledCards = response.cards.sort(() => Math.random() - 0.5);
-        const selectedCards = shuffledCards.slice(0, Math.min(10, shuffledCards.length));
         
         // Сбрасываем статистику повторов для новой сессии
         sessionRepeatStats = {
@@ -1630,7 +1634,11 @@ window.startTraining = async function(deckId) {
             totalCards: response.cards.length,
             deckInfo: response.deck,
             sessionStartTime: new Date(),
-            cardsStudiedInSession: 0
+            cardsStudiedInSession: 0,
+            currentPage: response.pagination.current_page,
+            totalPages: response.pagination.total_pages,
+            hasNextPage: response.pagination.has_next,
+            deckId: deckId
         };
         
         // Показываем окно тренировки
@@ -2115,8 +2123,11 @@ function checkAnswer() {
 function nextCard() {
     trainingData.currentIndex++;
     
-    if (trainingData.currentIndex >= trainingData.totalCards) {
-        // Тренировка завершена
+    // Ограничиваем сессию максимум 10 карточками
+    const maxCardsPerSession = 10;
+    
+    if (trainingData.currentIndex >= trainingData.totalCards || trainingData.currentIndex >= maxCardsPerSession) {
+        // Тренировка завершена (либо закончились карточки, либо достигнут лимит в 10 карточек)
         finishTraining();
     } else {
         // Загружаем следующую карточку
@@ -2137,6 +2148,20 @@ async function finishTraining() {
         }
     }
     
+    // Сохраняем позицию для следующей сессии
+    if (trainingData.deckId && trainingData.hasNextPage) {
+        const deckPositionKey = `deck_${trainingData.deckId}_position`;
+        const nextPage = trainingData.currentPage + 1;
+        localStorage.setItem(deckPositionKey, nextPage.toString());
+        console.log(`Saved position for deck ${trainingData.deckId}: page ${nextPage}`);
+    } else if (trainingData.deckId) {
+        // Если больше нет страниц, сбрасываем позицию на начало
+        const deckPositionKey = `deck_${trainingData.deckId}_position`;
+        localStorage.removeItem(deckPositionKey);
+        console.log(`Reset position for deck ${trainingData.deckId} - no more pages`);
+    }
+    
+    // Показываем сообщение о завершении и автоматически закрываем тренировку
     alert(t('training_completed', { count: trainingData.totalCards }));
     showWindow('main-window');
     refreshDecks(); // Обновляем статистику колод
