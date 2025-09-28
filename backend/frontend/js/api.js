@@ -184,7 +184,7 @@ export const api = {
     deleteDeck: (deckId) => request(`/api/decks/${deckId}`, 'DELETE'),
     
     // Методы для работы с карточками
-    getDeckCards: (deckId) => request(`/api/cards/deck/${deckId}`, 'GET'),
+    getDeckCards: (deckId, page = 1, limit = 10) => request(`/api/cards/deck/${deckId}?page=${page}&limit=${limit}`, 'GET'),
     saveCard: (cardData) => request('/api/cards/save', 'POST', cardData),
     enrichPhrase: (enrichData) => request('/api/cards/enrich', 'POST', enrichData),
     addPhrase: (phraseData) => request('/api/cards/add-phrase', 'POST', phraseData),

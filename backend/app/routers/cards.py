@@ -96,14 +96,16 @@ async def generate_audio_endpoint(request: AudioRequest = Body(...)):
 @router.get("/deck/{deck_id}")
 def get_deck_cards(
     deck_id: int,
+    page: int = 1,
+    limit: int = 10,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Получает все карточки для указанной колоды.
+    Получает карточки для указанной колоды с пагинацией.
     """
     from app.services.card_service import card_service
-    return card_service.get_deck_with_cards(deck_id, current_user, db)
+    return card_service.get_deck_with_cards(deck_id, current_user, db, page, limit)
 
 @router.post("/save", status_code=status.HTTP_201_CREATED)
 def save_card(
