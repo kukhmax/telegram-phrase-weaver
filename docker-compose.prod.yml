@@ -1,11 +1,8 @@
-version: '3.9'
 services:
   backend:
     build: 
       context: .
       dockerfile: ./backend/Dockerfile
-    ports:
-      - "8000:8080"
     expose:
       - "8080"
     env_file:
@@ -47,7 +44,6 @@ services:
       - ./backend/frontend:/usr/share/nginx/html:ro
       - shared_assets:/usr/share/nginx/html/assets:rw
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - /etc/ssl/pw-new-club:/etc/ssl/pw-new-club:ro
     depends_on:
       - backend
     restart: unless-stopped
