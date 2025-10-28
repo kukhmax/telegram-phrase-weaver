@@ -41,9 +41,8 @@ services:
 
   frontend:
     image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
+    expose:
+      - "80"
     volumes:
       - ./backend/frontend:/usr/share/nginx/html:ro
       - shared_assets:/usr/share/nginx/html/assets:rw
@@ -53,7 +52,10 @@ services:
       - backend
     restart: unless-stopped
     networks:
-      - app-network
+      app-network:
+      web:
+        aliases:
+          - weaver
 
 volumes:
   postgres_data:
@@ -62,3 +64,6 @@ volumes:
 networks:
   app-network:
     driver: bridge
+  web:
+    external: true
+    name: web
